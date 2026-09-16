@@ -9,8 +9,8 @@ import Filete from "@/components/motion/Filete";
 import RevealScrub from "@/components/motion/RevealScrub";
 import { BotaoLink } from "@/components/ui/Botao";
 import { ListaSelos, SeloOrigem } from "@/components/ui/Selos";
+import Preco from "@/components/ui/Preco";
 import { destaquesHome } from "@/data/menu";
-import { preco } from "@/lib/format";
 import { img } from "@/lib/images";
 
 /**
@@ -163,9 +163,10 @@ export default function Destaques() {
                     )}
                   </div>
 
-                  <p className="shrink-0 font-display text-lg text-ambar">
-                    {preco(item.preco)}
-                  </p>
+                  <Preco
+                    valor={item.preco}
+                    className="shrink-0 text-lg text-ambar"
+                  />
                 </div>
               </Link>
             </li>

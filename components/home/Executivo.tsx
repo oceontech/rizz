@@ -9,6 +9,7 @@ import Parallax from "@/components/motion/Parallax";
 import RevealScrub from "@/components/motion/RevealScrub";
 import BadgeExecutivo from "@/components/ui/BadgeExecutivo";
 import { BotaoLink } from "@/components/ui/Botao";
+import Preco from "@/components/ui/Preco";
 import { executivo } from "@/data/executivo";
 import { preco } from "@/lib/format";
 import { img } from "@/lib/images";
@@ -145,11 +146,12 @@ export default function Executivo() {
                           className="size-full object-cover"
                         />
                       </Parallax>
-                      <figcaption className="mt-3 text-[0.6875rem] leading-snug text-tinta/60">
+                      <figcaption className="mt-3 text-[0.8125rem] leading-snug text-tinta/80 md:text-sm">
                         {prato.nome}
-                        <span className="mt-1 block font-display text-sm text-vinho">
-                          {preco(prato.preco)}
-                        </span>
+                        <Preco
+                          valor={prato.preco}
+                          className="mt-1.5 flex text-base text-vinho md:text-lg"
+                        />
                       </figcaption>
                     </figure>
                   ))}

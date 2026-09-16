@@ -49,13 +49,16 @@
     /* Altura ocupada pelo header. O próprio Header zera isto quando se
        recolhe, para que barras grudadas abaixo dele (as abas do cardápio)
        subam junto em vez de deixar um vão. */
-    --altura-header: 4rem;
+    /* Soma o entalhe do iPhone: o header também o soma (`pt-safe`). */
+    --altura-header: calc(4rem + env(safe-area-inset-top, 0px));
     scroll-padding-top: calc(var(--altura-header) + 4rem);
   }
 
-  @media (min-width: 860px) {
+  /* Mesmo ponto do `md:h-24` do Header (48rem = 768px). Com 860px, entre
+     768 e 859px o header já tinha 6rem e as abas ficavam atrás dele. */
+  @media (min-width: 48rem) {
     :root {
-      --altura-header: 6rem;
+      --altura-header: calc(6rem + env(safe-area-inset-top, 0px));
     }
   }
 
@@ -149,6 +152,60 @@
 }
 
 @layer components {
+  /* Header que se recolhe. Mesma duração e curva das abas do cardápio
+     (MenuClient), que sobem pela mesma marca `data-header`: os dois andam
+     colados, sem vão nem sobreposição no meio do movimento. */
+  .header-fixo {
+    transition:
+      transform 0.55s var(--ease-rizz),
+      background-color 0.7s ease;
+  }
+
+  :root[data-header="oculto"] .header-fixo {
+    transform: translate3d(0, -100%, 0);
+  }
+
+  /* Vidro do cardápio. Header e abas usam exatamente o mesmo vidro e formam
+     um painel só: com o header transparente e as abas quase opacas, o
+     conteúdo visível só no header parecia um vão entre as duas barras.
+     Só CSS: um filtro SVG de refração ("liquid glass") chegou a ser usado,
+     mas o Chromium calcula errado a área dele com escala de tela fracionada
+     (125% no Windows) e deixava a faixa de baixo do header sem efeito. */
+  .vidro {
+    background-color: rgb(253 241 229 / 0.6);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
+  }
+
+  /* Divisa entre o header e as abas do cardápio: fio dourado que some nas
+     pontas, com um losango vazado no centro. */
+  .divisa-ornada {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgb(201 162 39 / 0.75) 30%,
+      rgb(201 162 39 / 0.75) 70%,
+      transparent
+    );
+  }
+
+  .divisa-ornada::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border: 1px solid rgb(201 162 39 / 0.9);
+    background: var(--color-creme);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
   .wrap {
     width: 100%;
     max-width: 82rem;

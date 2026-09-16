@@ -29,8 +29,8 @@ function prefersReducedMotion() {
 
 /** Altura do header fixo, para a âncora não parar embaixo dele. */
 function headerOffset() {
-  if (typeof window === "undefined") return 0;
-  return window.innerWidth >= 860 ? 88 : 68;
+  if (typeof document === "undefined") return 0;
+  return document.querySelector("header")?.offsetHeight ?? 0;
 }
 
 /**
@@ -46,17 +46,18 @@ export function scrollToTarget(target: string | HTMLElement, extra = 0) {
 
   const offset = -(headerOffset() + extra);
   const instant = prefersReducedMotion();
+  const y = el.getBoundingClientRect().top + window.scrollY + offset;
 
   if (lenisInstance) {
-    lenisInstance.scrollTo(el, {
-      offset,
+    // Posição numérica, não o elemento: com o elemento, o Lenis ainda
+    // desconta o `scroll-padding-top` do CSS e para ~160px mais baixo que a
+    // rolagem nativa do celular.
+    lenisInstance.scrollTo(y, {
       duration: instant ? 0 : 1.1,
       immediate: instant,
     });
     return;
   }
-
-  const y = el.getBoundingClientRect().top + window.scrollY + offset;
 
   if (instant) {
     window.scrollTo(0, y);

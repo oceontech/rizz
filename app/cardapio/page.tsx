@@ -8,6 +8,7 @@ import BadgeExecutivo from "@/components/ui/BadgeExecutivo";
 import { BotaoLink } from "@/components/ui/Botao";
 import { Legenda, SeloOrigem } from "@/components/ui/Selos";
 import IndicadorAbertura from "@/components/ui/StatusAbertura";
+import Preco from "@/components/ui/Preco";
 import { executivo } from "@/data/executivo";
 import { preco } from "@/lib/format";
 
@@ -69,13 +70,14 @@ function BlocoExecutivo() {
                     key={item.id}
                     className="flex items-baseline gap-3 border-b border-tinta/10 py-3 last:border-0"
                   >
-                    <span className="flex min-w-0 grow flex-wrap items-center gap-x-2 text-sm leading-snug text-vinho">
+                    <span className="flex min-w-0 grow flex-wrap items-center gap-x-2 text-[0.9375rem] leading-snug text-vinho md:text-base">
                       {item.nome}
                       {item.selo && <SeloOrigem tipo={item.selo} />}
                     </span>
-                    <span className="shrink-0 whitespace-nowrap font-display text-base text-vinho">
-                      {preco(item.preco)}
-                    </span>
+                    <Preco
+                      valor={item.preco}
+                      className="shrink-0 text-base text-vinho md:text-[1.0625rem]"
+                    />
                   </li>
                 ))}
               </ul>

@@ -1,7 +1,13 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
-type Variante = "ambar" | "contorno" | "creme" | "vinho" | "contorno-tinta";
+type Variante =
+  | "ambar"
+  | "contorno"
+  | "creme"
+  | "vinho"
+  | "contorno-tinta"
+  | "contorno-vinho";
 type Tamanho = "md" | "lg";
 
 /**
@@ -20,6 +26,8 @@ const variantes: Record<Variante, string> = {
     "border border-creme/30 text-creme hover:border-ambar hover:text-ambar",
   "contorno-tinta":
     "border border-tinta/25 text-tinta hover:border-vinho hover:text-vinho",
+  "contorno-vinho":
+    "border border-vinho/70 text-vinho hover:border-vinho hover:text-vinho-fundo",
   creme: "bg-creme text-tinta hover:bg-white",
   vinho: "bg-vinho text-creme hover:bg-vinho-fundo",
 };

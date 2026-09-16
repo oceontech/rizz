@@ -4,8 +4,8 @@ import { useMemo, useRef, useState } from "react";
 
 import { CONDICOES, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { ListaSelos, SeloOrigem } from "@/components/ui/Selos";
+import Preco from "@/components/ui/Preco";
 import { BADGES, cardapio, type Badge, type MenuItem } from "@/data/menu";
-import { preco } from "@/lib/format";
 import { scrollToTarget } from "@/lib/scroll";
 
 type FaixaPreco = "todas" | "ate60" | "de60a90" | "acima90";
@@ -28,13 +28,13 @@ function Linha({ item }: { item: MenuItem }) {
       className="flex items-baseline gap-3 border-b border-tinta/10 py-4 last:border-0"
     >
       <div className="min-w-0 grow">
-        <h3 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[1.0625rem] leading-snug text-vinho">
+        <h3 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[1.0625rem] leading-snug text-vinho md:text-lg">
           {item.nome}
           <ListaSelos badges={item.badges} />
           {item.vpj && <SeloOrigem />}
         </h3>
         {item.descricao && (
-          <p className="mt-1 text-sm italic leading-snug text-tinta/55">
+          <p className="mt-1 text-[0.9375rem] italic leading-snug text-tinta/65">
             {item.descricao}
           </p>
         )}
@@ -45,13 +45,10 @@ function Linha({ item }: { item: MenuItem }) {
         className="mb-1.5 hidden h-px grow border-b border-dotted border-tinta/20 sm:block"
       />
 
-      <p className="shrink-0 whitespace-nowrap font-display text-lg text-vinho">
-        {item.preco === null ? (
-          <span className="text-sm italic text-tinta/45">sob consulta</span>
-        ) : (
-          preco(item.preco)
-        )}
-      </p>
+      <Preco
+        valor={item.preco}
+        className="shrink-0 text-[1.0625rem] text-vinho md:text-lg"
+      />
     </li>
   );
 }
@@ -62,7 +59,11 @@ export default function MenuClient() {
   const [busca, setBusca] = useState("");
   const [ativa, setAtiva] = useState(cardapio[0].slug);
   const raiz = useRef<HTMLDivElement>(null);
-
+  const trilho = useRef<HTMLDivElement>(null);
+  const indicador = useRef<HTMLSpanElement>(null);
+  // Aba clicada: vale no fim da página, onde a rolagem acaba antes de a
+  // categoria chegar à linha de leitura.
+  const preferida = useRef<{ slug: string; noFim: boolean } | null>(null);
   function alternarBadge(b: Badge) {
     setBadges((atual) =>
       atual.includes(b) ? atual.filter((x) => x !== b) : [...atual, b],
@@ -96,7 +97,113 @@ export default function MenuClient() {
   const filtrando =
     badges.length > 0 || faixa !== "todas" || busca.trim() !== "";
 
-  // Scroll-spy: a aba acompanha a categoria em cena.
+  /**
+   * Abas que acompanham a rolagem. A categoria ativa troca de uma vez — ou
+   * está marcada, ou não está —, e a troca é animada: a pílula vinho
+   * desliza até a nova aba e o trilho rola para mantê-la no centro. Antes a
+   * aba só mudava de cor, e no celular, a partir de "Carne bovina", a ativa
+   * já estava fora da tela.
+   */
+  useGSAP(
+    () => {
+      const no = raiz.current;
+      const t = trilho.current;
+      const pilula = indicador.current;
+      if (!no || !t || !pilula) return;
+
+      let inicios: number[] = [];
+      let atual = "";
+      const faixa = gsap.utils.clamp(0, 1);
+
+      const medir = () => {
+        inicios = filtrado.map((cat) => {
+          const el = document.getElementById(cat.slug);
+          return el ? el.getBoundingClientRect().top + window.scrollY : 0;
+        });
+      };
+
+      const posicionar = (slug: string, animar: boolean) => {
+        const aba = t.querySelector<HTMLElement>(`[data-aba="${slug}"]`);
+        if (!aba) return;
+        const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const duracao = animar && !reduzido ? 0.45 : 0;
+
+        gsap.to(pilula, {
+          x: aba.offsetLeft,
+          y: aba.offsetTop,
+          width: aba.offsetWidth,
+          height: aba.offsetHeight,
+          autoAlpha: 1,
+          duration: duracao,
+          ease: "power3.out",
+          overwrite: true,
+        });
+        gsap.to(t, {
+          scrollTo: {
+            x: Math.max(0, aba.offsetLeft - (t.clientWidth - aba.offsetWidth) / 2),
+            autoKill: true,
+          },
+          duration: duracao ? 0.55 : 0,
+          ease: "power3.out",
+          overwrite: true,
+        });
+      };
+
+      const atualizar = (animar = true) => {
+        if (!inicios.length) return;
+
+        // A "linha de leitura" fica a 30% da altura da tela e, na última
+        // tela de rolagem, desce até o pé — senão as últimas categorias,
+        // que nunca sobem até os 30%, jamais ficariam ativas.
+        const y = window.scrollY;
+        const vh = window.innerHeight;
+        const max = ScrollTrigger.maxScroll(window);
+        const fim = faixa((y - (max - vh)) / vh);
+        const linha = y + vh * (0.3 + 0.65 * fim);
+        let i = 0;
+        while (i < inicios.length - 1 && linha >= inicios[i + 1]) i++;
+
+        const pref = preferida.current;
+        if (pref) {
+          const iPref = filtrado.findIndex((c) => c.slug === pref.slug);
+          if (y >= max - 2 && iPref >= 0) {
+            pref.noFim = true;
+            i = iPref;
+          } else if (pref.noFim || (iPref === i && fim === 0)) {
+            // Saiu da base depois de chegar nela, ou alcançou a aba clicada
+            // longe do fim: a escolha já cumpriu seu papel.
+            preferida.current = null;
+          }
+        }
+
+        const slug = filtrado[i]?.slug;
+        if (!slug || slug === atual) return;
+        atual = slug;
+        setAtiva(slug);
+        posicionar(slug, animar);
+      };
+
+      medir();
+      atualizar(false);
+
+      const gatilho = ScrollTrigger.create({
+        trigger: no,
+        start: "top bottom",
+        end: "bottom top",
+        onUpdate: () => atualizar(),
+        onRefresh: () => {
+          medir();
+          if (atual) posicionar(atual, false);
+          atualizar(false);
+        },
+      });
+
+      return () => gatilho.kill();
+    },
+    { scope: raiz, dependencies: [filtrado], revertOnUpdate: true },
+  );
+
+  // As linhas entram em cascata quando a categoria aparece.
   useGSAP(
     () => {
       const no = raiz.current;
@@ -105,18 +212,6 @@ export default function MenuClient() {
       const mm = gsap.matchMedia();
 
       mm.add(CONDICOES, () => {
-        const gatilhos = filtrado.map((cat) =>
-          ScrollTrigger.create({
-            trigger: `#${cat.slug}`,
-            start: "top 30%",
-            end: "bottom 30%",
-            onToggle: (self) => {
-              if (self.isActive) setAtiva(cat.slug);
-            },
-          }),
-        );
-
-        // As linhas entram em cascata quando a categoria aparece.
         const lote = ScrollTrigger.batch("[data-linha]", {
           start: "top 94%",
           once: true,
@@ -136,10 +231,7 @@ export default function MenuClient() {
             ),
         });
 
-        return () => {
-          gatilhos.forEach((g) => g.kill());
-          lote.forEach((b) => b.kill());
-        };
+        return () => lote.forEach((b) => b.kill());
       });
 
       return () => mm.revert();
@@ -149,28 +241,40 @@ export default function MenuClient() {
 
   return (
     <div ref={raiz}>
-      {/* Abas grudadas abaixo do header, com indicador que segue a cena. */}
+      {/* Abas grudadas abaixo do header, no mesmo vidro dele (`.vidro`): as
+          duas barras leem como um painel só. */}
       {/* O `top` acompanha a altura que o header está realmente ocupando:
           quando ele se recolhe a variável vai a zero e as abas sobem junto,
           em vez de deixar um vão do tamanho do header. */}
-      <div className="sticky top-[var(--altura-header)] z-30 -mx-[1.375rem] border-y border-tinta/12 bg-creme/95 backdrop-blur-md transition-[top] duration-500 ease-[var(--ease-rizz)] md:-mx-12">
-        <div className="no-scrollbar flex gap-1 overflow-x-auto px-[1.375rem] py-3 md:px-12">
+      <div className="vidro sticky top-[var(--altura-header)] z-30 -mx-[1.375rem] border-b border-tinta/12 transition-[top] duration-[550ms] ease-[var(--ease-rizz)] md:-mx-12">
+        <div
+          ref={trilho}
+          className="no-scrollbar relative flex gap-1 overflow-x-auto px-[1.375rem] py-3 [mask-image:linear-gradient(to_right,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent)] md:px-12"
+        >
+          {/* Pílula única que desliza entre as abas (posicionada pelo GSAP). */}
+          <span
+            ref={indicador}
+            aria-hidden
+            className="invisible pointer-events-none absolute left-0 top-0 rounded-full bg-vinho opacity-0"
+          />
           {cardapio.map((cat) => {
             const atual = ativa === cat.slug;
             return (
               <a
                 key={cat.id}
+                data-aba={cat.slug}
                 href={`#${cat.slug}`}
                 onClick={(e) => {
                   e.preventDefault();
+                  preferida.current = { slug: cat.slug, noFim: false };
                   scrollToTarget(`#${cat.slug}`, 56);
                   window.history.replaceState(null, "", `#${cat.slug}`);
                 }}
                 aria-current={atual ? "true" : undefined}
-                className={`shrink-0 rounded-full px-4 py-2 text-[0.6875rem] uppercase tracking-[0.14em] transition-colors duration-300 ${
+                className={`relative shrink-0 rounded-full px-4 py-2 text-[0.6875rem] uppercase tracking-[0.14em] transition-colors duration-300 ${
                   atual
-                    ? "bg-vinho text-creme"
-                    : "text-tinta/60 hover:bg-tinta/6 hover:text-vinho"
+                    ? "text-creme"
+                    : "text-tinta/60 hover:text-vinho"
                 }`}
               >
                 {cat.nome}
