@@ -5,7 +5,8 @@ import { precoNumero } from "@/lib/format";
  * algarismos alinhados e de largura fixa. A Cormorant ficava fina demais em
  * tamanho pequeno, e os algarismos de estilo antigo dela sobem e descem.
  *
- * O tamanho vem de fora (`className`); o "R$" acompanha em proporção.
+ * O tamanho vem de fora (`className`); o "R$" acompanha em proporção, mas
+ * para em 18px — nos preços grandes ele pesava ao lado do valor.
  */
 export default function Preco({
   valor,
@@ -28,7 +29,7 @@ export default function Preco({
     <span
       className={`inline-flex items-baseline gap-[0.25em] whitespace-nowrap font-sans font-medium tabular-nums lining-nums tracking-[0.01em] ${className}`}
     >
-      <span className="text-[0.62em] font-normal tracking-[0.06em] opacity-60">
+      <span className="text-[min(0.62em,1.125rem)] font-normal tracking-[0.06em] opacity-60">
         R$
       </span>
       {numero}

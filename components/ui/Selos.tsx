@@ -15,7 +15,7 @@ export function SeloBadge({ badge }: { badge: Badge }) {
 
   return (
     <span
-      className={`inline-flex size-[1.0625rem] shrink-0 translate-y-[0.1em] items-center justify-center rounded-full text-[0.5rem] font-semibold leading-none ${estilo[badge]}`}
+      className={`inline-flex size-[1.0625rem] shrink-0 items-center justify-center rounded-full text-[0.5rem] font-semibold not-italic leading-none ${estilo[badge]}`}
       title={info.descricao}
     >
       {badge === "vegetariano" ? (
@@ -30,13 +30,91 @@ export function SeloBadge({ badge }: { badge: Badge }) {
   );
 }
 
-export function ListaSelos({ badges }: { badges?: Badge[] }) {
+const tons = {
+  claro: {
+    base: "border-tinta/15 text-tinta/75",
+    interativo: "hover:border-vinho/45 hover:text-vinho",
+    ativo: "border-vinho bg-vinho/[0.07] text-vinho",
+  },
+  escuro: {
+    base: "border-creme/20 text-creme/75",
+    interativo: "hover:border-ambar/60 hover:text-ambar",
+    ativo: "border-ambar text-ambar",
+  },
+} as const;
+
+/**
+ * Etiqueta legível: o disco da peça impressa + o nome por extenso. O disco
+ * sozinho ("T", "R") não dizia nada a quem não conhece a legenda.
+ *
+ * Com `onAlternar` vira botão de filtro — tocar na etiqueta de um prato
+ * mostra só os pratos com ela.
+ */
+export function EtiquetaBadge({
+  badge,
+  tom = "claro",
+  ativo = false,
+  onAlternar,
+}: {
+  badge: Badge;
+  tom?: keyof typeof tons;
+  ativo?: boolean;
+  onAlternar?: (b: Badge) => void;
+}) {
+  const info = BADGES[badge];
+  const t = tons[tom];
+  const classe = `inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full border pl-[3px] pr-2.5 font-sans text-[0.6875rem] font-normal not-italic leading-none tracking-[0.03em] transition-colors duration-300 ${
+    ativo ? t.ativo : t.base
+  }`;
+
+  if (!onAlternar) {
+    return (
+      <span className={classe} title={info.descricao}>
+        <SeloBadge badge={badge} />
+        {info.rotulo}
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onAlternar(badge)}
+      aria-pressed={ativo}
+      title={ativo ? `Mostrar todos os pratos` : `Ver só pratos: ${info.rotulo}`}
+      className={`${classe} ${t.interativo} cursor-pointer`}
+    >
+      <SeloBadge badge={badge} />
+      {info.rotulo}
+    </button>
+  );
+}
+
+export function ListaSelos({
+  badges,
+  tom = "claro",
+  ativos = [],
+  onAlternar,
+  className = "",
+}: {
+  badges?: Badge[];
+  tom?: keyof typeof tons;
+  ativos?: Badge[];
+  onAlternar?: (b: Badge) => void;
+  className?: string;
+}) {
   if (!badges?.length) return null;
 
   return (
-    <span className="inline-flex items-center gap-1 align-middle">
+    <span className={`inline-flex flex-wrap items-center gap-1.5 ${className}`}>
       {badges.map((b) => (
-        <SeloBadge key={b} badge={b} />
+        <EtiquetaBadge
+          key={b}
+          badge={b}
+          tom={tom}
+          ativo={ativos.includes(b)}
+          onAlternar={onAlternar}
+        />
       ))}
     </span>
   );
@@ -59,7 +137,7 @@ export function SeloOrigem({
   return (
     <span
       title={titulo}
-      className={`inline-flex h-[1.0625rem] shrink-0 translate-y-[0.1em] items-center rounded-full border border-vinho/45 px-1.5 text-[0.5rem] font-semibold tracking-[0.12em] text-vinho/85 ${className}`}
+      className={`inline-flex h-6 shrink-0 items-center rounded-full border border-vinho/45 px-2.5 font-sans text-[0.625rem] font-semibold not-italic leading-none tracking-[0.12em] text-vinho/85 ${className}`}
     >
       <span aria-hidden>{rotulo}</span>
       <span className="sr-only">{titulo}</span>

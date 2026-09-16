@@ -31,7 +31,9 @@
   /* Escala fluida — um só passo entre mobile e desktop */
   --text-hero: clamp(3.25rem, 13vw, 11rem);
   --text-display: clamp(2.75rem, 8vw, 6.5rem);
+  --text-display--line-height: 1.02;
   --text-titulo: clamp(2.25rem, 5.5vw, 4rem);
+  --text-titulo--line-height: 1.08;
   --text-subtitulo: clamp(1.5rem, 2.8vw, 2.25rem);
 
   /* Movimento */
@@ -114,12 +116,30 @@
      overflow hidden. Esta folga impede que o itálico encoste na borda:
      o invólucro da máscara cresce junto com o padding da linha. */
   .linha-split {
-    /* SEM margem negativa: ela encolhia o invólucro da máscara de volta, e o
-       padding acabava empurrando o texto para fora da área visível — foi o
-       que cortou os títulos na lateral. Só o padding faz o invólucro crescer.
-       A folga é à direita porque o itálico se inclina para esse lado. */
+    /* SEM margem negativa na linha: ela encolhia o invólucro da máscara de
+       volta, e o padding acabava empurrando o texto para fora da área
+       visível — foi o que cortou os títulos na lateral. Só o padding faz o
+       invólucro crescer. A folga lateral é à direita porque o itálico se
+       inclina para esse lado; em cima e embaixo ela guarda acentos e
+       descendentes. */
     padding-inline-end: 0.14em;
-    padding-block-end: 0.14em;
+    padding-block: 0.16em;
+  }
+
+  /* A folga de cima e de baixo não pode virar entrelinha: as máscaras
+     vizinhas se sobrepõem exatamente nessa folga (o negativo vai no
+     INVÓLUCRO, não na linha). Sem isso a linha de um título de 104px
+     ocupava 137px e "Mais de / 20 opções" ficava solto demais. */
+  .linha-split-mask + .linha-split-mask {
+    margin-block-start: -0.32em;
+  }
+
+  .linha-split-mask:first-child {
+    margin-block-start: -0.16em;
+  }
+
+  .linha-split-mask:last-child {
+    margin-block-end: -0.16em;
   }
 
   /* Os títulos de seção são em itálico — é o que dá o tom editorial da

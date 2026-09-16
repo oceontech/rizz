@@ -21,22 +21,34 @@ const faixas: {
 ];
 
 /** Linha do cardápio, no desenho da peça impressa: preço sem "R$". */
-function Linha({ item }: { item: MenuItem }) {
+function Linha({
+  item,
+  ativos,
+  onAlternar,
+}: {
+  item: MenuItem;
+  ativos: Badge[];
+  onAlternar: (b: Badge) => void;
+}) {
   return (
     <li
       data-linha
       className="flex items-baseline gap-3 border-b border-tinta/10 py-4 last:border-0"
     >
       <div className="min-w-0 grow">
-        <h3 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[1.0625rem] leading-snug text-vinho md:text-lg">
+        <h3 className="text-[1.0625rem] leading-snug text-vinho md:text-lg">
           {item.nome}
-          <ListaSelos badges={item.badges} />
-          {item.vpj && <SeloOrigem />}
         </h3>
         {item.descricao && (
           <p className="mt-1 text-[0.9375rem] italic leading-snug text-tinta/65">
             {item.descricao}
           </p>
+        )}
+        {(item.badges?.length || item.vpj) && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            <ListaSelos badges={item.badges} ativos={ativos} onAlternar={onAlternar} />
+            {item.vpj && <SeloOrigem />}
+          </div>
         )}
       </div>
 
@@ -68,6 +80,13 @@ export default function MenuClient() {
     setBadges((atual) =>
       atual.includes(b) ? atual.filter((x) => x !== b) : [...atual, b],
     );
+  }
+
+  // Filtro pela etiqueta de um prato: a lista muda embaixo do dedo, então
+  // leva até os filtros, onde se vê o que está ativo e quantos pratos sobraram.
+  function alternarPelaLinha(b: Badge) {
+    alternarBadge(b);
+    requestAnimationFrame(() => scrollToTarget("#filtros", 72));
   }
 
   const filtrado = useMemo(() => {
@@ -285,7 +304,7 @@ export default function MenuClient() {
       </div>
 
       {/* Filtros */}
-      <div className="mt-10 flex flex-col gap-5">
+      <div id="filtros" className="mt-10 flex flex-col gap-5">
         <label className="relative block max-w-xl">
           <span className="sr-only">Buscar no cardápio</span>
           <svg
@@ -419,7 +438,7 @@ export default function MenuClient() {
                           {cat.itens
                             .filter((it) => it.grupo === g)
                             .map((item) => (
-                              <Linha key={item.id} item={item} />
+                              <Linha key={item.id} item={item} ativos={badges} onAlternar={alternarPelaLinha} />
                             ))}
                         </ul>
                       </div>
@@ -428,7 +447,7 @@ export default function MenuClient() {
                 ) : (
                   <ul className="mt-2">
                     {cat.itens.map((item) => (
-                      <Linha key={item.id} item={item} />
+                      <Linha key={item.id} item={item} ativos={badges} onAlternar={alternarPelaLinha} />
                     ))}
                   </ul>
                 )}

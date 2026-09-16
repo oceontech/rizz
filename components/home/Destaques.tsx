@@ -149,17 +149,21 @@ export default function Destaques() {
 
                 <div className="mt-4 flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <h3 className="flex flex-wrap items-center gap-x-2 gap-y-1 font-display text-lg leading-snug text-creme transition-colors duration-300 group-hover:text-ambar">
+                    <h3 className="font-display text-lg leading-snug text-creme transition-colors duration-300 group-hover:text-ambar">
                       {item.nome}
-                      <ListaSelos badges={item.badges} />
-                      {item.vpj && (
-                        <SeloOrigem className="border-ouro/50 text-ouro" />
-                      )}
                     </h3>
                     {item.descricao && (
                       <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-creme/50">
                         {item.descricao}
                       </p>
+                    )}
+                    {(item.badges?.length || item.vpj) && (
+                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                        <ListaSelos badges={item.badges} tom="escuro" />
+                        {item.vpj && (
+                          <SeloOrigem className="border-ouro/50 text-ouro" />
+                        )}
+                      </div>
                     )}
                   </div>
 

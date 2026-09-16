@@ -42,10 +42,10 @@ function BlocoExecutivo() {
         </RevealScrub>
 
         <div className="mt-7 flex flex-wrap items-end gap-x-12 gap-y-4">
-          <p className="font-display text-[3rem] leading-none text-vinho md:text-[4rem]">
-            <span className="align-super text-base text-tinta/45">R$</span>{" "}
-            {preco(executivo.precoCompleto)}
-          </p>
+          <Preco
+            valor={executivo.precoCompleto}
+            className="text-[3rem] leading-none text-vinho md:text-[4rem]"
+          />
 
           <p className="max-w-sm text-sm italic text-tinta/70">
             {executivo.chamada}. Avulsos a partir de{" "}

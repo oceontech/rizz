@@ -9,8 +9,8 @@ import RevealScrub from "@/components/motion/RevealScrub";
 import SeloRotativo from "@/components/brand/SeloRotativo";
 import { BotaoLink } from "@/components/ui/Botao";
 import { ListaSelos } from "@/components/ui/Selos";
+import Preco from "@/components/ui/Preco";
 import { pratoAssinatura } from "@/data/menu";
-import { preco } from "@/lib/format";
 import { img } from "@/lib/images";
 
 /**
@@ -150,11 +150,11 @@ export default function PratoAssinatura({ entradaPeloVideo = false }: { entradaP
               {pratoAssinatura.texto}
             </p>
 
-            <div className="mt-10 flex flex-wrap items-end gap-5">
-              <p className="font-display text-6xl leading-none text-tinta md:text-7xl">
-                <span className="align-super text-lg text-tinta/60">R$</span>{" "}
-                {preco(pratoAssinatura.preco)}
-              </p>
+            <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <Preco
+                valor={pratoAssinatura.preco}
+                className="text-5xl leading-none text-tinta md:text-6xl"
+              />
               <ListaSelos badges={pratoAssinatura.badges} />
             </div>
 

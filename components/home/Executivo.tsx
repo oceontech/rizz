@@ -11,7 +11,6 @@ import BadgeExecutivo from "@/components/ui/BadgeExecutivo";
 import { BotaoLink } from "@/components/ui/Botao";
 import Preco from "@/components/ui/Preco";
 import { executivo } from "@/data/executivo";
-import { preco } from "@/lib/format";
 import { img } from "@/lib/images";
 
 /**
@@ -85,20 +84,29 @@ export default function Executivo() {
                 nada — o mesmo Red Angus, os mesmos risotos.
               </p>
 
-              <div className="mt-12 flex flex-wrap items-end gap-x-14 gap-y-8">
+              {/* Rótulos no topo, valores alinhados pela base: com `items-end`
+                  no grupo, o rótulo do valor menor descia e os dois ficavam
+                  desencontrados. */}
+              <div className="mt-12 flex flex-wrap gap-x-14 gap-y-8">
                 <div>
                   <p className="eyebrow text-tinta/50">Menu completo</p>
-                  <p className="mt-2 font-display text-[3.5rem] leading-none text-vinho md:text-[4.5rem]">
-                    <span className="align-super text-lg text-tinta/45">R$</span>{" "}
-                    {preco(executivo.precoCompleto)}
-                  </p>
+                  <div className="mt-3 flex h-14 items-end md:h-[4.25rem]">
+                    <Preco
+                      valor={executivo.precoCompleto}
+                      className="text-[3.25rem] leading-none text-vinho md:text-[4.25rem]"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <p className="eyebrow text-tinta/50">Pratos avulsos</p>
-                  <p className="mt-2 font-display text-[2rem] leading-none text-tinta">
-                    a partir de {preco(executivo.precoAvulsoMin)}
-                  </p>
+                  <div className="mt-3 flex h-14 items-end gap-2.5 md:h-[4.25rem]">
+                    <span className="pb-1 text-base text-tinta/70 md:pb-1.5">a partir de</span>
+                    <Preco
+                      valor={executivo.precoAvulsoMin}
+                      className="text-[2rem] leading-none text-tinta md:text-[2.5rem]"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -136,7 +144,7 @@ export default function Executivo() {
                   .filter((p) => p.img)
                   .slice(0, 3)
                   .map((prato) => (
-                    <figure key={prato.id} className="min-w-0">
+                    <figure key={prato.id} className="flex min-w-0 flex-col">
                       <Parallax className="aspect-[3/4]" forca={6}>
                         <Image
                           src={img(prato.img!)}
@@ -146,12 +154,13 @@ export default function Executivo() {
                           className="size-full object-cover"
                         />
                       </Parallax>
-                      <figcaption className="mt-3 text-[0.8125rem] leading-snug text-tinta/80 md:text-sm">
-                        {prato.nome}
-                        <Preco
-                          valor={prato.preco}
-                          className="mt-1.5 flex text-base text-vinho md:text-lg"
-                        />
+                      {/* Nome em cima, preço no pé: com nomes de 2 e 3 linhas,
+                          os preços ficam na mesma altura nos três cards. */}
+                      <figcaption className="mt-3 flex grow flex-col text-[0.8125rem] leading-snug text-tinta/80 md:text-sm">
+                        <span>{prato.nome}</span>
+                        <span className="mt-auto block pt-2">
+                          <Preco valor={prato.preco} className="text-base text-vinho md:text-lg" />
+                        </span>
                       </figcaption>
                     </figure>
                   ))}

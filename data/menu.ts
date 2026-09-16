@@ -30,7 +30,7 @@ export const BADGES: Record<
 > = {
   vegetariano: { sigla: "V", rotulo: "Vegetariano", descricao: "Opção Vegetariana" },
   rizz: { sigla: "R", rotulo: "Criação Rizz", descricao: "Criação Rizz" },
-  tartufato: { sigla: "T", rotulo: "Tartufato", descricao: "Tartufato" },
+  tartufato: { sigla: "T", rotulo: "Com trufas", descricao: "Tartufato — finalizado com trufas" },
 };
 
 /**
