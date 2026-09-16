@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "project": {
+    "name": "projeto-rizz",
+    "productType": null,
+    "stack": [
+      "nextjs",
+      "react",
+      "tailwind-v4"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "app/globals.css"
+    ],
+    "components": [
+      "components/ui"
+    ],
+    "assets": [
+      "assets"
+    ],
+    "instructions": [
+      "AGENTS.md",
+      "CLAUDE.md"
+    ]
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "--color-vinho": {
+        "value": "#70012a",
+        "source": "app/globals.css"
+      },
+      "--color-vinho-fundo": {
+        "value": "#4a0018",
+        "source": "app/globals.css"
+      },
+      "--color-ambar": {
+        "value": "#e8890c",
+        "source": "app/globals.css"
+      },
+      "--color-ouro": {
+        "value": "#c9a227",
+        "source": "app/globals.css"
+      },
+      "--color-ouro-claro": {
+        "value": "#e3c55f",
+        "source": "app/globals.css"
+      },
+      "--color-creme": {
+        "value": "#fdf1e5",
+        "source": "app/globals.css"
+      },
+      "--color-creme-2": {
+        "value": "#f6e7d6",
+        "source": "app/globals.css"
+      },
+      "--color-tinta": {
+        "value": "#3a1219",
+        "source": "app/globals.css"
+      },
+      "--color-noite": {
+        "value": "#2b0710",
+        "source": "app/globals.css"
+      },
+      "--color-noite-2": {
+        "value": "#3a0a16",
+        "source": "app/globals.css"
+      },
+      "--color-verde": {
+        "value": "#1f5c44",
+        "source": "app/globals.css"
+      }
+    },
+    "typography": {
+      "--font-display": {
+        "value": "var(--font-cormorant), \"Times New Roman\", Georgia, serif",
+        "source": "app/globals.css"
+      },
+      "--font-sans": {
+        "value": "var(--font-jost), ui-sans-serif, system-ui, sans-serif",
+        "source": "app/globals.css"
+      },
+      "--text-hero": {
+        "value": "clamp(3.25rem, 13vw, 11rem)",
+        "source": "app/globals.css"
+      },
+      "--text-display": {
+        "value": "clamp(2.75rem, 8vw, 6.5rem)",
+        "source": "app/globals.css"
+      },
+      "--text-titulo": {
+        "value": "clamp(2.25rem, 5.5vw, 4rem)",
+        "source": "app/globals.css"
+      },
+      "--text-subtitulo": {
+        "value": "clamp(1.5rem, 2.8vw, 2.25rem)",
+        "source": "app/globals.css"
+      }
+    },
+    "spacing": {
+      "--spacing-nav": {
+        "value": "4.5rem",
+        "source": "app/globals.css"
+      }
+    },
+    "radius": {},
+    "shadows": {},
+    "motion": {
+      "--ease-rizz": {
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "source": "app/globals.css"
+      }
+    },
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [
+      "BadgeExecutivo",
+      "Botao",
+      "Selos",
+      "StatusAbertura"
+    ],
+    "preferredPrimitives": [],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [],
+    "avoid": []
+  },
+  "decisions": [
+    "A introdução do camarão usa o vídeo vertical camarao-reveal.mp4 ligado ao scroll por GSAP/ScrollTrigger, em largura total no mobile e enquadramento completo no desktop, com fade inferior branco. Vídeo e PratoAssinatura ocupam camadas do mesmo palco fixo. Após o último quadro, aparece uma chamada centralizada: O mais pedido!, em serifada vinho, com o nome do prato abaixo em fonte menor de peso 300. A chamada tem entrada, pausa de leitura e saída antes da revelação animada da foto e do texto. O palco reserva o percurso de scroll e só é liberado depois da transição; movimento reduzido mostra o conteúdo diretamente."
+  ],
+  "evidence": [
+    {
+      "fact": "components.installed",
+      "source": "components/ui"
+    },
+    {
+      "fact": "design.colorMode:light",
+      "source": "app/globals.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "app/globals.css"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "AGENTS.md"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "CLAUDE.md"
+    },
+    {
+      "fact": "project.stack:nextjs",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-09-16T13:46:25.300Z"
+}

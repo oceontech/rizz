@@ -1,26 +1,255 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ───────────────────────────────────────────────────────────
+   Rizz Cucina & Vino — sistema de design
+   Cores amostradas dos arquivos de logo originais, não estimadas.
+   ─────────────────────────────────────────────────────────── */
+@theme {
+  /* Marca */
+  --color-vinho: #70012a; /* amostrado de logo-vinho.png */
+  --color-vinho-fundo: #4a0018;
+  --color-ambar: #e8890c; /* amostrado de logo-original.png */
+  --color-ouro: #c9a227;
+  --color-ouro-claro: #e3c55f;
+
+  /* Papel — a superfície principal do site */
+  --color-creme: #fdf1e5;
+  --color-creme-2: #f6e7d6;
+  --color-tinta: #3a1219;
+
+  /* Escuro */
+  --color-noite: #2b0710;
+  --color-noite-2: #3a0a16;
+
+  /* Apoio */
+  --color-verde: #1f5c44;
+
+  /* Tipografia */
+  --font-display: var(--font-cormorant), "Times New Roman", Georgia, serif;
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+
+  /* Escala fluida — um só passo entre mobile e desktop */
+  --text-hero: clamp(3.25rem, 13vw, 11rem);
+  --text-display: clamp(2.75rem, 8vw, 6.5rem);
+  --text-titulo: clamp(2.25rem, 5.5vw, 4rem);
+  --text-subtitulo: clamp(1.5rem, 2.8vw, 2.25rem);
+
+  /* Movimento */
+  --ease-rizz: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --spacing-nav: 4.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: light;
+    /* Lenis é o dono da rolagem — nunca smooth no CSS. */
+    scroll-behavior: auto;
+
+    /* Altura ocupada pelo header. O próprio Header zera isto quando se
+       recolhe, para que barras grudadas abaixo dele (as abas do cardápio)
+       subam junto em vez de deixar um vão. */
+    --altura-header: 4rem;
+    scroll-padding-top: calc(var(--altura-header) + 4rem);
+  }
+
+  @media (min-width: 860px) {
+    :root {
+      --altura-header: 6rem;
+    }
+  }
+
+  :root[data-header="oculto"] {
+    --altura-header: 0px;
+  }
+
+  html,
+  body {
+    background-color: var(--color-noite);
+  }
+
+  body {
+    color: var(--color-creme);
+    font-family: var(--font-sans);
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  @media (max-width: 859px) {
+    body {
+      padding-bottom: calc(
+        var(--spacing-nav) + env(safe-area-inset-bottom, 0px)
+      );
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    /* 1 era apertado demais: a Cormorant itálica tem descendentes fundas e
+       as letras avançam para fora da caixa. Com line-height 1 elas eram
+       cortadas — dentro da máscara do SplitText e em qualquer seção com
+       overflow hidden. */
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  /* Rótulos em caixa alta: a caixa de linha herdada dos títulos era curta
+     demais para a Jost e cortava 2px embaixo. Rótulo também lê melhor com
+     mais ar. */
+  .eyebrow {
+    line-height: 1.5;
+  }
+
+  /* Cada linha cortada pelo SplitText vive dentro de uma máscara com
+     overflow hidden. Esta folga impede que o itálico encoste na borda:
+     o invólucro da máscara cresce junto com o padding da linha. */
+  .linha-split {
+    /* SEM margem negativa: ela encolhia o invólucro da máscara de volta, e o
+       padding acabava empurrando o texto para fora da área visível — foi o
+       que cortou os títulos na lateral. Só o padding faz o invólucro crescer.
+       A folga é à direita porque o itálico se inclina para esse lado. */
+    padding-inline-end: 0.14em;
+    padding-block-end: 0.14em;
+  }
+
+  /* Os títulos de seção são em itálico — é o que dá o tom editorial da
+     Cormorant. Nomes de prato (h3) seguem em romano, para não virar um
+     bloco inteiro inclinado no cardápio. */
+  h1,
+  h2 {
+    font-style: italic;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ambar);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-ambar);
+    color: var(--color-noite);
+  }
+
+  img,
+  video {
+    max-width: 100%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .wrap {
+    width: 100%;
+    max-width: 82rem;
+    margin-inline: auto;
+    padding-inline: 1.375rem;
+  }
+
+  @media (min-width: 860px) {
+    .wrap {
+      padding-inline: 3rem;
+    }
+  }
+
+  /* Rótulo em caixa alta, bem tracked — a voz das peças impressas. */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  /* Bloco em papel: inverte para o creme do cardápio impresso. */
+  .on-creme {
+    background-color: var(--color-creme);
+    color: var(--color-tinta);
+  }
+}
+
+@layer utilities {
+  .text-shadow-cena {
+    text-shadow: 0 1px 28px rgb(43 7 16 / 0.85), 0 1px 4px rgb(43 7 16 / 0.6);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .parallax-janela {
+    overflow: hidden;
+  }
+
+  .parallax-camada {
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+/* Resgate da cortina de abertura.
+   O preloader é renderizado no servidor, então ele chega ao navegador como
+   uma camada opaca sobre tudo. Se o JavaScript não rodar — erro, extensão,
+   bundle velho em cache — nada o removeria, e o site ficaria preso atrás
+   dele. Este resgate é puro CSS, funciona sem JS nenhum. Quando o JS está
+   vivo, ele remove `data-cortina` e assume o controle da saída. */
+@keyframes cortina-resgate {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+[data-cortina] {
+  animation: cortina-resgate 0.5s ease 4s forwards;
+}
+
+/* Movimentos ambientes — contínuos, sem relação com a rolagem. */
+@keyframes correr {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes girar {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
