@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Scripts de sondagem/investigação, fora do código da aplicação. São
+    // CommonJS por conveniência e não devem ser medidos pelas regras do app.
+    ".firecrawl/**",
   ]),
 ]);
 

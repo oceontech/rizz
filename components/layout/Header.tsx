@@ -142,12 +142,23 @@ export default function Header() {
           })}
         </nav>
 
+        {/*
+          Visível em toda largura, de propósito: reservar é a conversão da
+          marca e no celular este é o único acesso no topo (o flutuante só
+          entra depois da primeira dobra).
+
+          Aqui havia `className="hidden md:inline-flex"`, que nunca funcionou:
+          o `base` do Botao.tsx já traz `inline-flex`, e o Tailwind emite
+          `.inline-flex` DEPOIS de `.hidden`, então o `hidden` perdia a
+          disputa pela mesma propriedade. A classe foi removida em vez de
+          "consertada" porque o que ela pedia contraria o comportamento
+          desejado — o botão deve mesmo aparecer no celular.
+        */}
         <BotaoLink
           href={whatsappLink(
             `Olá! Gostaria de reservar uma mesa no ${site.nome}.`,
           )}
           variante="contorno"
-          className="hidden md:inline-flex"
         >
           Reservar
         </BotaoLink>

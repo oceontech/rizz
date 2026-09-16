@@ -13,6 +13,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import FloatingCta from "@/components/layout/FloatingCta";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
+import { resumoAvaliacoes } from "@/data/reviews";
 import { openingHoursSpecification } from "@/lib/hours";
 import { site } from "@/lib/site";
 
@@ -73,8 +74,10 @@ export const viewport: Viewport = {
 /**
  * Dados estruturados do restaurante.
  *
- * `aggregateRating` está propositalmente fora: os depoimentos ainda são
- * placeholder, e publicar nota agregada inventada é desinformação na busca.
+ * O `aggregateRating` só entrou depois que os números passaram a ser reais
+ * (perfil do Google, conferido em set/2026). Enquanto eram placeholder ele
+ * ficou de fora de propósito: nota agregada inventada vira desinformação nos
+ * resultados de busca.
  */
 const dadosEstruturados = {
   "@context": "https://schema.org",
@@ -82,9 +85,9 @@ const dadosEstruturados = {
   name: site.nome,
   description: site.descricao,
   url: site.url,
-  telephone: site.telefone,
+  telephone: site.telefoneLink,
   servesCuisine: ["Italiana", "Contemporânea"],
-  priceRange: "$$$",
+  priceRange: site.faixaPreco,
   acceptsReservations: true,
   hasMenu: `${site.url}/cardapio`,
   address: {
@@ -95,7 +98,19 @@ const dadosEstruturados = {
     postalCode: site.endereco.cep,
     addressCountry: "BR",
   },
-  sameAs: [site.redes.instagram],
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: site.coordenadas.lat,
+    longitude: site.coordenadas.lng,
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: resumoAvaliacoes.media,
+    reviewCount: resumoAvaliacoes.total,
+    bestRating: 5,
+    worstRating: 1,
+  },
+  sameAs: [site.redes.instagram, site.redes.facebook],
   openingHoursSpecification: openingHoursSpecification(),
 };
 

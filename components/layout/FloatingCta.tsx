@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useRef } from "react";
 
 import { CONDICOES, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
@@ -9,11 +10,23 @@ import { site, whatsappLink } from "@/lib/site";
  * Quarto acesso persistente, fora das três abas.
  *
  * As abas cobrem navegação; a conversão precisa de alvo próprio, senão
- * disputa espaço com o menu e perde. Entra depois do hero para não competir
- * com os CTAs da primeira dobra.
+ * disputa espaço com o menu e perde.
+ *
+ * Entra depois da primeira dobra para não competir com os CTAs que já estão
+ * na tela — e isso vale em TODAS as páginas, não só na home.
+ *
+ * Tentei soltá-lo de imediato fora da home, partindo da ideia de que o topo
+ * do cardápio no celular ficava sem ação de reserva. Era falso: o RESERVAR do
+ * header aparece sim abaixo de 768px (ver Header.tsx). O resultado foi um
+ * segundo botão redundante que ainda cobria o campo de busca do cardápio em
+ * telas de 640px de altura. Revertido.
+ *
+ * Em /reservas não aparece: a página inteira já é o pedido de mesa.
  */
 export default function FloatingCta() {
   const raiz = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const naReservas = pathname.startsWith("/reservas");
 
   useGSAP(
     () => {
@@ -24,15 +37,27 @@ export default function FloatingCta() {
 
       const mm = gsap.matchMedia();
 
-      mm.add(CONDICOES, () => {
+      mm.add(CONDICOES, (contexto) => {
+        const parado = contexto.conditions?.parado;
+
         const gatilho = ScrollTrigger.create({
           start: "top -75%",
           end: "max",
           onToggle: (self) => {
+            const visivel = self.isActive;
+            const estado = {
+              autoAlpha: visivel ? 1 : 0,
+              scale: visivel ? 1 : 0.8,
+              y: visivel ? 0 : 10,
+            };
+
+            if (parado) {
+              gsap.set(no, estado);
+              return;
+            }
+
             gsap.to(no, {
-              autoAlpha: self.isActive ? 1 : 0,
-              scale: self.isActive ? 1 : 0.8,
-              y: self.isActive ? 0 : 10,
+              ...estado,
               duration: 0.45,
               ease: "back.out(1.5)",
               overwrite: true,
@@ -47,6 +72,8 @@ export default function FloatingCta() {
     },
     { scope: raiz },
   );
+
+  if (naReservas) return null;
 
   return (
     <div
