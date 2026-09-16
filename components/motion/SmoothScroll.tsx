@@ -7,8 +7,9 @@ import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { setLenis } from "@/lib/scroll";
 
 /**
- * Lenis é o dono da rolagem em todos os aparelhos — só fica de fora para
- * quem pediu menos movimento.
+ * Lenis é o dono da rolagem só no desktop com ponteiro fino. No toque a
+ * rolagem é 100% nativa: a inércia do próprio sistema é a que o usuário
+ * conhece, e o `syncTouch` do Lenis deixava o celular pesado e travado.
  *
  * Usa `lerp` (e não `duration`) de propósito. Com `duration`, cada giro da
  * roda empurra o alvo para frente e a página corre atrás dele com a mesma
@@ -16,14 +17,12 @@ import { setLenis } from "@/lib/scroll";
  * trilho de pratos) o usuário gira muito, o alvo dispara, e quando a cena
  * solta a página "ganha energia". Com `lerp` a aproximação é proporcional
  * e a inércia acaba junto com o gesto.
- *
- * No touch, `syncTouch` troca a inércia nativa pela do Lenis, com expoente
- * mais baixo que o padrão (1.7) pelo mesmo motivo: um peteleco dentro de
- * uma cena presa não pode virar um arremesso quando ela libera.
  */
 export default function SmoothScroll() {
   useEffect(() => {
-    const querSuavidade = window.matchMedia("(prefers-reduced-motion: no-preference)");
+    const querSuavidade = window.matchMedia(
+      "(min-width: 1024px) and (pointer: fine) and (prefers-reduced-motion: no-preference)",
+    );
 
     let lenis: Lenis | null = null;
     let ticker: ((tempo: number) => void) | null = null;
@@ -35,12 +34,6 @@ export default function SmoothScroll() {
         lerp: 0.1,
         wheelMultiplier: 0.9,
         smoothWheel: true,
-        syncTouch: true,
-        syncTouchLerp: 0.09,
-        touchInertiaExponent: 1.35,
-        touchMultiplier: 1,
-        // Trilhos com overflow-x (cards de pratos) seguem arrastáveis de lado.
-        allowNestedScroll: true,
       });
 
       // O resto do sistema só LÊ a posição — quem avisa é o Lenis.

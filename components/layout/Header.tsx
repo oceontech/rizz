@@ -67,12 +67,23 @@ export default function Header() {
         }
 
         let oculto = false;
+        let ultimo = window.scrollY;
 
+        /**
+         * Direção pela diferença real de posição, com folga de alguns pixels.
+         * O `self.direction` do ScrollTrigger oscila no toque (inércia, barra
+         * de endereço recolhendo) e o header ficava parado ou piscando.
+         */
         const esconde = ScrollTrigger.create({
-          start: "top -200",
+          start: 0,
           end: "max",
           onUpdate: (self) => {
-            const deveOcultar = self.direction === 1 && self.scroll() > 320;
+            const y = self.scroll();
+            const delta = y - ultimo;
+            if (Math.abs(delta) < 6) return;
+            ultimo = y;
+
+            const deveOcultar = delta > 0 && y > 120;
             if (deveOcultar === oculto) return;
 
             oculto = deveOcultar;
@@ -80,8 +91,8 @@ export default function Header() {
 
             gsap.to(no, {
               yPercent: oculto ? -120 : 0,
-              duration: 0.5,
-              ease: "power3.out",
+              duration: oculto ? 0.35 : 0.5,
+              ease: oculto ? "power2.in" : "power3.out",
               overwrite: true,
             });
           },
