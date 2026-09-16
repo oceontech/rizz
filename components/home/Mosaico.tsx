@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 import Filete from "@/components/motion/Filete";
@@ -25,6 +25,35 @@ import { site } from "@/lib/site";
  */
 export default function Mosaico() {
   const raiz = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  /**
+   * `autoPlay` ANULA `preload="none"`: para começar a tocar, o navegador tem
+   * de buscar a mídia. Medido na carga inicial da home — 990 KB de vídeo mais
+   * 183 KB de pôster baixavam antes de qualquer rolagem, para uma seção que
+   * fica lá no fim. Agora fonte e pôster só são atribuídos na aproximação,
+   * como o IntroCamarao já fazia.
+   */
+  useEffect(() => {
+    const no = raiz.current;
+    const video = videoRef.current;
+    if (!no || !video) return;
+
+    const observador = new IntersectionObserver(
+      ([entrada]) => {
+        if (!entrada.isIntersecting) return;
+        video.poster = "/videos/mosaico-poster.jpg";
+        video.src = "/videos/mosaico.mp4";
+        video.load();
+        void video.play().catch(() => {});
+        observador.disconnect();
+      },
+      { rootMargin: "600px 0px" },
+    );
+
+    observador.observe(no);
+    return () => observador.disconnect();
+  }, []);
 
   useGSAP(
     () => {
@@ -153,10 +182,8 @@ export default function Mosaico() {
         >
           <div data-filme className="size-full will-change-transform">
             <video
+              ref={videoRef}
               className="size-full object-cover"
-              src="/videos/mosaico.mp4"
-              poster="/videos/mosaico-poster.jpg"
-              autoPlay
               muted
               loop
               playsInline

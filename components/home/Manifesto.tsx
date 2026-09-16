@@ -4,31 +4,34 @@ import Image from "next/image";
 import { useRef } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
-import { img, type ImgKey } from "@/lib/images";
+import risoto from "@/assets/img/manifesto/risoto-v2.webp";
+import angus from "@/assets/img/manifesto/angus-v2.webp";
+import ingredientes from "@/assets/img/manifesto/ingredientes-v2.webp";
+import type { StaticImageData } from "next/image";
 
 const frases: {
   destaque: string;
   texto: string;
-  img: ImgKey;
+  img: StaticImageData;
   alt: string;
 }[] = [
   {
     destaque: "Arroz carnaroli",
     texto: "acertado no ponto na hora, nunca antes. Risoto não espera.",
-    img: "textura-acafrao",
-    alt: "Grãos de arroz carnaroli crus ao lado de fios de açafrão, vistos de cima sobre papel creme",
+    img: risoto,
+    alt: "Risoto cremoso de carnaroli com fios de açafrão em prato de porcelana",
   },
   {
     destaque: "Red Angus e Duroc",
     texto: "de origem certificada pelo selo VPJ, rastreados do campo ao prato.",
-    img: "ancho-acafrao-trufado",
-    alt: "Ancho Red Angus grelhado ao lado de risoto de açafrão trufado em prato azul",
+    img: angus,
+    alt: "Ancho grelhado com duas fatias em prato de porcelana branca",
   },
   {
     destaque: "Trufa, alho negro, açafrão",
     texto: "em combinações que são nossas — e que você não acha em outro lugar.",
-    img: "textura-trufa",
-    alt: "Trufa negra inteira e lâminas finas sobre prato bordô, à luz de vela",
+    img: ingredientes,
+    alt: "Trufa negra com uma lâmina fina, dois dentes de alho negro e fios de açafrão",
   },
 ];
 
@@ -138,7 +141,7 @@ export default function Manifesto() {
             {frases.map((f) => (
               <div
                 key={f.destaque}
-                className="grid items-center gap-7 [grid-area:1/1] motion-reduce:[grid-area:auto] md:grid-cols-[1.25fr_1fr] md:gap-20"
+                className="grid min-w-0 items-center gap-5 [grid-area:1/1] motion-reduce:[grid-area:auto] md:grid-cols-[1fr_1.3fr] md:gap-8"
               >
                 <p
                   data-frase
@@ -150,14 +153,13 @@ export default function Manifesto() {
 
                 <div
                   data-foto
-                  className="aspect-[16/10] max-h-[30svh] overflow-hidden motion-reduce:max-h-none md:aspect-[4/5] md:max-h-[56svh]"
+                  className="relative isolate aspect-[3/2] max-h-[40svh] w-full min-w-0 motion-reduce:max-h-none md:aspect-[6/5] md:max-h-[62svh]"
                 >
                   <Image
-                    src={img(f.img)}
+                    src={f.img}
                     alt={f.alt}
-                    placeholder="blur"
-                    sizes="(min-width: 860px) 38vw, 92vw"
-                    className="size-full object-cover"
+                    unoptimized
+                    className="size-full object-contain drop-shadow-[0_0_32px_rgba(129,21,48,0.55)] md:drop-shadow-[0_0_56px_rgba(129,21,48,0.55)]"
                   />
                 </div>
               </div>

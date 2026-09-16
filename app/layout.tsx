@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Jost } from "next/font/google";
 
+import "lenis/dist/lenis.css";
 import "./globals.css";
 
 import { BootProvider } from "@/components/motion/Boot";

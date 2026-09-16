@@ -56,15 +56,31 @@ export default function IntroCamarao({ children }: { children: ReactNode }) {
         video.addEventListener("loadeddata", sincronizar);
         video.addEventListener("seeked", sincronizar);
 
+        /**
+         * Distância da trava medida pelo que cada fase precisa, não "quanto
+         * maior melhor". Antes eram 3,5 telas (mín. 2400px) e só ~36% disso
+         * era vídeo: o resto era a chamada parada e o prato entrando com a
+         * cena ainda presa — o usuário rolava sem ver nada mudar e achava
+         * que tinha travado.
+         *
+         * Linha do tempo (unidades):
+         *   0    → 1     vídeo
+         *   0.86 → 1.08  chamada entra
+         *   1.08 → 1.30  chamada fica (respiro curto)
+         *   1.30 → 1.50  chamada sai, prato entra
+         *   ~1.66        solta
+         */
         const timeline = gsap.timeline({
           scrollTrigger: {
             trigger: no,
             start: "top top",
-            end: () => `+=${Math.max(2400, document.documentElement.clientHeight * 3.5)}`,
+            end: () => `+=${Math.round(Math.max(1500, document.documentElement.clientHeight * 2.4))}`,
             pin: cena,
             pinSpacing: true,
             anticipatePin: 1,
-            scrub: 0.8,
+            // Scrub curto: com atraso longo a animação ainda está correndo
+            // quando a trava solta, e a página parece dar um tranco.
+            scrub: 0.4,
             invalidateOnRefresh: true,
           },
         });
@@ -77,31 +93,39 @@ export default function IntroCamarao({ children }: { children: ReactNode }) {
         });
         // A chamada começa nos instantes finais do vídeo, antes da passagem branca.
         timeline
-          .to(camada, { autoAlpha: 0, duration: 0.24, ease: "power1.inOut" }, 0.88)
-          .to(chamada, { autoAlpha: 1, duration: 0.24, ease: "power1.inOut" }, 0.88)
+          .to(camada, { autoAlpha: 0, duration: 0.2, ease: "power1.inOut" }, 0.86)
+          .to(chamada, { autoAlpha: 1, duration: 0.2, ease: "power1.inOut" }, 0.86)
           .fromTo(
             textos,
             { y: 24, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.35, stagger: 0.08, ease: "power2.out" },
-            0.88,
+            { y: 0, opacity: 1, duration: 0.2, stagger: 0.03, ease: "power2.out" },
+            0.86,
           )
-          .to(textos, { y: -24, opacity: 0, duration: 0.28, stagger: 0.04, ease: "power2.in" }, 1.95)
-          .to(chamada, { autoAlpha: 0, duration: 0.35, ease: "power1.inOut" }, 1.99)
-          .to(conteudo, { autoAlpha: 1, duration: 0.5, ease: "power1.inOut" }, 1.99)
+          .to(textos, { y: -24, opacity: 0, duration: 0.16, stagger: 0.03, ease: "power2.in" }, 1.3)
+          .to(chamada, { autoAlpha: 0, duration: 0.18, ease: "power1.inOut" }, 1.34)
+          .to(conteudo, { autoAlpha: 1, duration: 0.2, ease: "power1.inOut" }, 1.34)
           .fromTo(
             entradas,
             { y: 36, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.55, stagger: 0.12, ease: "power2.out" },
-            1.99,
+            { y: 0, opacity: 1, duration: 0.22, stagger: 0.06, ease: "power2.out" },
+            1.36,
           )
-          .to({}, { duration: 0.12 });
+          .to({}, { duration: 0.02 });
 
         // Carrega a mídia ao se aproximar, sem competir com o vídeo do hero.
         const observador = new IntersectionObserver(
           ([entrada]) => {
             if (!entrada.isIntersecting) return;
             video.preload = "auto";
-            video.src = "/videos/camarao-reveal.mp4";
+            // Retrato no celular, landscape no desktop: o mesmo clipe em 24fps
+            // e 5,04s nos dois, então a matemática do seek não muda.
+            const largo = window.matchMedia("(min-width: 768px)").matches;
+            video.src = largo
+              ? "/videos/camarao-reveal-desktop.mp4"
+              : "/videos/camarao-reveal.mp4";
+            video.poster = largo
+              ? "/videos/camarao-reveal-desktop-poster.jpg"
+              : "/videos/camarao-reveal-poster.jpg";
             video.load();
             observador.disconnect();
           },
@@ -130,12 +154,14 @@ export default function IntroCamarao({ children }: { children: ReactNode }) {
         <div ref={conteudoRef} data-camarao-conteudo>{children}</div>
         <div ref={camadaRef} data-camarao-video aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 hidden bg-white">
           <div className="relative h-[100svh] w-full overflow-hidden">
+            {/*
+              `object-cover` nos dois: no desktop o arquivo é 16:9 e deve
+              preencher a tela. Sem `width`/`height` fixos — eles travavam a
+              proporção em 9:16, errada para a fonte landscape.
+            */}
             <video
               ref={videoRef}
-              className="block size-full object-cover md:object-contain"
-              poster="/videos/camarao-reveal-poster.jpg"
-              width={720}
-              height={1280}
+              className="block size-full object-cover"
               muted
               playsInline
               preload="none"

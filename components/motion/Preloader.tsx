@@ -4,30 +4,23 @@ import { useRef } from "react";
 
 import { gsap, useGSAP } from "@/lib/gsap";
 import { useBoot } from "@/components/motion/Boot";
-import Logo from "@/components/brand/Logo";
-
-const CHAVE_SESSAO = "rizz:visto";
+import LogoSvg from "@/components/brand/LogoSvg";
 
 /** Prazo máximo que a cortina pode segurar a página, aconteça o que acontecer. */
-const RESGATE_MS = 3500;
+const RESGATE_MS = 5000;
 
 /**
- * Cortina de abertura. Aparece uma vez por sessão.
+ * Cortina de abertura. Toca a cada carregamento completo da página — ela
+ * vive no layout raiz, então navegar pelo menu não a repete.
  *
  * ⚠️ O markup é SEMPRE o mesmo no servidor e no cliente — de propósito.
  *
- * A versão anterior lia `sessionStorage` dentro de um `useState` e devolvia
- * `null` quando a sessão já tinha sido vista. Isso produz saídas diferentes
- * no servidor (sempre `false`) e no cliente (`true`), ou seja, incompatibi-
- * lidade de hidratação: o React não removia o nó vindo do servidor, e quem
- * voltava ao site ficava encarando a cortina até o resgate em CSS, 4s depois.
- *
- * Agora a decisão é tomada só no efeito: se a sessão já foi vista, a cortina
- * é apagada no primeiro quadro, sem nunca travar a rolagem.
+ * Houve uma regra de "uma vez por sessão" (via `sessionStorage`). Ela fazia
+ * quem recarregava ver só um clarão vinho sem logo, e foi retirada.
  *
  * Quatro saídas, da mais externa para a mais interna:
  *   1. `data-cortina` + animação CSS — funciona mesmo sem JS algum;
- *   2. sessão já vista ou movimento reduzido — some no primeiro quadro;
+ *   2. movimento reduzido — a logo só acende e a cortina se dissolve;
  *   3. alvo ausente ou erro ao montar a timeline — desiste e libera;
  *   4. temporizador de resgate, caso a animação não termine.
  */
@@ -42,14 +35,6 @@ export default function Preloader() {
       // O JS está vivo: ele assume a saída e dispensa o resgate do CSS.
       no?.removeAttribute("data-cortina");
 
-      let jaViu = false;
-      try {
-        jaViu = sessionStorage.getItem(CHAVE_SESSAO) === "1";
-        sessionStorage.setItem(CHAVE_SESSAO, "1");
-      } catch {
-        // Modo privado: segue sem memória de sessão.
-      }
-
       let solto = false;
       const soltar = () => {
         if (solto) return;
@@ -62,19 +47,40 @@ export default function Preloader() {
         "(prefers-reduced-motion: reduce)",
       ).matches;
 
-      if (jaViu || !no || semMovimento) {
-        if (no) gsap.set(no, { autoAlpha: 0, pointerEvents: "none" });
+      if (!no) {
         soltar();
         return;
       }
 
-      const marca = no.querySelector("[data-marca]");
-      const filete = no.querySelector("[data-filete]");
-      const conteudo = no.querySelector("[data-conteudo]");
-      const folhas = no.querySelectorAll("[data-folha]");
+      if (semMovimento) {
+        // Sem deslocamento nenhum: a assinatura só acende e a cortina se
+        // dissolve. Pular a cortina deixava um clarão vinho sem logo.
+        document.documentElement.style.overflow = "hidden";
+        const marcaParada = no.querySelector("[data-marca]");
+        const tlParada = gsap.timeline({
+          onComplete: () => {
+            gsap.set(no, { autoAlpha: 0, pointerEvents: "none" });
+            soltar();
+          },
+        });
+        if (marcaParada) {
+          tlParada.fromTo(marcaParada, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "none" });
+        }
+        tlParada.to(no, { autoAlpha: 0, duration: 0.4, ease: "none" }, "+=0.6");
+        return () => {
+          tlParada.kill();
+          document.documentElement.style.overflow = "";
+        };
+      }
+
+      const marca = no.querySelector<SVGSVGElement>("[data-marca]");
+      const pano = no.querySelector<HTMLElement>("[data-pano]");
+      const letras = marca?.querySelectorAll("[data-logo-letra]");
+      const garfo = marca?.querySelector<SVGGElement>("[data-logo-garfo]");
+      const sub = marca?.querySelectorAll("[data-logo-sub-letra]");
 
       // Faltando qualquer peça, não vale prender a página por um enfeite.
-      if (!marca || !filete || !conteudo || !folhas.length) {
+      if (!marca || !pano || !letras?.length || !garfo || !sub?.length) {
         gsap.set(no, { autoAlpha: 0, pointerEvents: "none" });
         soltar();
         return;
@@ -95,22 +101,64 @@ export default function Preloader() {
           },
         });
 
+        /**
+         * O garfo é uma lança.
+         *
+         * O nome se monta sem ele — R, Z, Z e o "CUCINA & VINO". Aí o garfo
+         * despenca do topo da tela, acelerando, e crava no lugar do "i". O
+         * impacto sacode a assinatura, e a cortina inteira (fundo e logo)
+         * cai junto, revelando o hero.
+         */
+        gsap.set(marca, { opacity: 1 });
+
+        // Distância até o topo da tela, em unidades do viewBox: o `y` de um
+        // <g> dentro do SVG é medido nelas, não em pixels.
+        const queda = () => {
+          const caixa = marca.getBoundingClientRect();
+          const unidadesPorPx = marca.viewBox.baseVal.width / caixa.width;
+          return -(caixa.bottom + 40) * unidadesPorPx;
+        };
+
+        const impacto = 1.75;
+
         tl.fromTo(
-          marca,
-          { opacity: 0, y: 18, x: 0, filter: "blur(16px)" },
-          { opacity: 1, y: 0, x: 0, filter: "blur(0px)", duration: 1.1 },
+          letras,
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.9, ease: "power3.out", stagger: 0.09 },
         )
           .fromTo(
-            filete,
-            { scaleX: 0 },
-            { scaleX: 1, duration: 0.9, ease: "power2.inOut" },
-            "-=0.5",
+            sub,
+            { opacity: 0, y: 5 },
+            { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.035 },
+            0.45,
           )
-          .to(conteudo, { opacity: 0, duration: 0.45, ease: "power2.in" })
-          .to(
-            folhas,
-            { scaleY: 0, duration: 1, ease: "expo.inOut", stagger: 0.08 },
-            "-=0.1",
+          // A queda: acelera o tempo todo e chega esticada, como algo pesado.
+          .fromTo(
+            garfo,
+            { y: queda, scaleY: 1.18, transformOrigin: "50% 100%" },
+            { y: 0, scaleY: 1, duration: 0.5, ease: "power3.in" },
+            impacto - 0.5,
+          )
+          // O baque: a assinatura afunda um tico e volta; as letras achatam.
+          .fromTo(
+            marca,
+            { y: 0 },
+            { y: 7, duration: 0.07, ease: "power2.out", yoyo: true, repeat: 1 },
+            impacto,
+          )
+          .fromTo(
+            letras,
+            { scaleY: 1, transformOrigin: "50% 100%" },
+            { scaleY: 0.94, duration: 0.07, ease: "power2.out", yoyo: true, repeat: 1 },
+            impacto,
+          )
+          // Com o golpe, a cortina despenca e o hero começa a entrar.
+          .call(soltar, undefined, impacto + 0.2)
+          .fromTo(
+            pano,
+            { yPercent: 0 },
+            { yPercent: 100, duration: 0.95, ease: "power3.in" },
+            impacto + 0.2,
           );
       } catch {
         window.clearTimeout(resgate);
@@ -133,28 +181,16 @@ export default function Preloader() {
       aria-hidden
       className="pointer-events-none fixed inset-0 z-[100]"
     >
-      {/* Duas folhas que recolhem para cima, escalonadas. */}
-      <div className="absolute inset-0 grid grid-cols-2">
-        <div data-folha className="origin-top bg-noite" />
-        <div data-folha className="origin-top bg-noite" />
-      </div>
-
-      <div
-        data-conteudo
-        className="absolute inset-0 flex flex-col items-center justify-center gap-6 px-6"
-      >
-        <Logo
-          data-marca
-          variante="branca"
-          decorativo
-          priority
-          sizes="(min-width: 860px) 320px, 55vw"
-          className="h-auto w-[min(55vw,20rem)]"
-        />
-        <span
-          data-filete
-          className="block h-px w-40 origin-center bg-ouro sm:w-56"
-        />
+      {/* Fundo e logo num pano só: é ele que despenca no fim. */}
+      <div data-pano className="absolute inset-0 bg-noite will-change-transform">
+        <div className="absolute inset-0 flex items-center justify-center px-6">
+          {/* Começa apagada: quem a acende é a timeline. Sem JS, a cortina
+              sai sozinha pelo resgate em CSS. */}
+          <LogoSvg
+            data-marca
+            className="h-auto w-[min(38vw,11rem)] overflow-visible text-white opacity-0"
+          />
+        </div>
       </div>
     </div>
   );

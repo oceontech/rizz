@@ -1,0 +1,16 @@
+# Manifesto imagery - revision 2
+
+Generated with the built-in image_gen tool. WebP conversion preserves alpha. The website adds a lighter burgundy drop-shadow, matching the background hue.
+
+## risoto-v2.webp
+
+Photograph of real food for a restrained contemporary Italian restaurant, not an illustration. A single shallow matte off-white porcelain bowl of freshly cooked carnaroli risotto, pale ivory rice with a very subtle natural saffron tint, loose flowing all'onda consistency spread flat, individual small irregular rice grains partially submerged in creamy emulsion, only three fine saffron threads as garnish. No piled mound, no cheese shavings, no herbs, no props. Shot on medium format camera with a 80mm lens, soft large window illumination, neutral white balance, quiet highlights, gentle microcontrast, natural imperfections and photographic tonal transitions. Avoid exaggerated texture, sharpened edges, yellow saturation, plastic gloss, CGI food, embossed-looking grains. Entire bowl viewed obliquely 45 degrees above, centered, fills 94 percent of image width, compact composition, landscape 3:2. Fully transparent alpha background around bowl, no environment, no cast shadow, no baked glow, no text. Real understated fine dining editorial photography.
+
+## angus-v2.webp
+
+Minimalist real restaurant food photography. One small matte warm-white porcelain dinner plate holding ONLY a grilled Angus steak, one portion with two thick slices gently separated, softly pink medium interior and authentic uneven brown sear, no grill stripes, no sides, no rice, no herbs, no garnish, no sauce decorations. Restrained premium Italian restaurant presentation. Soft window daylight from left, neutral white balance, low contrast, subtle natural moist highlights, fine actual meat fibers rather than exaggerated crunchy texture. Real-camera editorial photograph, 80mm lens, not CGI, not hyperreal render, no oversharpening, no orange cast, no exaggerated gloss. Oblique 45 degree top view, whole plate fully visible centered filling 94 percent of width, landscape 3:2 frame. Genuinely transparent alpha background, no table, no environment, no baked shadow or halo. No text.
+
+## ingredientes-v2.webp
+
+Minimalist photographic still life for an understated premium restaurant. Exactly one small whole real black winter truffle with one thin truffle slice leaning against it, two peeled fermented black garlic cloves beside it, and a tiny restrained pinch of saffron threads. Just these natural ingredients, closely grouped, no garlic bulb, no spoon, no plate, no props, no scattered decoration. Authentic naturally irregular subtle truffle rind, delicate marbling on thin slice, softly wrinkled garlic skin, fine fine saffron filaments. Soft diffuse window lighting, neutral natural color, restrained contrast, no oversharpening, no exaggerated bumpy texture, no plastic specular highlights, not CGI, not illustration. Shot on a real medium format camera with 80mm lens at 40 degree angle, photographic depth and subtle organic imperfections. Group occupies 90 percent width in a landscape 3:2 composition, fully visible, balanced quiet spacing. Genuinely transparent alpha background with no surface or environment and no baked glow or shadow, no text.
+

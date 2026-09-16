@@ -1,6 +1,7 @@
 import AvaliacoesResumo from "@/components/home/AvaliacoesResumo";
 import Destaques from "@/components/home/Destaques";
 import Executivo from "@/components/home/Executivo";
+import Galeria from "@/components/home/Galeria";
 import Hero from "@/components/home/Hero";
 import IntroCamarao from "@/components/home/IntroCamarao";
 import Manifesto from "@/components/home/Manifesto";
@@ -13,6 +14,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <Galeria />
       <Marquee />
       <Manifesto />
       <IntroCamarao>

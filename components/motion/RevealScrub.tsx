@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, type ElementType, type ReactNode } from "react";
+import {
+  useRef,
+  type ComponentType,
+  type ElementType,
+  type ReactNode,
+  type Ref,
+} from "react";
 
 import { CONDICOES, gsap, SplitText, useGSAP } from "@/lib/gsap";
 
@@ -75,9 +81,17 @@ export default function RevealScrub({
     { scope: raiz },
   );
 
+  /** Mesmo motivo do Reveal: ver a nota lá sobre a ampliação de JSX do R3F. */
+  const Componente = Tag as ComponentType<{
+    ref?: Ref<HTMLElement>;
+    className?: string;
+    id?: string;
+    children?: ReactNode;
+  }>;
+
   return (
-    <Tag ref={raiz} className={className} id={id}>
+    <Componente ref={raiz} className={className} id={id}>
       {children}
-    </Tag>
+    </Componente>
   );
 }

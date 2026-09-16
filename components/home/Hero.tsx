@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 import { useBoot } from "@/components/motion/Boot";
 import Logo from "@/components/brand/Logo";
+import HeroFundo from "@/components/home/HeroFundo";
 import { BotaoLink } from "@/components/ui/Botao";
 import IndicadorAbertura from "@/components/ui/StatusAbertura";
 import { site, whatsappLink } from "@/lib/site";
@@ -91,18 +92,9 @@ export default function Hero() {
     <div ref={raiz} className="relative h-[190svh]">
       <section className="sticky top-0 flex h-[100svh] min-h-[34rem] items-end overflow-hidden">
         <div className="absolute inset-0 -z-10">
+          {/* Fotos com zoom no desktop, vídeo no celular — ver HeroFundo. */}
           <div data-cena className="size-full will-change-transform">
-            <video
-              className="size-full object-cover"
-              src="/videos/hero.mp4"
-              poster="/videos/hero-poster.jpg"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              aria-hidden
-            />
+            <HeroFundo />
           </div>
 
           {/* Véu de contraste: sólido onde o texto vive, limpo lá em cima. */}

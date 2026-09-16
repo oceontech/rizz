@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, type ElementType, type ReactNode } from "react";
+import {
+  useRef,
+  type ComponentType,
+  type ElementType,
+  type ReactNode,
+  type Ref,
+} from "react";
 
 import { gsap, useGSAP } from "@/lib/gsap";
 
@@ -82,9 +88,23 @@ export default function Reveal({
     { scope: raiz },
   );
 
+  /**
+   * O `@react-three/fiber` amplia `JSX.IntrinsicElements` com os elementos do
+   * three. Isso faz o union de `ElementType` passar a incluir props de
+   * `mesh`, `planeGeometry` etc., e o TypeScript colapsa a interseção para
+   * `never` — `ref`, `className` e `children` passam a ser rejeitados aqui.
+   * O elenco abaixo estreita para as três props que este componente usa.
+   */
+  const Componente = Tag as ComponentType<{
+    ref?: Ref<HTMLElement>;
+    className?: string;
+    id?: string;
+    children?: ReactNode;
+  }>;
+
   return (
-    <Tag ref={raiz} className={className} id={id}>
+    <Componente ref={raiz} className={className} id={id}>
       {children}
-    </Tag>
+    </Componente>
   );
 }

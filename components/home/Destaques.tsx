@@ -119,7 +119,7 @@ export default function Destaques() {
 
         <ul
           data-trilho
-          className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 md:mt-10 md:gap-7 md:overflow-visible md:px-12"
+          className="no-scrollbar mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 md:mt-10 md:gap-7 md:overflow-visible md:px-12"
         >
           {destaquesHome.map((item, i) => (
             <li

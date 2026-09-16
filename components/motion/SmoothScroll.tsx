@@ -7,17 +7,23 @@ import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { setLenis } from "@/lib/scroll";
 
 /**
- * Lenis é o dono da rolagem — e só no desktop com ponteiro fino.
+ * Lenis é o dono da rolagem em todos os aparelhos — só fica de fora para
+ * quem pediu menos movimento.
  *
- * Em touch a rolagem fica 100% nativa: o site é mobile-first e as cenas são
- * medidas em svh/lvh, então interceptar o scroll no celular só criaria briga
- * com a barra de endereço que recolhe.
+ * Usa `lerp` (e não `duration`) de propósito. Com `duration`, cada giro da
+ * roda empurra o alvo para frente e a página corre atrás dele com a mesma
+ * curva, não importa a distância: nas cenas presas (vídeo do camarão,
+ * trilho de pratos) o usuário gira muito, o alvo dispara, e quando a cena
+ * solta a página "ganha energia". Com `lerp` a aproximação é proporcional
+ * e a inércia acaba junto com o gesto.
+ *
+ * No touch, `syncTouch` troca a inércia nativa pela do Lenis, com expoente
+ * mais baixo que o padrão (1.7) pelo mesmo motivo: um peteleco dentro de
+ * uma cena presa não pode virar um arremesso quando ela libera.
  */
 export default function SmoothScroll() {
   useEffect(() => {
-    const querSuavidade = window.matchMedia(
-      "(min-width: 1024px) and (pointer: fine) and (prefers-reduced-motion: no-preference)",
-    );
+    const querSuavidade = window.matchMedia("(prefers-reduced-motion: no-preference)");
 
     let lenis: Lenis | null = null;
     let ticker: ((tempo: number) => void) | null = null;
@@ -26,10 +32,15 @@ export default function SmoothScroll() {
       if (lenis) return;
 
       lenis = new Lenis({
-        duration: 1.05,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        wheelMultiplier: 1,
-        touchMultiplier: 1.6,
+        lerp: 0.1,
+        wheelMultiplier: 0.9,
+        smoothWheel: true,
+        syncTouch: true,
+        syncTouchLerp: 0.09,
+        touchInertiaExponent: 1.35,
+        touchMultiplier: 1,
+        // Trilhos com overflow-x (cards de pratos) seguem arrastáveis de lado.
+        allowNestedScroll: true,
       });
 
       // O resto do sistema só LÊ a posição — quem avisa é o Lenis.
