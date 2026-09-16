@@ -6,7 +6,6 @@ import "./globals.css";
 
 import { BootProvider } from "@/components/motion/Boot";
 import Preloader from "@/components/motion/Preloader";
-import ScrollProgress from "@/components/motion/ScrollProgress";
 import ScrollRefresh from "@/components/motion/ScrollRefresh";
 import SmoothAnchors from "@/components/motion/SmoothAnchors";
 import SmoothScroll from "@/components/motion/SmoothScroll";
@@ -126,7 +125,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <SmoothScroll />
           <ScrollRefresh />
           <SmoothAnchors />
-          <ScrollProgress />
           <Preloader />
 
           <a

@@ -52,7 +52,8 @@
        recolhe, para que barras grudadas abaixo dele (as abas do cardápio)
        subam junto em vez de deixar um vão. */
     /* Soma o entalhe do iPhone: o header também o soma (`pt-safe`). */
-    --altura-header: calc(4rem + env(safe-area-inset-top, 0px));
+    --altura-header-cheia: calc(4rem + env(safe-area-inset-top, 0px));
+    --altura-header: var(--altura-header-cheia);
     scroll-padding-top: calc(var(--altura-header) + 4rem);
   }
 
@@ -60,7 +61,8 @@
      768 e 859px o header já tinha 6rem e as abas ficavam atrás dele. */
   @media (min-width: 48rem) {
     :root {
-      --altura-header: calc(6rem + env(safe-area-inset-top, 0px));
+      --altura-header-cheia: calc(6rem + env(safe-area-inset-top, 0px));
+      --altura-header: var(--altura-header-cheia);
     }
   }
 
@@ -176,13 +178,18 @@
      (MenuClient), que sobem pela mesma marca `data-header`: os dois andam
      colados, sem vão nem sobreposição no meio do movimento. */
   .header-fixo {
+    top: 0;
     transition:
-      transform 0.55s var(--ease-rizz),
+      top 0.55s var(--ease-rizz),
       background-color 0.7s ease;
   }
 
+  /* Sobe mexendo em `top`, não em `transform`: no Safari um elemento com
+     `backdrop-filter` que se move por transform desenha "fantasmas"
+     desfocados do próprio conteúdo (o brilho que piscava em volta da logo e
+     do botão). As abas do cardápio também andam por `top`, no mesmo ritmo. */
   :root[data-header="oculto"] .header-fixo {
-    transform: translate3d(0, -100%, 0);
+    top: calc(-1 * var(--altura-header-cheia) - 2px);
   }
 
   /* Vidro do cardápio. Header e abas usam exatamente o mesmo vidro e formam
@@ -192,19 +199,31 @@
      mas o Chromium calcula errado a área dele com escala de tela fracionada
      (125% no Windows) e deixava a faixa de baixo do header sem efeito. */
   .vidro {
-    background-color: rgb(253 241 229 / 0.6);
-    -webkit-backdrop-filter: blur(12px) saturate(140%);
-    backdrop-filter: blur(12px) saturate(140%);
+    /* Véu denso e sem saturação: com véu fino (60%) e saturate, o texto
+       vinho dos pratos atravessava desfocado e virava manchas rosadas
+       embaixo da logo e do botão. Fica só um leve toque de vidro. */
+    background-color: rgb(253 241 229 / 0.9);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
   }
 
   /* Divisa entre o header e as abas do cardápio: fio dourado que some nas
      pontas, com um losango vazado no centro. */
+  /* Só aparece com o header visível E as abas grudadas logo abaixo dele
+     (`data-abas-presas`, marcado pelo MenuClient). O fio cresce do centro
+     para as pontas e o losango gira para o lugar. */
   .divisa-ornada {
     position: absolute;
     inset-inline: 0;
     bottom: 0;
     height: 1px;
     pointer-events: none;
+  }
+
+  .divisa-ornada::before {
+    content: "";
+    position: absolute;
+    inset: 0;
     background: linear-gradient(
       to right,
       transparent,
@@ -212,6 +231,11 @@
       rgb(201 162 39 / 0.75) 70%,
       transparent
     );
+    opacity: 0;
+    transform: scaleX(0.15);
+    transition:
+      opacity 0.4s ease,
+      transform 0.65s var(--ease-rizz);
   }
 
   .divisa-ornada::after {
@@ -223,7 +247,22 @@
     height: 7px;
     border: 1px solid rgb(201 162 39 / 0.9);
     background: var(--color-creme);
-    transform: translate(-50%, -50%) rotate(45deg);
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-45deg) scale(0.3);
+    transition:
+      opacity 0.35s ease,
+      transform 0.6s var(--ease-rizz);
+  }
+
+  :root[data-abas-presas="1"]:not([data-header="oculto"]) .divisa-ornada::before {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  :root[data-abas-presas="1"]:not([data-header="oculto"]) .divisa-ornada::after {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(45deg) scale(1);
+    transition-delay: 0.12s;
   }
 
   .wrap {

@@ -65,16 +65,20 @@ export default function IntroCamarao({ children }: { children: ReactNode }) {
          *
          * Linha do tempo (unidades):
          *   0    → 1     vídeo
-         *   0.86 → 1.08  chamada entra
-         *   1.08 → 1.30  chamada fica (respiro curto)
-         *   1.30 → 1.50  chamada sai, prato entra
-         *   ~1.66        solta
+         *   0.86 → 1.10  chamada entra
+         *   1.10 → 1.20  chamada fica (respiro curto)
+         *   1.20 → 1.60  textos saem subindo e desfocando, um de cada vez
+         *   1.42 → 1.66  fundo branco da chamada some
+         *   1.50 → 2.24  o prato entra devagar: foto, depois o texto
+         *   ~2.28        solta
+         *
+         * A saída era de 0,16 unidade — num gesto normal, um corte seco.
          */
         const timeline = gsap.timeline({
           scrollTrigger: {
             trigger: no,
             start: "top top",
-            end: () => `+=${Math.round(Math.max(1500, document.documentElement.clientHeight * 2.4))}`,
+            end: () => `+=${Math.round(Math.max(1500, document.documentElement.clientHeight * 3))}`,
             pin: cena,
             pinSpacing: true,
             anticipatePin: 1,
@@ -97,20 +101,38 @@ export default function IntroCamarao({ children }: { children: ReactNode }) {
           .to(chamada, { autoAlpha: 1, duration: 0.2, ease: "power1.inOut" }, 0.86)
           .fromTo(
             textos,
-            { y: 24, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.2, stagger: 0.03, ease: "power2.out" },
+            { y: 24, opacity: 0, filter: "blur(6px)" },
+            {
+              y: 0,
+              opacity: 1,
+              filter: "blur(0px)",
+              duration: 0.22,
+              stagger: 0.04,
+              ease: "power2.out",
+            },
             0.86,
           )
-          .to(textos, { y: -24, opacity: 0, duration: 0.16, stagger: 0.03, ease: "power2.in" }, 1.3)
-          .to(chamada, { autoAlpha: 0, duration: 0.18, ease: "power1.inOut" }, 1.34)
-          .to(conteudo, { autoAlpha: 1, duration: 0.2, ease: "power1.inOut" }, 1.34)
+          .to(
+            textos,
+            {
+              y: -30,
+              opacity: 0,
+              filter: "blur(8px)",
+              duration: 0.34,
+              stagger: 0.07,
+              ease: "power2.inOut",
+            },
+            1.2,
+          )
+          .to(chamada, { autoAlpha: 0, duration: 0.24, ease: "power1.inOut" }, 1.42)
+          .to(conteudo, { autoAlpha: 1, duration: 0.45, ease: "power1.inOut" }, 1.5)
           .fromTo(
             entradas,
-            { y: 36, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.22, stagger: 0.06, ease: "power2.out" },
-            1.36,
+            { y: 56, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.5, stagger: 0.14, ease: "power3.out" },
+            1.6,
           )
-          .to({}, { duration: 0.02 });
+          .to({}, { duration: 0.04 });
 
         // Carrega a mídia ao se aproximar, sem competir com o vídeo do hero.
         const observador = new IntersectionObserver(
@@ -119,12 +141,18 @@ export default function IntroCamarao({ children }: { children: ReactNode }) {
             video.preload = "auto";
             // Retrato no celular, landscape no desktop: o mesmo clipe em 24fps
             // e 5,04s nos dois, então a matemática do seek não muda.
+            // Os dois arquivos são all-intra (todo quadro é quadro-chave):
+            // cada seek decodifica um quadro só. O desktop antigo tinha 2
+            // quadros-chave em 121 e cada seek levava ~250ms — era o que
+            // travava a rolagem. Agora ~8ms.
             const largo = window.matchMedia("(min-width: 768px)").matches;
+            // `?v=2`: arquivo trocado com o mesmo nome — sem isso o
+            // navegador seguia usando o vídeo antigo do cache.
             video.src = largo
-              ? "/videos/camarao-reveal-desktop.mp4"
+              ? "/videos/camarao-reveal-desktop.mp4?v=2"
               : "/videos/camarao-reveal.mp4";
             video.poster = largo
-              ? "/videos/camarao-reveal-desktop-poster.jpg"
+              ? "/videos/camarao-reveal-desktop-poster.jpg?v=2"
               : "/videos/camarao-reveal-poster.jpg";
             video.load();
             observador.disconnect();

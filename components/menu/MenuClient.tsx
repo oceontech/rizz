@@ -30,37 +30,41 @@ function Linha({
   ativos: Badge[];
   onAlternar: (b: Badge) => void;
 }) {
+  const temEtiquetas = Boolean(item.badges?.length || item.vpj);
+
   return (
-    <li
-      data-linha
-      className="flex items-baseline gap-3 border-b border-tinta/10 py-4 last:border-0"
-    >
-      <div className="min-w-0 grow">
-        <h3 className="text-[1.0625rem] leading-snug text-vinho md:text-lg">
-          {item.nome}
-        </h3>
-        {item.descricao && (
-          <p className="mt-1 text-[0.9375rem] italic leading-snug text-tinta/65">
-            {item.descricao}
-          </p>
-        )}
-        {(item.badges?.length || item.vpj) && (
-          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            <ListaSelos badges={item.badges} ativos={ativos} onAlternar={onAlternar} />
-            {item.vpj && <SeloOrigem />}
-          </div>
-        )}
+    <li data-linha className="border-b border-tinta/10 py-4 last:border-0">
+      <div className="flex items-baseline gap-3">
+        <div className="min-w-0 grow">
+          <h3 className="text-[1.0625rem] leading-snug text-vinho md:text-lg">
+            {item.nome}
+          </h3>
+          {item.descricao && (
+            <p className="mt-1 text-[0.9375rem] italic leading-snug text-tinta/65">
+              {item.descricao}
+            </p>
+          )}
+        </div>
+
+        <span
+          aria-hidden
+          className="mb-1.5 hidden h-px grow border-b border-dotted border-tinta/20 sm:block"
+        />
+
+        <Preco
+          valor={item.preco}
+          className="shrink-0 text-[1.0625rem] text-vinho md:text-lg"
+        />
       </div>
 
-      <span
-        aria-hidden
-        className="mb-1.5 hidden h-px grow border-b border-dotted border-tinta/20 sm:block"
-      />
-
-      <Preco
-        valor={item.preco}
-        className="shrink-0 text-[1.0625rem] text-vinho md:text-lg"
-      />
+      {/* Fora da coluna do nome: com a largura da linha inteira as
+          etiquetas cabem lado a lado mesmo no celular. */}
+      {temEtiquetas && (
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <ListaSelos badges={item.badges} ativos={ativos} onAlternar={onAlternar} />
+          {item.vpj && <SeloOrigem />}
+        </div>
+      )}
     </li>
   );
 }
@@ -202,14 +206,33 @@ export default function MenuClient() {
         posicionar(slug, animar);
       };
 
+      /**
+       * Abas "presas" = grudadas logo abaixo do header. Só nesse estado a
+       * divisa dourada do header faz sentido (ver `.divisa-ornada`).
+       */
+      const barra = t.parentElement;
+      const raizDoc = document.documentElement;
+      const marcarPresa = () => {
+        if (!barra) return;
+        const presa =
+          barra.getBoundingClientRect().top <=
+          parseFloat(getComputedStyle(barra).top) + 1;
+        if (presa) raizDoc.dataset.abasPresas = "1";
+        else delete raizDoc.dataset.abasPresas;
+      };
+
       medir();
       atualizar(false);
+      marcarPresa();
 
       const gatilho = ScrollTrigger.create({
         trigger: no,
         start: "top bottom",
         end: "bottom top",
-        onUpdate: () => atualizar(),
+        onUpdate: () => {
+          atualizar();
+          marcarPresa();
+        },
         onRefresh: () => {
           medir();
           if (atual) posicionar(atual, false);
@@ -217,7 +240,10 @@ export default function MenuClient() {
         },
       });
 
-      return () => gatilho.kill();
+      return () => {
+        gatilho.kill();
+        delete raizDoc.dataset.abasPresas;
+      };
     },
     { scope: raiz, dependencies: [filtrado], revertOnUpdate: true },
   );

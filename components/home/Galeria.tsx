@@ -193,6 +193,8 @@ export default function Galeria() {
       ref={raiz}
       aria-label="O salão e os pratos do Rizz"
       className="relative h-[250svh] bg-noite"
+      // Sobe 1px: cobre qualquer resto de subpixel na emenda com o hero.
+      style={{ marginTop: -1 }}
     >
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         {/* Salão: em tela cheia, recortado pela janela central. */}

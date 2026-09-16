@@ -120,8 +120,8 @@ export default function PratoAssinatura({ entradaPeloVideo = false }: { entradaP
             </div>
 
             <SeloRotativo
-              texto="O MAIS PEDIDO · CRIAÇÃO RIZZ · "
-              className="absolute -right-5 -top-7 size-28 text-vinho md:-right-10 md:-top-10 md:size-36"
+              texto="O MAIS PEDIDO · CRIAÇÃO RIZZ ·"
+              className="absolute -right-4 -top-6 size-28 md:-right-8 md:-top-9 md:size-36"
             />
           </div>
 

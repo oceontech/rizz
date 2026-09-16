@@ -140,7 +140,7 @@ export default function Header() {
     <header
       ref={raiz}
       data-modo={modo}
-      className={`header-fixo pt-safe fixed inset-x-0 top-0 z-50 ${fundoPorModo[modo]}`}
+      className={`header-fixo pt-safe fixed inset-x-0 z-50 ${fundoPorModo[modo]}`}
     >
       <div className="wrap flex h-16 items-center justify-between gap-4 md:h-24">
         <Link
