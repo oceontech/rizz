@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useBoot } from "@/components/motion/Boot";
 import type { Promocao } from "@/lib/dados";
@@ -78,6 +78,10 @@ export default function PopupPromocional({ promocoes }: { promocoes: PromoSite[]
   const { pronto } = useBoot();
   const [atual, setAtual] = useState<PromoSite | null>(null);
   const [visivel, setVisivel] = useState(false);
+  // Fechar é uma decisão do visitante. Mantemos os IDs dispensados enquanto
+  // o layout estiver montado para que a limpeza do estado visual não dispare
+  // o mesmo pop-up novamente.
+  const [dispensadas, setDispensadas] = useState<Set<number>>(() => new Set());
   const caixa = useRef<HTMLDivElement>(null);
   const foco = useRef<Element | null>(null);
 
@@ -89,7 +93,7 @@ export default function PopupPromocional({ promocoes }: { promocoes: PromoSite[]
         valePara(p.paginas, pathname) &&
         (!p.inicio || p.inicio <= hoje) &&
         (!p.fim || p.fim >= hoje) &&
-        !jaVisto(p),
+        !jaVisto(p) && !dispensadas.has(p.id),
     );
     if (!escolhida) return;
 
@@ -102,7 +106,7 @@ export default function PopupPromocional({ promocoes }: { promocoes: PromoSite[]
     }, Math.max(1, escolhida.atrasoSeg) * 1000);
 
     return () => clearTimeout(t);
-  }, [pronto, pathname, promocoes, atual]);
+  }, [pronto, pathname, promocoes, atual, dispensadas]);
 
   useEffect(() => {
     if (!visivel) return;
@@ -110,15 +114,24 @@ export default function PopupPromocional({ promocoes }: { promocoes: PromoSite[]
     const tecla = (e: KeyboardEvent) => e.key === "Escape" && fechar();
     window.addEventListener("keydown", tecla);
     return () => window.removeEventListener("keydown", tecla);
+  // `fechar` is declared below so it can use the current promotion.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visivel]);
 
-  function fechar() {
+  const fechar = useCallback(() => {
+    if (atual) {
+      setDispensadas((anteriores) => {
+        const proxima = new Set(anteriores);
+        proxima.add(atual.id);
+        return proxima;
+      });
+    }
     setVisivel(false);
     setTimeout(() => {
       setAtual(null);
       if (foco.current instanceof HTMLElement) foco.current.focus();
     }, 350);
-  }
+  }, [atual]);
 
   if (!atual) return null;
 
