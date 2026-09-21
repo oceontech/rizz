@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { useBoot } from "@/components/motion/Boot";
 import type { Promocao } from "@/lib/dados";
@@ -68,9 +68,10 @@ function registrar(id: number, tipo: "view" | "click") {
 }
 
 /**
- * Pop-up promocional configurado no painel. Um por vez: o mais recente que
- * vale para a página atual, dentro do período e ainda não visto conforme a
- * frequência. Entra depois do atraso configurado e nunca durante o preloader.
+ * Pop-up promocional configurado no painel. No máximo UM por visita: o mais
+ * recente que vale para a página atual, dentro do período e ainda não visto
+ * conforme a frequência. Entra depois do atraso configurado e nunca durante o
+ * preloader.
  */
 export default function PopupPromocional({ promocoes }: { promocoes: PromoSite[] }) {
   const pathname = usePathname();
@@ -78,27 +79,39 @@ export default function PopupPromocional({ promocoes }: { promocoes: PromoSite[]
   const { pronto } = useBoot();
   const [atual, setAtual] = useState<PromoSite | null>(null);
   const [visivel, setVisivel] = useState(false);
-  // Fechar é uma decisão do visitante. Mantemos os IDs dispensados enquanto
-  // o layout estiver montado para que a limpeza do estado visual não dispare
-  // o mesmo pop-up novamente.
-  const [dispensadas, setDispensadas] = useState<Set<number>>(() => new Set());
+  /**
+   * Já houve pop-up nesta visita. Vive no layout, que não desmonta entre
+   * páginas, então só zera ao recarregar. Sem isto, limpar `atual` ao fechar
+   * reagendava o mesmo pop-up ("Toda visita" não grava nada no storage) ou
+   * abria o próximo da fila logo em seguida.
+   */
+  const [exibido, setExibido] = useState(false);
   const caixa = useRef<HTMLDivElement>(null);
   const foco = useRef<Element | null>(null);
 
+  function fechar() {
+    setVisivel(false);
+    setTimeout(() => {
+      setAtual(null);
+      if (foco.current instanceof HTMLElement) foco.current.focus();
+    }, 350);
+  }
+
   useEffect(() => {
-    if (!pronto || !promocoes.length || atual) return;
+    if (!pronto || !promocoes.length || exibido) return;
     const hoje = hojeSP();
     const escolhida = promocoes.find(
       (p) =>
         valePara(p.paginas, pathname) &&
         (!p.inicio || p.inicio <= hoje) &&
         (!p.fim || p.fim >= hoje) &&
-        !jaVisto(p) && !dispensadas.has(p.id),
+        !jaVisto(p),
     );
     if (!escolhida) return;
 
     const t = setTimeout(() => {
       foco.current = document.activeElement;
+      setExibido(true);
       setAtual(escolhida);
       requestAnimationFrame(() => setVisivel(true));
       marcarVisto(escolhida);
@@ -106,32 +119,23 @@ export default function PopupPromocional({ promocoes }: { promocoes: PromoSite[]
     }, Math.max(1, escolhida.atrasoSeg) * 1000);
 
     return () => clearTimeout(t);
-  }, [pronto, pathname, promocoes, atual, dispensadas]);
+  }, [pronto, pathname, promocoes, exibido]);
+
+  // Foco no diálogo só ao abrir.
+  useEffect(() => {
+    if (visivel) caixa.current?.focus();
+  }, [visivel]);
+
+  const aoTeclar = useEffectEvent((e: KeyboardEvent) => {
+    if (e.key === "Escape") fechar();
+  });
 
   useEffect(() => {
     if (!visivel) return;
-    caixa.current?.focus();
-    const tecla = (e: KeyboardEvent) => e.key === "Escape" && fechar();
+    const tecla = (e: KeyboardEvent) => aoTeclar(e);
     window.addEventListener("keydown", tecla);
     return () => window.removeEventListener("keydown", tecla);
-  // `fechar` is declared below so it can use the current promotion.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visivel]);
-
-  const fechar = useCallback(() => {
-    if (atual) {
-      setDispensadas((anteriores) => {
-        const proxima = new Set(anteriores);
-        proxima.add(atual.id);
-        return proxima;
-      });
-    }
-    setVisivel(false);
-    setTimeout(() => {
-      setAtual(null);
-      if (foco.current instanceof HTMLElement) foco.current.focus();
-    }, 350);
-  }, [atual]);
 
   if (!atual) return null;
 
