@@ -16,10 +16,10 @@ export default function Visite() {
       <div className="wrap">
         <div className="grid gap-16 md:grid-cols-2 md:gap-20">
           <div>
-            <p className="eyebrow text-ambar">Visite</p>
+            <p className="eyebrow text-ambar">Planeje sua visita</p>
 
             <RevealScrub className="mt-6 text-titulo text-creme">
-              Onde e quando
+              Horários e endereço
             </RevealScrub>
 
             <Filete className="mt-8" />
@@ -66,7 +66,7 @@ export default function Visite() {
             <Parallax className="aspect-[4/5]" forca={10}>
               <Image
                 src={img("salao-claraboia")}
-                alt="Salão do Rizz visto de uma mesa: parede de tijolo aparente com a placa Rizz Cucina & Vino, claraboia, lustres de ferro e parede vermelha ao fundo"
+                alt="Uma mesa no salão do Rizz Cucina & Vino"
                 placeholder="blur"
                 sizes="(min-width: 860px) 45vw, 92vw"
                 className="size-full object-cover"
@@ -77,7 +77,7 @@ export default function Visite() {
               <div className="mt-8 aspect-[16/10] overflow-hidden border border-creme/10">
                 <iframe
                   src={site.mapaEmbed}
-                  title={`Mapa — ${site.nome}`}
+                  title={`Localização do ${site.nome}`}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   className="size-full border-0 grayscale-[0.5] contrast-[1.1]"
@@ -102,7 +102,7 @@ export default function Visite() {
                 </div>
 
                 <div>
-                  <dt className="eyebrow text-creme/40">Contato</dt>
+                  <dt className="eyebrow text-creme/40">Telefone e WhatsApp</dt>
                   <dd className="mt-2">
                     <a
                       href={`tel:${site.telefone.replace(/\s/g, "")}`}
@@ -123,7 +123,7 @@ export default function Visite() {
                   )}
                   tamanho="lg"
                 >
-                  Reservar no WhatsApp
+                  Reservar pelo WhatsApp
                 </BotaoLink>
                 <BotaoLink href={site.mapaLink} variante="contorno" tamanho="lg">
                   Como chegar

@@ -146,30 +146,29 @@ export default function Mosaico() {
           className="absolute inset-0 flex items-center motion-reduce:relative motion-reduce:inset-auto"
         >
           <div className="wrap">
-            <p className="eyebrow text-ambar">Por dentro</p>
+            <p className="eyebrow text-ambar">A casa</p>
 
             <h2 className="mt-6 max-w-2xl text-titulo text-creme">
-              Um pedaço de uma noite qualquer
+              Conheça o Rizz
             </h2>
 
             <Filete className="mt-8 w-full max-w-sm" />
 
             <p className="mt-8 max-w-prose leading-relaxed text-creme/70">
-              O salão de tijolo aparente sob a claraboia, a adega montada na
-              parede, o chopp puxado na hora e a cozinha em movimento. É mais
-              ou menos assim de terça a domingo.
+              Venha almoçar ou jantar com a gente. No Instagram, você acompanha
+              as novidades do restaurante.
             </p>
 
             <div className="mt-10 flex flex-wrap gap-3">
               <BotaoLink href="/reservas" tamanho="lg">
-                Reservar uma mesa
+                Reservar mesa
               </BotaoLink>
               <BotaoLink
                 href={site.redes.instagram}
                 variante="contorno"
                 tamanho="lg"
               >
-                Ver no Instagram
+                Acompanhar no Instagram
               </BotaoLink>
             </div>
           </div>

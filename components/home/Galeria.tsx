@@ -252,7 +252,7 @@ export default function Galeria() {
             {site.endereco.cidade} · {site.endereco.uf}
           </p>
           <p className="mx-auto mt-4 max-w-[20ch] font-display text-titulo italic leading-tight text-creme">
-            Cozinha italiana contemporânea.
+            Conheça a casa.
           </p>
         </div>
       </div>

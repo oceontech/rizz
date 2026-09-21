@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { executivo as executivoEstatico } from "@/data/executivo";
 import { executivoDisponivel } from "@/lib/hours";
 
 /**
@@ -9,7 +10,16 @@ import { executivoDisponivel } from "@/lib/hours";
  * Resolvido no cliente pelo mesmo motivo do indicador de abertura:
  * horário não sobrevive ao cache da página estática.
  */
-export default function BadgeExecutivo({ claro = true }: { claro?: boolean }) {
+type DadosBadge = { condicoesConfirmadas: boolean; dias: string; horario: string };
+
+export default function BadgeExecutivo({
+  claro = true,
+  executivo = executivoEstatico,
+}: {
+  claro?: boolean;
+  /** Vem do painel; sem ele, usa `data/executivo.ts`. */
+  executivo?: DadosBadge;
+}) {
   const [ativo, setAtivo] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -18,6 +28,8 @@ export default function BadgeExecutivo({ claro = true }: { claro?: boolean }) {
     const id = setInterval(atualizar, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  if (!executivo.condicoesConfirmadas) return null;
 
   if (ativo === null) return <span className="block h-7" aria-hidden />;
 
@@ -28,7 +40,7 @@ export default function BadgeExecutivo({ claro = true }: { claro?: boolean }) {
           claro ? "bg-tinta/8 text-tinta/55" : "bg-creme/10 text-creme/55"
         }`}
       >
-        Fora do horário
+        Executivo: {executivo.dias}, {executivo.horario}
       </span>
     );
   }
@@ -39,7 +51,7 @@ export default function BadgeExecutivo({ claro = true }: { claro?: boolean }) {
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-current opacity-70 motion-reduce:animate-none" />
         <span className="relative inline-flex size-1.5 rounded-full bg-current" />
       </span>
-      Servindo agora
+      Executivo disponível agora
     </span>
   );
 }

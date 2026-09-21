@@ -11,18 +11,18 @@ export const site = {
   nome: "Rizz Cucina & Vino",
   nomeCurto: "Rizz",
   descricao:
-    "Cozinha italiana contemporânea em Espírito Santo do Pinhal: risotos, massas, Red Angus e criações autorais da casa.",
-  tagline: "Criações e releituras",
+    "Cozinha contemporânea, especialidade em risotos e vinhos em Espírito Santo do Pinhal. Conheça o cardápio e consulte horários e reservas.",
+  tagline: "Especialidade em risotos",
 
-  // TODO: trocar pelo domínio real quando houver.
-  url: "https://rizzcucinaevino.com.br",
+  // Domínio informado no perfil oficial do restaurante.
+  url: "https://rizzrestaurante.com.br",
 
   telefone: "(19) 3661-5503",
   telefoneLink: "+551936615503",
   whatsapp: "551936615503",
 
   endereco: {
-    rua: "R. Cel. Joaquim Vergueiro, 87",
+    rua: "Rua Coronel Joaquim Vergueiro, 87",
     bairro: "Centro",
     cidade: "Espírito Santo do Pinhal",
     uf: "SP",
@@ -43,7 +43,7 @@ export const site = {
     "https://www.google.com/maps/search/?api=1&query=Rizz%20Cucina%20%26%20Vino%20Esp%C3%ADrito%20Santo%20do%20Pinhal",
 
   /** Faixa informada no perfil do Google (por pessoa). */
-  faixaPreco: "R$ 60–160",
+  faixaPreco: "R$ 60 a R$ 160",
 
   redes: {
     instagram: "https://www.instagram.com/rizzcucinaevino/",
@@ -57,7 +57,7 @@ export const site = {
   selo: {
     nome: "Selo VPJ",
     descricao:
-      "Carne de origem certificada — Red Angus e Duroc Pork, rastreadas do campo ao prato.",
+      "Identificações VPJ e Duroc nos itens indicados no cardápio.",
   },
 } as const;
 

@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       { caminho: "/avaliacoes", prioridade: 0.7, frequencia: "weekly" },
       { caminho: "/reservas", prioridade: 0.8, frequencia: "monthly" },
       { caminho: "/carta-de-vinhos", prioridade: 0.5, frequencia: "monthly" },
+      { caminho: "/fidelidade", prioridade: 0.5, frequencia: "monthly" },
     ];
 
   return rotas.map((r) => ({

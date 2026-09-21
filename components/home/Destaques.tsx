@@ -103,9 +103,9 @@ export default function Destaques() {
         <div className="wrap">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="eyebrow text-ambar">Da cozinha</p>
+              <p className="eyebrow text-ambar">Do cardápio</p>
               <RevealScrub className="mt-4 text-titulo text-creme">
-                Alguns favoritos
+                Uma seleção do cardápio
               </RevealScrub>
             </div>
 
@@ -135,7 +135,7 @@ export default function Destaques() {
                     <Image
                       data-card-foto
                       src={img(item.img)}
-                      alt={`${item.nome}${item.descricao ? ` — ${item.descricao.toLowerCase()}` : ""}`}
+                      alt={`${item.nome}${item.descricao ? `. ${item.descricao}` : ""}`}
                       placeholder="blur"
                       sizes="(min-width: 860px) 19rem, 76vw"
                       className="size-full object-cover transition-[filter] duration-700 ease-[var(--ease-rizz)] group-hover:brightness-110"

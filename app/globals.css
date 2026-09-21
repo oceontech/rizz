@@ -52,7 +52,9 @@
        recolhe, para que barras grudadas abaixo dele (as abas do cardápio)
        subam junto em vez de deixar um vão. */
     /* Soma o entalhe do iPhone: o header também o soma (`pt-safe`). */
-    --altura-header-cheia: calc(4rem + env(safe-area-inset-top, 0px));
+    /* Faixa de aviso publicada pelo painel (dentro do header). */
+    --altura-aviso: 0px;
+    --altura-header-cheia: calc(4rem + var(--altura-aviso) + env(safe-area-inset-top, 0px));
     --altura-header: var(--altura-header-cheia);
     scroll-padding-top: calc(var(--altura-header) + 4rem);
   }
@@ -61,7 +63,7 @@
      768 e 859px o header já tinha 6rem e as abas ficavam atrás dele. */
   @media (min-width: 48rem) {
     :root {
-      --altura-header-cheia: calc(6rem + env(safe-area-inset-top, 0px));
+      --altura-header-cheia: calc(6rem + var(--altura-aviso) + env(safe-area-inset-top, 0px));
       --altura-header: var(--altura-header-cheia);
     }
   }
@@ -70,9 +72,17 @@
     --altura-header: 0px;
   }
 
+  :root.com-aviso {
+    --altura-aviso: 2.25rem;
+  }
+
   html,
   body {
     background-color: var(--color-noite);
+  }
+
+  html {
+    overflow-x: clip;
   }
 
   body {

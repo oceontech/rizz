@@ -10,8 +10,9 @@ import RevealScrub from "@/components/motion/RevealScrub";
 import BadgeExecutivo from "@/components/ui/BadgeExecutivo";
 import { BotaoLink } from "@/components/ui/Botao";
 import Preco from "@/components/ui/Preco";
-import { executivo } from "@/data/executivo";
+import type { ExecutivoDados } from "@/lib/dados";
 import { img } from "@/lib/images";
+import { whatsappLink } from "@/lib/site";
 
 /**
  * Bloco em papel — inverte o site para o creme das peças impressas.
@@ -21,7 +22,7 @@ import { img } from "@/lib/images";
  * `data-folha` nas próprias cortinas, e o nome repetido já fez uma busca
  * global casar as duas coisas.
  */
-export default function Executivo() {
+export default function Executivo({ executivo }: { executivo: ExecutivoDados }) {
   const raiz = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -70,60 +71,70 @@ export default function Executivo() {
             <div>
               <div className="flex flex-wrap items-center gap-4">
                 <p className="eyebrow text-vinho">Almoço executivo</p>
-                <BadgeExecutivo claro />
+                <BadgeExecutivo claro executivo={executivo} />
               </div>
 
               <RevealScrub className="mt-6 text-display text-vinho">
-                Mais de {executivo.totalOpcoes} opções, todo dia útil
+                Entrada, prato principal e sobremesa
               </RevealScrub>
 
               <Filete className="mt-8 w-full max-w-md bg-ouro/70" />
 
               <p className="mt-8 max-w-prose leading-relaxed text-tinta/75">
-                {executivo.chamada}, com pratos que não são versão reduzida de
-                nada — o mesmo Red Angus, os mesmos risotos.
+                {executivo.chamada}.
               </p>
 
               {/* Rótulos no topo, valores alinhados pela base: com `items-end`
                   no grupo, o rótulo do valor menor descia e os dois ficavam
                   desencontrados. */}
-              <div className="mt-12 flex flex-wrap gap-x-14 gap-y-8">
-                <div>
-                  <p className="eyebrow text-tinta/50">Menu completo</p>
-                  <div className="mt-3 flex h-14 items-end md:h-[4.25rem]">
-                    <Preco
-                      valor={executivo.precoCompleto}
-                      className="text-[3.25rem] leading-none text-vinho md:text-[4.25rem]"
-                    />
+              {executivo.condicoesConfirmadas && (
+                <>
+                  <div className="mt-12 flex flex-wrap gap-x-14 gap-y-8">
+                    <div>
+                      <p className="eyebrow text-tinta/50">Menu completo por pessoa</p>
+                      <div className="mt-3 flex h-14 items-end md:h-[4.25rem]">
+                        <Preco
+                          valor={executivo.precoCompleto}
+                          className="text-[3.25rem] leading-none text-vinho md:text-[4.25rem]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="eyebrow text-tinta/50">Pratos principais</p>
+                      <div className="mt-3 flex h-14 items-end gap-2.5 md:h-[4.25rem]">
+                        <span className="pb-1 text-base text-tinta/70 md:pb-1.5">a partir de</span>
+                        <Preco
+                          valor={executivo.precoAvulsoMin}
+                          className="text-[2rem] leading-none text-tinta md:text-[2.5rem]"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <p className="eyebrow text-tinta/50">Pratos avulsos</p>
-                  <div className="mt-3 flex h-14 items-end gap-2.5 md:h-[4.25rem]">
-                    <span className="pb-1 text-base text-tinta/70 md:pb-1.5">a partir de</span>
-                    <Preco
-                      valor={executivo.precoAvulsoMin}
-                      className="text-[2rem] leading-none text-tinta md:text-[2.5rem]"
-                    />
-                  </div>
-                </div>
-              </div>
+                  <dl className="mt-10 flex flex-wrap gap-x-12 gap-y-3 text-sm text-tinta/70">
+                    <div className="flex gap-2.5">
+                      <dt className="text-tinta/45">Dias</dt>
+                      <dd className="font-medium">{executivo.dias}</dd>
+                    </div>
+                    <div className="flex gap-2.5">
+                      <dt className="text-tinta/45">Horário</dt>
+                      <dd className="font-medium">{executivo.horario}</dd>
+                    </div>
+                  </dl>
+                </>
+              )}
 
-              <dl className="mt-10 flex flex-wrap gap-x-12 gap-y-3 text-sm text-tinta/70">
-                <div className="flex gap-2.5">
-                  <dt className="text-tinta/45">Dias</dt>
-                  <dd className="font-medium">{executivo.dias}</dd>
-                </div>
-                <div className="flex gap-2.5">
-                  <dt className="text-tinta/45">Horário</dt>
-                  <dd className="font-medium">{executivo.horario}</dd>
-                </div>
-              </dl>
+              <p className="mt-8 text-sm leading-relaxed text-tinta/70">
+                Consulte os dias, as opções e os valores do executivo com a equipe.
+              </p>
 
-              <div className="mt-11">
+              <div className="mt-11 flex flex-wrap gap-3">
                 <BotaoLink href="/cardapio#executivo" variante="vinho" tamanho="lg">
-                  Ver o menu executivo
+                  Ver menu executivo
+                </BotaoLink>
+                <BotaoLink href={whatsappLink("Olá! Gostaria de consultar os dias, as opções e os valores do almoço executivo do Rizz.")} variante="contorno-tinta">
+                  Consultar pelo WhatsApp
                 </BotaoLink>
               </div>
             </div>
@@ -158,9 +169,11 @@ export default function Executivo() {
                           os preços ficam na mesma altura nos três cards. */}
                       <figcaption className="mt-3 flex grow flex-col text-[0.8125rem] leading-snug text-tinta/80 md:text-sm">
                         <span>{prato.nome}</span>
-                        <span className="mt-auto block pt-2">
-                          <Preco valor={prato.preco} className="text-base text-vinho md:text-lg" />
-                        </span>
+                        {executivo.condicoesConfirmadas && (
+                          <span className="mt-auto block pt-2">
+                            <Preco valor={prato.preco} className="text-base text-vinho md:text-lg" />
+                          </span>
+                        )}
                       </figcaption>
                     </figure>
                   ))}

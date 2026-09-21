@@ -78,13 +78,7 @@ export default function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.1fr_1fr_1fr]">
           <div>
             <p className="max-w-xs font-display text-xl italic leading-snug text-creme/85">
-              Criações e releituras da cozinha italiana.
-            </p>
-            <p className="mt-6 flex items-start gap-3 text-xs leading-relaxed text-creme/50">
-              <span className="mt-px inline-flex h-4 shrink-0 items-center rounded-full border border-ouro/50 px-1.5 text-[0.5rem] font-semibold tracking-[0.12em] text-ouro">
-                VPJ
-              </span>
-              {site.selo.descricao}
+              Cozinha contemporânea e especialidade em risotos, em Espírito Santo do Pinhal.
             </p>
 
             <ul className="mt-8 flex items-center gap-3">
@@ -116,14 +110,16 @@ export default function Footer() {
           </div>
 
           <nav aria-label="Rodapé">
-            <h2 className="eyebrow text-ambar">Navegue</h2>
+            <h2 className="eyebrow text-ambar">Explore o Rizz</h2>
             <ul className="mt-5 space-y-3 text-sm text-creme/70">
               {[
-                ["/", "Home"],
+                ["/", "Início"],
                 ["/cardapio", "Cardápio"],
                 ["/avaliacoes", "Avaliações"],
                 ["/reservas", "Reservas"],
-                ["/carta-de-vinhos", "Carta de vinhos"],
+                ["/carta-de-vinhos", "Vinhos"],
+                ["/fidelidade", "Cartão fidelidade"],
+                ["/#visite", "Horários e endereço"],
               ].map(([href, rotulo]) => (
                 <li key={href}>
                   <Link
@@ -191,7 +187,7 @@ export default function Footer() {
             href="/privacidade"
             className="transition-colors hover:text-creme/70"
           >
-            Privacidade e cookies
+            Privacidade
           </Link>
         </div>
       </div>

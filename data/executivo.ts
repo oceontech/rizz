@@ -19,11 +19,14 @@ export type ItemExecutivo = {
 export const executivo = {
   ativo: true,
   precoCompleto: 75.9,
-  precoAvulsoMin: 39.9,
+  // Valores e dias divergentes aguardam confirmação da casa.
+  condicoesConfirmadas: false,
+  get precoAvulsoMin(): number {
+    return Math.min(...this.pratos.map((prato) => prato.preco));
+  },
   dias: "Segunda a sexta",
   horario: "11h às 14h30",
-  chamada: "Escolha qualquer entrada + prato + sobremesa",
-  totalOpcoes: 20,
+  chamada: "Escolha uma entrada, um prato principal e uma sobremesa entre as opções do menu executivo",
 
   entradas: [
     { id: "ex-polenta", nome: "Polenta com Cogumelos", preco: 16 },
@@ -44,9 +47,9 @@ export const executivo = {
     { id: "ex-carbonara", nome: "Espaguete à Carbonara", preco: 44 },
     { id: "ex-4-queijos", nome: "Talharim aos 4 Queijos", preco: 39 },
     { id: "ex-risoto-camarao", nome: "Risoto de Camarão", preco: 48 },
-    { id: "ex-risoto-pera", nome: "Risoto de Pêra com Gorgonzola", preco: 44 },
+    { id: "ex-risoto-pera", nome: "Risoto de Pera com Gorgonzola", preco: 44 },
     { id: "ex-tilapia-milanesa", nome: "Tilápia à Milanesa com Risoto de Funghi", preco: 48 },
-    { id: "ex-tilapia-legumes", nome: "Tilápia com Arroz e Legumes", preco: 43, img: "peixe-arroz-negro" },
+    { id: "ex-tilapia-legumes", nome: "Tilápia com Arroz e Legumes", preco: 43 },
   ] as ItemExecutivo[],
 
   sobremesas: [

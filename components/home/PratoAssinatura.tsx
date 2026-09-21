@@ -120,7 +120,7 @@ export default function PratoAssinatura({ entradaPeloVideo = false }: { entradaP
             </div>
 
             <SeloRotativo
-              texto="O MAIS PEDIDO · CRIAÇÃO RIZZ ·"
+              texto="O MAIS PEDIDO · RIZZ CUCINA & VINO ·"
               className="absolute -right-4 -top-6 size-28 md:-right-8 md:-top-9 md:size-36"
             />
           </div>
@@ -129,10 +129,10 @@ export default function PratoAssinatura({ entradaPeloVideo = false }: { entradaP
             <p className="eyebrow text-vinho">{pratoAssinatura.chamada}</p>
 
             {entradaPeloVideo ? (
-              <h2 className="mt-6 text-titulo text-tinta">{pratoAssinatura.nome}</h2>
+              <h2 className="mt-6 text-titulo text-tinta">Camarão rosa empanado</h2>
             ) : (
               <RevealScrub className="mt-6 text-titulo text-tinta">
-                {pratoAssinatura.nome}
+                Camarão rosa empanado
               </RevealScrub>
             )}
 
@@ -141,10 +141,6 @@ export default function PratoAssinatura({ entradaPeloVideo = false }: { entradaP
             ) : (
               <Filete className="mt-7 w-full max-w-sm" />
             )}
-
-            <p className="mt-6 font-display text-xl italic text-vinho md:text-2xl">
-              {pratoAssinatura.descricao}
-            </p>
 
             <p className="mt-6 max-w-prose leading-relaxed text-tinta/75">
               {pratoAssinatura.texto}

@@ -7,10 +7,9 @@ import { CONDICOES, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 const palavras = [
   "Risotos",
   "Massas",
-  "Red Angus",
-  "Cordeiro",
+  "Carnes",
   "Peixes",
-  "Trufas",
+  "Sobremesas",
   "Vinhos",
 ];
 

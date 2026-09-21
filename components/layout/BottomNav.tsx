@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const abas = [
   {
     href: "/",
-    rotulo: "Home",
+    rotulo: "Início",
     icone: <path d="M3 10.5 12 3l9 7.5M5.5 9.5V20h13V9.5" />,
   },
   {

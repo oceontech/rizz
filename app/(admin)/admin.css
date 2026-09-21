@@ -1,0 +1,105 @@
+@layer theme, base, components, utilities;
+
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/* ───────────────────────────────────────────────────────────
+   Painel Rizz — tema HeroUI com as cores da marca.
+   Só é carregado nas rotas /admin (root layout próprio), então
+   nada daqui vaza para o site público.
+   ─────────────────────────────────────────────────────────── */
+
+@theme {
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-cormorant), Georgia, serif;
+
+  --color-vinho: #70012a;
+  --color-ambar: #e8890c;
+  --color-ouro: #c9a227;
+  --color-creme: #fdf1e5;
+  --color-noite: #2b0710;
+}
+
+@layer theme {
+  :root,
+  [data-theme="rizz"] {
+    color-scheme: light;
+
+    --radius: 0.75rem;
+    --field-radius: 0.75rem;
+
+    --background: oklch(0.975 0.008 60);
+    --foreground: oklch(0.24 0.05 15);
+
+    --surface: oklch(1 0 0);
+    --surface-foreground: var(--foreground);
+    --surface-secondary: oklch(0.965 0.012 60);
+    --surface-tertiary: oklch(0.945 0.016 60);
+
+    --overlay: oklch(1 0 0);
+    --overlay-foreground: var(--foreground);
+
+    --muted: oklch(0.5 0.03 20);
+
+    --default: oklch(0.94 0.014 55);
+    --default-foreground: var(--foreground);
+
+    /* Vinho da marca (#70012A) */
+    --accent: oklch(0.36 0.14 10);
+    --accent-foreground: oklch(0.985 0.012 70);
+
+    --success: oklch(0.55 0.12 160);
+    --success-foreground: oklch(0.99 0 0);
+
+    /* Âmbar da marca (#E8890C) */
+    --warning: oklch(0.72 0.16 65);
+    --warning-foreground: oklch(0.24 0.05 15);
+
+    --danger: oklch(0.55 0.2 25);
+    --danger-foreground: oklch(0.99 0 0);
+
+    --field-background: oklch(1 0 0);
+    --field-foreground: var(--foreground);
+    --field-placeholder: var(--muted);
+    --field-border: oklch(0.9 0.015 50);
+
+    --segment: oklch(1 0 0);
+    --segment-foreground: var(--foreground);
+
+    --border: oklch(0.91 0.014 50);
+    --separator: oklch(0.92 0.012 50);
+    --focus: var(--accent);
+    --link: var(--accent);
+
+    --surface-shadow:
+      0 1px 2px 0 rgb(43 7 16 / 0.04), 0 2px 8px -2px rgb(43 7 16 / 0.06);
+    --overlay-shadow:
+      0 8px 24px -4px rgb(43 7 16 / 0.14), 0 2px 6px 0 rgb(43 7 16 / 0.06);
+  }
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--background);
+    color: var(--foreground);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .titulo-display {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

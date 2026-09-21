@@ -50,9 +50,9 @@ export default async function AvaliacoesResumo() {
       <div className="wrap">
         <div className="flex flex-wrap items-end justify-between gap-10">
           <div>
-            <p className="eyebrow text-ambar">Quem já veio</p>
+            <p className="eyebrow text-ambar">Avaliações</p>
             <RevealScrub className="mt-5 text-titulo text-creme">
-              O que dizem por aí
+              O que nossos clientes dizem
             </RevealScrub>
           </div>
 
@@ -73,6 +73,13 @@ export default async function AvaliacoesResumo() {
 
         <Filete className="mt-10" />
 
+        <p className="mt-4 text-xs leading-relaxed text-creme/50">
+          {google.media === null || google.total === null
+            ? `Dados do Google consultados em ${resumoAvaliacoes.conferidoEm.split("-").reverse().join("/")}.`
+            : "Nota geral do restaurante no Google."}
+          {destaques.length > 0 && " Seleção de comentários publicados pelos clientes."}
+        </p>
+
         {destaques.length > 0 ? (
           <Reveal stagger className="mt-12 grid gap-5 md:grid-cols-3 md:gap-8">
             {destaques.map((r) => (
@@ -91,8 +98,7 @@ export default async function AvaliacoesResumo() {
         ) : (
           <Reveal>
             <p className="mt-12 max-w-prose font-display text-xl italic leading-relaxed text-creme/70">
-              São {total} avaliações no Google, com média {media.toFixed(1).replace(".", ",")}.
-              Vale ler o que escreveram por lá.
+              Leia as avaliações dos clientes no perfil do Rizz no Google.
             </p>
           </Reveal>
         )}
@@ -100,10 +106,10 @@ export default async function AvaliacoesResumo() {
         <Reveal delay={0.1}>
           <div className="mt-12 flex flex-wrap gap-3">
             <BotaoLink href="/avaliacoes" variante="contorno">
-              Ver todas as avaliações
+              Avaliações de clientes
             </BotaoLink>
             <BotaoLink href={site.googleReviewsUrl} variante="contorno">
-              Ler no Google
+              Ver todas no Google
             </BotaoLink>
           </div>
         </Reveal>

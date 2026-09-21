@@ -13,14 +13,16 @@ const rotulo =
   "mb-2 block text-[0.625rem] uppercase tracking-[0.18em] text-creme/45";
 
 /**
- * A reserva vira uma mensagem pronta no WhatsApp.
+ * A reserva vira uma mensagem pronta no WhatsApp — e, em paralelo, um pedido
+ * "pendente" no painel (/admin/reservas), onde a equipe confirma e responde.
  *
- * Sem back-end de reservas ainda (Fase 4), este é o caminho honesto: o cliente
- * revisa o texto antes de enviar e a equipe responde no canal que já usa.
+ * O registro vai por sendBeacon, sem esperar resposta: o window.open precisa
+ * sair no mesmo gesto do clique, senão o navegador bloqueia a aba nova.
  */
 export default function FormReserva() {
   const [dados, setDados] = useState({
     nome: "",
+    telefone: "",
     pessoas: "2",
     data: "",
     hora: "",
@@ -31,20 +33,42 @@ export default function FormReserva() {
 
   function montarMensagem() {
     return [
-      `Olá! Gostaria de reservar uma mesa no ${site.nome}.`,
+      `Olá! Gostaria de consultar a disponibilidade de uma mesa no ${site.nome}.`,
       dados.nome && `Nome: ${dados.nome}`,
-      dados.pessoas && `Pessoas: ${dados.pessoas}`,
+      dados.telefone && `Telefone: ${dados.telefone}`,
+      dados.pessoas && `Número de pessoas: ${dados.pessoas}`,
       dados.data &&
         `Data: ${new Date(`${dados.data}T00:00`).toLocaleDateString("pt-BR")}`,
-      dados.hora && `Horário: ${dados.hora}`,
+      dados.hora && `Horário desejado: ${dados.hora}`,
       dados.obs && `Observações: ${dados.obs}`,
     ]
       .filter(Boolean)
       .join("\n");
   }
 
+  function registrarNoPainel() {
+    const corpo = JSON.stringify({
+      nome: dados.nome,
+      telefone: dados.telefone,
+      pessoas: dados.pessoas === "mais de 12" ? 13 : Number(dados.pessoas),
+      data: dados.data,
+      hora: dados.hora,
+      obs: dados.obs,
+      site: "",
+    });
+    try {
+      const blob = new Blob([corpo], { type: "application/json" });
+      if (!navigator.sendBeacon?.("/api/reservas", blob)) {
+        void fetch("/api/reservas", { method: "POST", body: corpo, keepalive: true, headers: { "content-type": "application/json" } });
+      }
+    } catch {
+      /* o WhatsApp segue sendo o canal principal */
+    }
+  }
+
   function enviar(evento: React.FormEvent) {
     evento.preventDefault();
+    registrarNoPainel();
     window.open(whatsappLink(montarMensagem()), "_blank", "noopener");
   }
 
@@ -63,14 +87,32 @@ export default function FormReserva() {
             required
             value={dados.nome}
             onChange={(e) => setDados({ ...dados, nome: e.target.value })}
-            placeholder="Como devemos chamar?"
+            placeholder="Seu nome"
+            className={campo}
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label htmlFor="telefone" className={rotulo}>
+            WhatsApp para contato
+          </label>
+          <input
+            id="telefone"
+            name="telefone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            required
+            value={dados.telefone}
+            onChange={(e) => setDados({ ...dados, telefone: e.target.value })}
+            placeholder="(19) 99999-9999"
             className={campo}
           />
         </div>
 
         <div>
           <label htmlFor="pessoas" className={rotulo}>
-            Pessoas
+            Número de pessoas
           </label>
           <select
             id="pessoas"
@@ -90,7 +132,7 @@ export default function FormReserva() {
 
         <div>
           <label htmlFor="data" className={rotulo}>
-            Data
+            Data da visita (opcional)
           </label>
           <input
             id="data"
@@ -105,7 +147,7 @@ export default function FormReserva() {
 
         <div>
           <label htmlFor="hora" className={rotulo}>
-            Horário
+            Horário desejado (opcional)
           </label>
           <input
             id="hora"
@@ -127,7 +169,7 @@ export default function FormReserva() {
             rows={3}
             value={dados.obs}
             onChange={(e) => setDados({ ...dados, obs: e.target.value })}
-            placeholder="Aniversário, restrição alimentar, preferência de mesa…"
+            placeholder="Conte se há alguma preferência ou informação para a equipe."
             className={`${campo} h-auto resize-y py-3`}
           />
         </div>
@@ -137,8 +179,8 @@ export default function FormReserva() {
         {diasFechados.length > 0 && (
           <>Não abrimos {diasFechados.join(" e ").toLowerCase()}. </>
         )}
-        Ao continuar, abrimos o WhatsApp com a mensagem pronta — você confere e
-        envia. A reserva só é confirmada pela resposta da equipe.
+        Você poderá revisar e enviar a mensagem no WhatsApp.
+        A reserva será confirmada pela equipe.
       </p>
 
       <Botao type="submit" tamanho="lg" className="mt-9">

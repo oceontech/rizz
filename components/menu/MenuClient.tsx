@@ -5,7 +5,9 @@ import { useMemo, useRef, useState } from "react";
 import { CONDICOES, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { ListaSelos, SeloOrigem } from "@/components/ui/Selos";
 import Preco from "@/components/ui/Preco";
-import { BADGES, cardapio, type Badge, type MenuItem } from "@/data/menu";
+import Image from "next/image";
+
+import { BADGES, type Badge, type Categoria, type MenuItem } from "@/data/menu";
 import { scrollToTarget } from "@/lib/scroll";
 
 type FaixaPreco = "todas" | "ate60" | "de60a90" | "acima90";
@@ -15,9 +17,9 @@ const faixas: {
   rotulo: string;
   testa: (v: number) => boolean;
 }[] = [
-  { id: "ate60", rotulo: "até 60", testa: (v) => v <= 60 },
-  { id: "de60a90", rotulo: "60 – 90", testa: (v) => v > 60 && v <= 90 },
-  { id: "acima90", rotulo: "acima de 90", testa: (v) => v > 90 },
+  { id: "ate60", rotulo: "Até R$ 60", testa: (v) => v <= 60 },
+  { id: "de60a90", rotulo: "Acima de R$ 60 até R$ 90", testa: (v) => v > 60 && v <= 90 },
+  { id: "acima90", rotulo: "Acima de R$ 90", testa: (v) => v > 90 },
 ];
 
 /** Linha do cardápio, no desenho da peça impressa: preço sem "R$". */
@@ -31,13 +33,25 @@ function Linha({
   onAlternar: (b: Badge) => void;
 }) {
   const temEtiquetas = Boolean(item.badges?.length || item.vpj);
+  // Marcado como esgotado no painel: segue listado, mas apagado e sem preço.
+  const esgotado = item.disponivel === false;
 
   return (
-    <li data-linha className="border-b border-tinta/10 py-4 last:border-0">
+    <li data-linha className={`border-b border-tinta/10 py-4 last:border-0 ${esgotado ? "opacity-55" : ""}`}>
       <div className="flex items-baseline gap-3">
+        {item.foto && (
+          <div className="relative size-14 shrink-0 self-center overflow-hidden rounded-full border border-ouro/40 md:size-16">
+            <Image src={item.foto} alt="" fill sizes="64px" className="object-cover" />
+          </div>
+        )}
         <div className="min-w-0 grow">
           <h3 className="text-[1.0625rem] leading-snug text-vinho md:text-lg">
             {item.nome}
+            {esgotado && (
+              <span className="ml-2 inline-block translate-y-[-2px] rounded-full border border-vinho/30 px-2 py-0.5 align-middle font-sans text-[0.5625rem] font-medium uppercase not-italic tracking-[0.16em] text-vinho/80">
+                Esgotado hoje
+              </span>
+            )}
           </h3>
           {item.descricao && (
             <p className="mt-1 text-[0.9375rem] italic leading-snug text-tinta/65">
@@ -51,10 +65,12 @@ function Linha({
           className="mb-1.5 hidden h-px grow border-b border-dotted border-tinta/20 sm:block"
         />
 
-        <Preco
-          valor={item.preco}
-          className="shrink-0 text-[1.0625rem] text-vinho md:text-lg"
-        />
+        {!esgotado && (
+          <Preco
+            valor={item.preco}
+            className="shrink-0 text-[1.0625rem] text-vinho md:text-lg"
+          />
+        )}
       </div>
 
       {/* Fora da coluna do nome: com a largura da linha inteira as
@@ -69,11 +85,11 @@ function Linha({
   );
 }
 
-export default function MenuClient() {
+export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [faixa, setFaixa] = useState<FaixaPreco>("todas");
   const [busca, setBusca] = useState("");
-  const [ativa, setAtiva] = useState(cardapio[0].slug);
+  const [ativa, setAtiva] = useState(cardapio[0]?.slug ?? "");
   const raiz = useRef<HTMLDivElement>(null);
   const trilho = useRef<HTMLDivElement>(null);
   const indicador = useRef<HTMLSpanElement>(null);
@@ -114,7 +130,7 @@ export default function MenuClient() {
         }),
       }))
       .filter((cat) => cat.itens.length > 0);
-  }, [badges, faixa, busca]);
+  }, [cardapio, badges, faixa, busca]);
 
   const total = filtrado.reduce((soma, c) => soma + c.itens.length, 0);
   const filtrando =
@@ -348,7 +364,7 @@ export default function MenuClient() {
             type="search"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar prato ou ingrediente"
+            placeholder="Buscar prato, bebida ou ingrediente"
             className="h-12 w-full border-b border-tinta/20 bg-transparent pl-7 text-[0.9375rem] text-vinho placeholder:text-tinta/35 focus:border-vinho focus:outline-none"
           />
         </label>
@@ -404,7 +420,7 @@ export default function MenuClient() {
               }}
               className="h-9 px-3 text-[0.6875rem] uppercase tracking-[0.12em] text-tinta/50 underline underline-offset-4 transition-colors hover:text-vinho"
             >
-              Limpar
+              Limpar filtros e busca
             </button>
           )}
         </div>
@@ -415,15 +431,15 @@ export default function MenuClient() {
           aria-live="polite"
         >
           {filtrando
-            ? `${total} ${total === 1 ? "prato encontrado" : "pratos encontrados"}`
-            : `${total} pratos no cardápio`}
+            ? `${total} ${total === 1 ? "item encontrado" : "itens encontrados"}`
+            : `${total} itens no cardápio`}
         </p>
       </div>
 
       {/* Listagem */}
       {filtrado.length === 0 ? (
         <p className="mt-20 text-center font-display text-2xl italic text-tinta/45">
-          Nenhum prato com esses filtros. Tente afrouxar um deles.
+          Nenhum item encontrado. Tente outro termo ou limpe os filtros.
         </p>
       ) : (
         <div className="mt-14">

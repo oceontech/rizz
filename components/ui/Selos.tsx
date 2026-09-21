@@ -81,7 +81,7 @@ export function EtiquetaBadge({
       type="button"
       onClick={() => onAlternar(badge)}
       aria-pressed={ativo}
-      title={ativo ? `Mostrar todos os pratos` : `Ver só pratos: ${info.rotulo}`}
+      title={ativo ? `Remover filtro: ${info.rotulo}` : `Filtrar por: ${info.rotulo}`}
       className={`${classe} ${t.interativo} cursor-pointer`}
     >
       <SeloBadge badge={badge} />
@@ -131,8 +131,8 @@ export function SeloOrigem({
   const rotulo = tipo === "vpj" ? "VPJ" : "DUROC";
   const titulo =
     tipo === "vpj"
-      ? "Selo VPJ — carne de origem certificada"
-      : "Duroc Pork — suíno de origem certificada";
+      ? "Identificação VPJ no cardápio"
+      : "Duroc Pork";
 
   return (
     <span
@@ -157,7 +157,7 @@ export function Legenda({ className = "" }: { className?: string }) {
       ))}
       <li className="flex items-center gap-2.5">
         <SeloOrigem />
-        <span>Carne de origem certificada</span>
+        <span>VPJ nos itens indicados</span>
       </li>
     </ul>
   );

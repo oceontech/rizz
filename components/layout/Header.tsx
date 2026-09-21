@@ -7,10 +7,13 @@ import { useRef, useState } from "react";
 import { CONDICOES, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import Logo from "@/components/brand/Logo";
 import { BotaoLink } from "@/components/ui/Botao";
-import { site, whatsappLink } from "@/lib/site";
+import { site } from "@/lib/site";
+
+export type AvisoHeader = { texto: string; link: string; linkTexto: string } | null;
 
 const links = [
   { href: "/cardapio", rotulo: "Cardápio" },
+  { href: "/carta-de-vinhos", rotulo: "Vinhos" },
   { href: "/avaliacoes", rotulo: "Avaliações" },
   { href: "/reservas", rotulo: "Reservas" },
 ];
@@ -43,7 +46,7 @@ const fundoPorModo: Record<Modo, string> = {
  * variável `--altura-header` zera junto, e barras grudadas logo abaixo — as
  * abas do cardápio — sobem para o topo em vez de ficar um vão.
  */
-export default function Header() {
+export default function Header({ aviso = null }: { aviso?: AvisoHeader }) {
   const raiz = useRef<HTMLElement>(null);
   const pathname = usePathname();
   const naHome = pathname === "/";
@@ -142,10 +145,23 @@ export default function Header() {
       data-modo={modo}
       className={`header-fixo pt-safe fixed inset-x-0 z-50 ${fundoPorModo[modo]}`}
     >
+      {/* Aviso publicado no painel. Mora dentro do header para recolher
+          junto com ele; a altura entra em `--altura-aviso` (classe
+          `com-aviso` na raiz, posta pelo layout). */}
+      {aviso && (
+        <div className="flex h-9 items-center justify-center gap-3 bg-ambar px-4 text-center text-[0.75rem] leading-tight text-noite md:text-[0.8125rem]">
+          <span className="line-clamp-1">{aviso.texto}</span>
+          {aviso.link && aviso.linkTexto && (
+            <Link href={aviso.link} className="shrink-0 font-medium underline underline-offset-4 hover:no-underline">
+              {aviso.linkTexto} →
+            </Link>
+          )}
+        </div>
+      )}
       <div className="wrap flex h-16 items-center justify-between gap-4 md:h-24">
         <Link
           href="/"
-          aria-label={`${site.nome} — página inicial`}
+          aria-label={`${site.nome}. Página inicial.`}
           className="shrink-0 transition-opacity duration-300 hover:opacity-80"
         >
           <Logo
@@ -196,9 +212,7 @@ export default function Header() {
           desejado — o botão deve mesmo aparecer no celular.
         */}
         <BotaoLink
-          href={whatsappLink(
-            `Olá! Gostaria de reservar uma mesa no ${site.nome}.`,
-          )}
+          href="/reservas"
           variante={claro ? "contorno-vinho" : "contorno"}
         >
           Reservar

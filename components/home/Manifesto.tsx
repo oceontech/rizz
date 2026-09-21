@@ -4,9 +4,7 @@ import Image from "next/image";
 import { useRef } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
-import risoto from "@/assets/img/manifesto/risoto-v2.webp";
-import angus from "@/assets/img/manifesto/angus-v2.webp";
-import ingredientes from "@/assets/img/manifesto/ingredientes-v2.webp";
+import { img } from "@/lib/images";
 import type { StaticImageData } from "next/image";
 
 const frases: {
@@ -16,22 +14,22 @@ const frases: {
   alt: string;
 }[] = [
   {
-    destaque: "Arroz carnaroli",
-    texto: "acertado no ponto na hora, nunca antes. Risoto não espera.",
-    img: risoto,
-    alt: "Risoto cremoso de carnaroli com fios de açafrão em prato de porcelana",
+    destaque: "Especialidade em risotos.",
+    texto: "Do alho negro com funghi e brie à pera com gorgonzola e nozes, conheça as combinações do nosso cardápio.",
+    img: img("risoto-trufado-brie"),
+    alt: "Risoto de alho negro trufado com funghi e brie",
   },
   {
-    destaque: "Red Angus e Duroc",
-    texto: "de origem certificada pelo selo VPJ, rastreados do campo ao prato.",
-    img: angus,
-    alt: "Ancho grelhado com duas fatias em prato de porcelana branca",
+    destaque: "Cozinha contemporânea.",
+    texto: "Entradas, massas, carnes, peixes e sobremesas completam as opções para sua mesa.",
+    img: img("ancho-talharim-parma"),
+    alt: "Ancho Red Angus com talharim na fonduta de parmesão e presunto Parma",
   },
   {
-    destaque: "Trufa, alho negro, açafrão",
-    texto: "em combinações que são nossas — e que você não acha em outro lugar.",
-    img: ingredientes,
-    alt: "Trufa negra com uma lâmina fina, dois dentes de alho negro e fios de açafrão",
+    destaque: "Vinhos para acompanhar.",
+    texto: "Converse com a equipe para conhecer os rótulos disponíveis e escolher o seu.",
+    img: img("salao-claraboia"),
+    alt: "Prato e taça de vinho em uma mesa do Rizz",
   },
 ];
 
@@ -133,7 +131,7 @@ export default function Manifesto() {
     >
       <section className="sticky top-0 flex h-[100svh] items-center overflow-hidden motion-reduce:static motion-reduce:block motion-reduce:h-auto motion-reduce:overflow-visible motion-reduce:py-24">
         <div className="wrap">
-          <p className="eyebrow text-ambar">O que nos define</p>
+          <h2 className="eyebrow text-ambar">Nossa cozinha</h2>
 
           {/* Os três blocos ocupam a MESMA célula (1/1) para o palco não mudar
               de altura na troca. Com movimento reduzido voltam ao fluxo. */}

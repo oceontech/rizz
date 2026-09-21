@@ -104,7 +104,7 @@ export function statusDeAbertura(base = new Date()): StatusAbertura {
       return {
         aberto: false,
         rotulo: `Abre às ${s.faixa!.inicio}`,
-        detalhe: `${s.nome} ${s.faixa!.inicio}–${s.faixa!.fim}`,
+        detalhe: `${s.nome} das ${s.faixa!.inicio} às ${s.faixa!.fim}`,
         servico: null,
       };
     }
@@ -130,7 +130,7 @@ export function executivoDisponivel(base = new Date()) {
 
 /** Formato "11:00 – 14:30" para exibição. */
 export function faixa(s?: Servico) {
-  return s ? `${s.inicio} – ${s.fim}` : null;
+  return s ? `${s.inicio} às ${s.fim}` : null;
 }
 
 /** Usado no JSON-LD de schema.org/Restaurant. */

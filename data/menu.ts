@@ -14,6 +14,8 @@ export type MenuItem = {
   /** Subdivisão dentro da categoria (usado em Bebidas). */
   grupo?: string;
   disponivel?: boolean;
+  /** Foto enviada pelo painel (Vercel Blob). */
+  foto?: string;
 };
 
 export type Categoria = {
@@ -30,7 +32,7 @@ export const BADGES: Record<
 > = {
   vegetariano: { sigla: "V", rotulo: "Vegetariano", descricao: "Opção Vegetariana" },
   rizz: { sigla: "R", rotulo: "Criação Rizz", descricao: "Criação Rizz" },
-  tartufato: { sigla: "T", rotulo: "Com trufas", descricao: "Tartufato — finalizado com trufas" },
+  tartufato: { sigla: "T", rotulo: "Trufado", descricao: "Trufado" },
 };
 
 /**
@@ -44,7 +46,7 @@ export const cardapio: Categoria[] = [
     id: "entradas",
     nome: "Entradas",
     slug: "entradas",
-    descricao: "Para começar devagar, de preferência dividindo.",
+    descricao: "Para começar a refeição.",
     itens: [
       { id: "arancini-parmesao", nome: "Arancini de Parmesão com Fonduta Cremosa", descricao: "8 unidades", preco: 55, badges: ["vegetariano"] },
       { id: "arancini-salmao", nome: "Arancini de Salmão Trufado com Fonduta Cremosa", descricao: "Finalizado com trufas · 8 unidades", preco: 95, badges: ["tartufato"] },
@@ -53,10 +55,10 @@ export const cardapio: Categoria[] = [
       { id: "burrata-cogumelos", nome: "Burrata com Confit de Cogumelos Trufados", descricao: "Finalizada com trufas · acompanha pão italiano", preco: 98, badges: ["tartufato", "vegetariano", "rizz"] },
       { id: "carpaccio", nome: "Carpaccio Bovino com Salada", descricao: "Acompanha pão italiano", preco: 62 },
       { id: "creme-batata-trufado", nome: "Creme de Batata Trufado", descricao: "Crispy de parma, toast de queijo coalho e rúcula · acompanha pão italiano", preco: 80, badges: ["tartufato", "rizz"] },
-      { id: "enroladinho", nome: "Enroladinho", descricao: "Presunto cru com rúcula, queijo brie e pêra · 4 unidades", preco: 69, badges: ["rizz"] },
+      { id: "enroladinho", nome: "Enroladinho", descricao: "Presunto cru com rúcula, queijo brie e pera · 4 unidades", preco: 69, badges: ["rizz"] },
       { id: "frigideira-file", nome: "Frigideira de Filé Mignon ao Formaggio", descricao: "Com fritas", preco: 72 },
       { id: "fritas", nome: "Fritas", preco: 32, badges: ["vegetariano"] },
-      { id: "fritas-casa", nome: "Fritas da Casa", descricao: "Presunto cru, raspas de limão siciliano, parmesão e pimenta do reino", preco: 49 },
+      { id: "fritas-casa", nome: "Fritas da Casa", descricao: "Presunto cru, raspas de limão siciliano, parmesão e pimenta-do-reino", preco: 49 },
     ],
   },
   {
@@ -65,14 +67,14 @@ export const cardapio: Categoria[] = [
     slug: "saladas",
     itens: [
       { id: "caprese", nome: "Caprese", descricao: "Folhas verdes, tomate cereja, mussarela de búfala e manjericão", preco: 46, badges: ["vegetariano"] },
-      { id: "salada-rizz", nome: "Salada Rizz", descricao: "Folhas verdes, gorgonzola, mel, lâminas de amêndoas e pêra", preco: 50, badges: ["vegetariano"] },
+      { id: "salada-rizz", nome: "Salada Rizz", descricao: "Folhas verdes, gorgonzola, mel, lâminas de amêndoas e pera", preco: 50, badges: ["vegetariano"] },
     ],
   },
   {
     id: "risotos",
     nome: "Risotos",
     slug: "risotos",
-    descricao: "O coração da casa. Arroz acertado no ponto, na hora.",
+    descricao: "Nossa especialidade, em diferentes combinações.",
     itens: [
       { id: "risoto-carbonara", nome: "À Carbonara", descricao: "Finalizado com trufas", preco: 90, badges: ["tartufato"] },
       { id: "risoto-acafrao-costela", nome: "Açafrão Espanhol com Ragu de Costela Bovina", preco: 81 },
@@ -81,12 +83,12 @@ export const cardapio: Categoria[] = [
       { id: "risoto-bacalhau", nome: "Bacalhau", preco: 82 },
       { id: "risoto-camarao-aspargos", nome: "Camarão com Aspargos e Toast de Queijo Coalho", preco: 87 },
       { id: "risoto-caprese", nome: "Caprese com Tomates Confit e Burrata", descricao: "Servido frio", preco: 90, badges: ["vegetariano"] },
-      { id: "risoto-cogumelos", nome: "Cogumelos com Gorgonzola e Alho Poró", preco: 73, badges: ["vegetariano"] },
+      { id: "risoto-cogumelos", nome: "Cogumelos com Gorgonzola e Alho-Poró", preco: 73, badges: ["vegetariano"] },
       { id: "risoto-costela", nome: "Costela Bovina com Rúcula e Redução de Balsâmico", preco: 81 },
       { id: "risoto-file-funghi", nome: "Filé Mignon com Funghi", preco: 77 },
       { id: "risoto-file-gorgonzola", nome: "Filé Mignon com Gorgonzola", preco: 77 },
       { id: "risoto-limao-bufala", nome: "Limão Siciliano, Mussarela de Búfala e Crispy de Presunto Parma", preco: 81 },
-      { id: "risoto-pera", nome: "Pêra com Gorgonzola e Nozes", preco: 71, badges: ["vegetariano"] },
+      { id: "risoto-pera", nome: "Pera com Gorgonzola e Nozes", preco: 71, badges: ["vegetariano"] },
       { id: "risoto-presunto-brie", nome: "Presunto Cru, Rúcula e Brie", preco: 79 },
       { id: "risoto-salmao-brie", nome: "Salmão com Brie e Manjericão", preco: 78 },
       { id: "risoto-salmao-trufado", nome: "Salmão Trufado com Limão Siciliano", descricao: "Finalizado com trufas", preco: 90, badges: ["tartufato"] },
@@ -97,7 +99,7 @@ export const cardapio: Categoria[] = [
     nome: "Carne Bovina",
     slug: "carne-bovina",
     descricao:
-      "Pratos com acompanhamentos e massas, entre nossas criações e releituras.",
+      "Confira os cortes e os acompanhamentos de cada prato.",
     itens: [
       { id: "ancho-alho-negro", nome: "Ancho Red Angus com Risoto de Alho Negro Trufado e Gorgonzola", descricao: "Finalizado com trufas", preco: 105, badges: ["tartufato", "rizz"], vpj: true },
       { id: "ancho-acafrao", nome: "Ancho Red Angus com Risoto de Açafrão Trufado", descricao: "Finalizado com trufas", preco: 110, badges: ["tartufato", "rizz"], vpj: true, img: "ancho-acafrao-trufado" },
@@ -153,7 +155,7 @@ export const cardapio: Categoria[] = [
     id: "bebidas",
     nome: "Bebidas",
     slug: "bebidas",
-    descricao: "A carta de vinhos completa está no QR Code das mesas.",
+    descricao: "Para conhecer os vinhos disponíveis, consulte a equipe.",
     itens: [
       { id: "agua-gas", nome: "Água com gás", preco: 8, grupo: "Não alcoólicas" },
       { id: "refrigerante", nome: "Refrigerante", descricao: "350 ml", preco: 10, grupo: "Não alcoólicas" },
@@ -195,7 +197,7 @@ export const pratoAssinatura = {
   categoria: "Peixes e Frutos do Mar",
   chamada: "O mais pedido da casa",
   texto:
-    "Camarão rosa empanado na hora, crocante por fora e suculento por dentro, sobre risoto de alho-poró e um creme de catupiry que amarra tudo. É o prato que mais sai — e o que mais volta.",
+    "Camarão rosa empanado, servido com risoto de alho-poró e creme de Catupiry.",
 };
 
 /** Seleção da home: só itens com foto própria. */
@@ -207,7 +209,13 @@ export const destaquesHome: MenuItem[] = [
   "ancho-talharim",
   "file-syrah",
   "file-milanesa",
-].map((id) => cardapio.flatMap((c) => c.itens).find((i) => i.id === id)!);
+].map((id) => {
+  const categoria = cardapio.find((c) => c.itens.some((i) => i.id === id))!;
+  const item = categoria.itens.find((i) => i.id === id)!;
+  return categoria.id === "risotos"
+    ? { ...item, nome: `Risoto de ${item.nome}` }
+    : item;
+});
 
 export const todosOsItens = cardapio.flatMap((c) => c.itens);
 

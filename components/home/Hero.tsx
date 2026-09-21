@@ -8,7 +8,7 @@ import Logo from "@/components/brand/Logo";
 import HeroFundo from "@/components/home/HeroFundo";
 import { BotaoLink } from "@/components/ui/Botao";
 import IndicadorAbertura from "@/components/ui/StatusAbertura";
-import { site, whatsappLink } from "@/lib/site";
+import { site } from "@/lib/site";
 
 /**
  * Hero: o vídeo ocupa a tela inteira, sem moldura.
@@ -135,12 +135,12 @@ export default function Hero() {
             data-entra
             className="eyebrow text-ambar text-shadow-cena"
           >
-            Desde sempre no ponto
+            {site.endereco.cidade}, {site.endereco.uf}
           </p>
 
           <h1 data-entra className="mt-4 md:mt-5">
             <span className="sr-only">
-              {site.nome} — cozinha italiana contemporânea
+              {site.nome}. Restaurante em Espírito Santo do Pinhal.
             </span>
             <Logo
               variante="branca"
@@ -155,7 +155,11 @@ export default function Hero() {
             data-entra
             className="mt-5 max-w-[20ch] font-display text-[1.75rem] italic leading-[1.15] text-creme text-shadow-cena md:mt-7 md:max-w-[22ch] md:text-[2.75rem]"
           >
-            Criações e releituras da cozinha italiana.
+            Especialidade em risotos.
+          </p>
+
+          <p data-entra className="mt-3 max-w-[32ch] text-sm leading-relaxed text-creme/80 md:max-w-md md:text-base">
+            Cozinha contemporânea e vinhos para acompanhar seu almoço ou jantar.
           </p>
 
           {/* Compactos para caber lado a lado em 390px — empilhados eles
@@ -169,12 +173,10 @@ export default function Hero() {
               variante="ambar"
               className="md:h-14 md:px-8 md:text-xs"
             >
-              Ver o cardápio
+              Ver cardápio
             </BotaoLink>
             <BotaoLink
-              href={whatsappLink(
-                `Olá! Gostaria de reservar uma mesa no ${site.nome}.`,
-              )}
+              href="/reservas"
               variante="contorno"
               className="md:h-14 md:px-8 md:text-xs"
             >
@@ -182,8 +184,11 @@ export default function Hero() {
             </BotaoLink>
           </div>
 
-          <div data-entra className="mt-5 md:mt-7">
+          <div data-entra className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 md:mt-7">
             <IndicadorAbertura />
+            <a href="#visite" className="text-xs text-creme/75 underline underline-offset-4 hover:text-ambar">
+              Horários e endereço
+            </a>
           </div>
         </div>
       </section>
