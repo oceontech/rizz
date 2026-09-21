@@ -307,10 +307,10 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
       {/* O `top` acompanha a altura que o header está realmente ocupando:
           quando ele se recolhe a variável vai a zero e as abas sobem junto,
           em vez de deixar um vão do tamanho do header. */}
-      <div className="vidro sticky top-[var(--altura-header)] z-30 -mx-[1.375rem] border-b border-tinta/12 transition-[top] duration-[550ms] ease-[var(--ease-rizz)] md:-mx-12">
+      <div className="vidro sticky top-[var(--altura-header)] z-30 -mx-[1.375rem] border-b border-tinta/12 transition-[top] duration-[550ms] ease-[var(--ease-rizz)] min-[860px]:-mx-12">
         <div
           ref={trilho}
-          className="no-scrollbar relative flex gap-1 overflow-x-auto px-[1.375rem] py-3 [mask-image:linear-gradient(to_right,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent)] md:px-12"
+          className="no-scrollbar relative flex gap-1 overflow-x-auto px-[1.375rem] py-3 [mask-image:linear-gradient(to_right,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent)] min-[860px]:px-12"
         >
           {/* Pílula única que desliza entre as abas (posicionada pelo GSAP). */}
           <span

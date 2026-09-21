@@ -117,9 +117,13 @@ export default function Destaques() {
           <Filete className="mt-7" />
         </div>
 
+        {/* `relative`: no celular o trilho não recebe transform, e os
+            `sr-only` (absolutos) dos selos escapavam do recorte do scroll —
+            ficavam a ~1900px e esticavam a página inteira (zoom-out e header
+            largo no mobile). */}
         <ul
           data-trilho
-          className="no-scrollbar mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 md:mt-10 md:gap-7 md:overflow-visible md:px-12"
+          className="no-scrollbar relative mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 md:mt-10 md:gap-7 md:overflow-visible md:px-12"
         >
           {destaquesHome.map((item, i) => (
             <li

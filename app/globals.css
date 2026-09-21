@@ -81,10 +81,6 @@
     background-color: var(--color-noite);
   }
 
-  html {
-    overflow-x: clip;
-  }
-
   body {
     color: var(--color-creme);
     font-family: var(--font-sans);

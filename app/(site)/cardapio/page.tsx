@@ -62,11 +62,13 @@ function BlocoExecutivo({ executivo }: { executivo: ExecutivoDados }) {
             {executivo.chamada}. Consulte os dias e os valores com a equipe.
           </p>
         )}
-        <div className="mt-7">
-          <BotaoLink href={whatsappLink("Olá! Gostaria de consultar os dias, as opções e os valores do almoço executivo do Rizz.")} variante="vinho">
-            Consultar executivo pelo WhatsApp
-          </BotaoLink>
-        </div>
+        {!executivo.condicoesConfirmadas && (
+          <div className="mt-7">
+            <BotaoLink href={whatsappLink("Olá! Gostaria de consultar os dias, as opções e os valores do almoço executivo do Rizz.")} variante="vinho">
+              Consultar executivo pelo WhatsApp
+            </BotaoLink>
+          </div>
+        )}
 
         <div className="mt-8 h-px bg-ouro/60" />
 

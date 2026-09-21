@@ -19,12 +19,22 @@ export default function PrivacidadePage() {
           informações para sua visita sem criar uma conta no site.
         </p>
 
-        <h2 className="pt-6 font-display text-2xl text-creme">Reservas pelo WhatsApp</h2>
+        <h2 className="pt-6 font-display text-2xl text-creme">Reservas</h2>
         <p>
           O formulário prepara uma mensagem com os dados que você preencher.
           Ao continuar, o site abre essa mensagem no WhatsApp para que você
-          possa revisá-la e enviá-la. O atendimento à solicitação acontece
-          na conversa com a equipe.
+          possa revisá-la e enviá-la. Os mesmos dados (nome, telefone, número
+          de pessoas, data, horário e observações) ficam registrados para a
+          equipe do restaurante organizar a sua solicitação, que é confirmada
+          na conversa.
+        </p>
+
+        <h2 className="pt-6 font-display text-2xl text-creme">Cartão fidelidade</h2>
+        <p>
+          Ao participar do cartão fidelidade, guardamos seu nome, seu celular
+          e, se você informar, a data do seu aniversário, para registrar as
+          visitas e o prêmio. Mensagens pelo WhatsApp só são enviadas se você
+          autorizar no cadastro.
         </p>
 
         <h2 className="pt-6 font-display text-2xl text-creme">Serviços de terceiros</h2>

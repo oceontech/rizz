@@ -4,7 +4,9 @@ import Image from "next/image";
 import { useRef } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
-import { img } from "@/lib/images";
+import risoto from "@/assets/img/manifesto/risoto-v2.webp";
+import angus from "@/assets/img/manifesto/angus-v2.webp";
+import ingredientes from "@/assets/img/manifesto/ingredientes-v2.webp";
 import type { StaticImageData } from "next/image";
 
 const frases: {
@@ -13,23 +15,26 @@ const frases: {
   img: StaticImageData;
   alt: string;
 }[] = [
+  // As imagens são recortes 3:2 com fundo transparente, feitos para este palco
+  // (object-contain + brilho vinho). Foto retangular do cardápio aqui fica
+  // pequena e com o brilho em volta de um retângulo.
   {
     destaque: "Especialidade em risotos.",
     texto: "Do alho negro com funghi e brie à pera com gorgonzola e nozes, conheça as combinações do nosso cardápio.",
-    img: img("risoto-trufado-brie"),
-    alt: "Risoto de alho negro trufado com funghi e brie",
+    img: risoto,
+    alt: "Risoto cremoso com fios de açafrão em prato de porcelana",
   },
   {
     destaque: "Cozinha contemporânea.",
     texto: "Entradas, massas, carnes, peixes e sobremesas completam as opções para sua mesa.",
-    img: img("ancho-talharim-parma"),
-    alt: "Ancho Red Angus com talharim na fonduta de parmesão e presunto Parma",
+    img: angus,
+    alt: "Ancho grelhado com duas fatias em prato de porcelana branca",
   },
   {
-    destaque: "Vinhos para acompanhar.",
-    texto: "Converse com a equipe para conhecer os rótulos disponíveis e escolher o seu.",
-    img: img("salao-claraboia"),
-    alt: "Prato e taça de vinho em uma mesa do Rizz",
+    destaque: "Trufa, alho negro e açafrão.",
+    texto: "Ingredientes que aparecem em risotos, carnes e entradas do cardápio.",
+    img: ingredientes,
+    alt: "Trufa negra com uma lâmina fina, dois dentes de alho negro e fios de açafrão",
   },
 ];
 

@@ -125,17 +125,24 @@ export default function Executivo({ executivo }: { executivo: ExecutivoDados }) 
                 </>
               )}
 
-              <p className="mt-8 text-sm leading-relaxed text-tinta/70">
-                Consulte os dias, as opções e os valores do executivo com a equipe.
-              </p>
+              {/* Preços ocultos pelo painel ("Mostrar preços" desligado):
+                  orienta a consultar a equipe. Com preços visíveis, o aviso
+                  contradiria os valores logo acima. */}
+              {!executivo.condicoesConfirmadas && (
+                <p className="mt-8 text-sm leading-relaxed text-tinta/70">
+                  Consulte os dias, as opções e os valores do executivo com a equipe.
+                </p>
+              )}
 
               <div className="mt-11 flex flex-wrap gap-3">
                 <BotaoLink href="/cardapio#executivo" variante="vinho" tamanho="lg">
                   Ver menu executivo
                 </BotaoLink>
-                <BotaoLink href={whatsappLink("Olá! Gostaria de consultar os dias, as opções e os valores do almoço executivo do Rizz.")} variante="contorno-tinta">
-                  Consultar pelo WhatsApp
-                </BotaoLink>
+                {!executivo.condicoesConfirmadas && (
+                  <BotaoLink href={whatsappLink("Olá! Gostaria de consultar os dias, as opções e os valores do almoço executivo do Rizz.")} variante="contorno-tinta">
+                    Consultar pelo WhatsApp
+                  </BotaoLink>
+                )}
               </div>
             </div>
 
