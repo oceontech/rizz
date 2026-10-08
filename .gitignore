@@ -43,3 +43,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# contas e CLIs: tokens e links locais nunca vão para o git
+.claude/settings.local.json
