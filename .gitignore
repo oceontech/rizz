@@ -46,3 +46,6 @@ next-env.d.ts
 
 # contas e CLIs: tokens e links locais nunca vão para o git
 .claude/settings.local.json
+
+# logs do next dev e outros logs locais
+*.log
