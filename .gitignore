@@ -49,3 +49,9 @@ next-env.d.ts
 
 # logs do next dev e outros logs locais
 *.log
+
+# modelo de variáveis, sem valores reais
+!.env.example
+
+# PDFs do cardápio impresso (material de referência do cliente)
+/cardápios/
