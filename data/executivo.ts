@@ -10,52 +10,48 @@ export type ItemExecutivo = {
 };
 
 /**
- * Menu executivo — transcrito da peça impressa.
- *
- * ⚠️ Divergência de preço nas fontes: o cardápio impresso traz
- * **R$ 75,90**; um post de dezembro/2025 anunciava R$ 72,90. Adotamos 75,90
- * por ser a peça mais recente e a oficial. Confirmar antes de publicar.
+ * Menu executivo — transcrito da peça impressa "Menu Executivo" (pasta
+ * `cardápios/`), que traz o valor do menu completo, os dias, o horário e o
+ * preço avulso de cada item.
  */
 export const executivo = {
   ativo: true,
-  precoCompleto: 75.9,
-  // Valores e dias divergentes aguardam confirmação da casa.
-  condicoesConfirmadas: false,
+  precoCompleto: 78.9,
+  condicoesConfirmadas: true,
   get precoAvulsoMin(): number {
     return Math.min(...this.pratos.map((prato) => prato.preco));
   },
   dias: "Segunda a sexta",
   horario: "11h às 14h30",
-  chamada: "Escolha uma entrada, um prato principal e uma sobremesa entre as opções do menu executivo",
+  chamada: "Escolha qualquer entrada, prato principal e sobremesa do menu executivo",
 
   entradas: [
-    { id: "ex-polenta", nome: "Polenta com Cogumelos", preco: 16 },
-    { id: "ex-carpaccio", nome: "Carpaccio com Salada", preco: 19, selo: "vpj" },
-    { id: "ex-salada", nome: "Salada", preco: 11 },
-    { id: "ex-arancini", nome: "Arancini de Parmesão", preco: 19 },
-    { id: "ex-mini-fritas", nome: "Mini Fritas", preco: 11 },
+    { id: "ex-polenta", nome: "Polenta Cremosa com Ragu de Cogumelos", preco: 17.9 },
+    { id: "ex-carpaccio", nome: "Carpaccio com Salada", preco: 19.9, selo: "vpj" },
+    { id: "ex-arancini", nome: "Arancini de Parmesão", preco: 19.9 },
+    { id: "ex-mini-fritas", nome: "Mini Fritas", preco: 13.9 },
   ] as ItemExecutivo[],
 
   pratos: [
-    { id: "ex-steak-milanesa", nome: "Steak Red Angus à Milanesa com Risoto de Brie", preco: 49, selo: "vpj" },
-    { id: "ex-steak-parmegiana", nome: "Steak Red Angus à Parmegiana com Arroz e Fritas", preco: 49, selo: "vpj" },
-    { id: "ex-frango-parmegiana", nome: "Filé de Frango à Parmegiana com Arroz e Fritas", preco: 46, selo: "vpj", img: "parmegiana-fritas" },
-    { id: "ex-strogonoff", nome: "Strogonoff de Filé Mignon com Arroz e Fritas", preco: 48 },
-    { id: "ex-talharim-alfredo", nome: "Talharim ao Molho Alfredo com Filé de Frango Empanado", preco: 46, img: "frango-talharim-alfredo" },
-    { id: "ex-copa-milanesa", nome: "Copa Lombo Suíno à Milanesa com Risoto de Limão Siciliano", preco: 45, selo: "duroc", img: "copa-lombo-limao" },
-    { id: "ex-copa-mostarda", nome: "Copa Lombo Suíno ao Molho Mostarda com Risoto de Alho-poró", preco: 46 },
-    { id: "ex-carbonara", nome: "Espaguete à Carbonara", preco: 44 },
-    { id: "ex-4-queijos", nome: "Talharim aos 4 Queijos", preco: 39 },
-    { id: "ex-risoto-camarao", nome: "Risoto de Camarão", preco: 48 },
-    { id: "ex-risoto-pera", nome: "Risoto de Pera com Gorgonzola", preco: 44 },
-    { id: "ex-tilapia-milanesa", nome: "Tilápia à Milanesa com Risoto de Funghi", preco: 48 },
-    { id: "ex-tilapia-legumes", nome: "Tilápia com Arroz e Legumes", preco: 43 },
+    { id: "ex-steak-milanesa", nome: "Steak Red Angus à Milanesa com Risoto de Brie", preco: 49.9, selo: "vpj" },
+    { id: "ex-steak-parmegiana", nome: "Steak Red Angus à Parmegiana com Arroz e Fritas", preco: 49.9, selo: "vpj" },
+    { id: "ex-steak-talharim", nome: "Steak Red Angus Grelhado com Talharim aos 4 Queijos", preco: 49.9, selo: "vpj" },
+    { id: "ex-frango-parmegiana", nome: "Filé de Frango à Parmegiana com Arroz e Fritas", preco: 47.9, img: "parmegiana-fritas" },
+    { id: "ex-strogonoff", nome: "Strogonoff de Filé Mignon com Arroz e Fritas", preco: 49.9, selo: "vpj" },
+    { id: "ex-talharim-alfredo", nome: "Talharim ao Molho Alfredo com Filé de Frango à Milanesa", preco: 47.9, img: "frango-talharim-alfredo" },
+    { id: "ex-copa-milanesa", nome: "Copa Lombo Suíno à Milanesa com Molho de Vinho e Risoto de Cebola Caramelizada", preco: 47.9, selo: "duroc", img: "copa-lombo-limao" },
+    { id: "ex-copa-mostarda", nome: "Copa Lombo Suíno ao Molho Mostarda Dijon com Risoto de Alho-Poró", preco: 48.9, selo: "duroc" },
+    { id: "ex-carbonara", nome: "Espaguete à Carbonara", preco: 46.9 },
+    { id: "ex-risoto-camarao", nome: "Risoto de Camarão", preco: 49.9 },
+    { id: "ex-risoto-pera", nome: "Risoto de Pera com Gorgonzola", preco: 46.9 },
+    { id: "ex-tilapia-milanesa", nome: "Tilápia à Milanesa com Risoto de Funghi", preco: 49.9 },
+    { id: "ex-tilapia-legumes", nome: "Tilápia Grelhada com Arroz e Legumes", preco: 46.9 },
   ] as ItemExecutivo[],
 
   sobremesas: [
-    { id: "ex-abacaxi", nome: "Fatia de Abacaxi com Sorvete e Raspas de Limão", preco: 14 },
-    { id: "ex-pudim", nome: "Pudim da Casa", preco: 14 },
-    { id: "ex-cookie", nome: "Cookie Artesanal com Sorvete de Creme", preco: 16 },
-    { id: "ex-brigadeiro", nome: "Brigadeiro Artesanal de Colher", preco: 14 },
+    { id: "ex-abacaxi", nome: "Fatia de Abacaxi com Raspas de Limão Siciliano e Sorvete de Creme", preco: 15.9 },
+    { id: "ex-cookie", nome: "Cookie Artesanal com Sorvete de Creme", preco: 19.9 },
+    { id: "ex-brigadeiro", nome: "Brigadeiro Artesanal de Colher", preco: 16.9 },
+    { id: "ex-pudim", nome: "Pudim da Casa", preco: 15.9 },
   ] as ItemExecutivo[],
 };
