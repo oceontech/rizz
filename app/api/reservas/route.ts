@@ -1,39 +1,71 @@
 import { z } from "zod";
 
+import { normalizarTelefone } from "@/lib/admin/formato";
 import { sql } from "@/lib/db";
+import { OCASIOES } from "@/lib/reservas/regras";
+import { horariosDisponiveis, livresNoHorario, novoCodigo } from "@/lib/reservas/servidor";
 
 const esquema = z.object({
-  nome: z.string().trim().min(2).max(120),
-  telefone: z.string().trim().max(30).optional().default(""),
-  pessoas: z.coerce.number().int().min(1).max(200).catch(2),
-  data: z
+  nome: z.string().trim().min(2, "Informe seu nome.").max(120),
+  telefone: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional()
-    .or(z.literal("")),
-  hora: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/)
-    .optional()
-    .or(z.literal("")),
+    .transform(normalizarTelefone)
+    .refine((t) => /^\d{10,11}$/.test(t), "Informe um WhatsApp com DDD."),
+  pessoas: z.coerce.number().int().min(1).max(200),
+  data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  hora: z.string().regex(/^\d{2}:\d{2}$/),
+  ocasiao: z
+    .enum(OCASIOES.map((o) => o.id) as [string, ...string[]])
+    .nullable()
+    .optional(),
   obs: z.string().trim().max(500).optional().default(""),
   /** Armadilha para robôs: humanos não veem este campo. */
   site: z.string().max(0).optional(),
 });
 
+const erro = (mensagem: string, status = 400) => Response.json({ ok: false, erro: mensagem }, { status });
+
 /**
- * Pedido de reserva vindo do site. Entra como "pendente" no painel; o
- * cliente segue para o WhatsApp como antes, então nada muda para ele.
+ * Reserva feita pelo cliente no site. Confere a lotação antes e depois de
+ * gravar: se duas pessoas pegarem o último lugar ao mesmo tempo, a segunda
+ * gravação é desfeita e o cliente escolhe outro horário.
  */
 export async function POST(req: Request) {
   const corpo = esquema.safeParse(await req.json().catch(() => null));
-  if (!corpo.success) return Response.json({ ok: false, erro: "Dados inválidos" }, { status: 400 });
-
+  if (!corpo.success) return erro(corpo.error.issues[0]?.message ?? "Dados inválidos.");
   const d = corpo.data;
-  await sql`
-    insert into reservas (nome, telefone, pessoas, data, hora, obs, status, origem)
-    values (${d.nome}, ${d.telefone || null}, ${d.pessoas}, ${d.data || null}, ${d.hora || null},
-            ${d.obs || null}, 'pendente', 'site')`;
 
-  return Response.json({ ok: true });
+  const { cfg, horarios } = await horariosDisponiveis(d.data);
+  if (!cfg.ativo) return erro("As reservas pelo site estão pausadas. Fale com a gente pelo WhatsApp.", 409);
+  if (d.pessoas > cfg.maxPessoasOnline) {
+    return erro(`Para mais de ${cfg.maxPessoasOnline} pessoas, fale com a equipe pelo WhatsApp.`, 409);
+  }
+  const horario = horarios.find((h) => h.hora === d.hora);
+  if (!horario || horario.livres < d.pessoas) {
+    return erro("Esse horário acabou de lotar. Escolha outro, por favor.", 409);
+  }
+
+  const [repetida] = await sql`
+    select 1 from reservas
+    where data = ${d.data} and status in ('pendente','confirmada')
+      and regexp_replace(coalesce(telefone, ''), '\\D', '', 'g') = ${d.telefone}`;
+  if (repetida) {
+    return erro("Já existe uma reserva neste WhatsApp para esse dia. Para mudar, use o link que você recebeu.", 409);
+  }
+
+  const codigo = novoCodigo();
+  const status = cfg.confirmacaoAutomatica ? "confirmada" : "pendente";
+  const [nova] = await sql`
+    insert into reservas (nome, telefone, pessoas, data, hora, obs, ocasiao, status, origem, codigo)
+    values (${d.nome}, ${d.telefone}, ${d.pessoas}, ${d.data}, ${d.hora}, ${d.obs || null},
+            ${d.ocasiao ?? null}, ${status}, 'site', ${codigo})
+    returning id`;
+
+  const depois = await livresNoHorario(cfg, d.data, d.hora, Number(nova.id));
+  if (depois.livres < d.pessoas) {
+    await sql`delete from reservas where id = ${nova.id}`;
+    return erro("Esse horário acabou de lotar. Escolha outro, por favor.", 409);
+  }
+
+  return Response.json({ ok: true, codigo, status });
 }

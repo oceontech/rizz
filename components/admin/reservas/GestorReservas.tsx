@@ -1,253 +1,38 @@
 "use client";
 
-import {
-  Calendar as IconeCalendario,
-  CircleCheck,
-  CircleXmark,
-  Ellipsis,
-  Handset,
-  Pencil,
-  Plus,
-  TrashBin,
-  Check,
-  Clock,
-} from "@gravity-ui/icons";
-import {
-  Button,
-  Card,
-  Chip,
-  Dropdown,
-  EmptyState,
-  Label,
-  Modal,
-  SearchField,
-  Table,
-  Tabs,
-} from "@heroui/react";
+import { Calendar as IconeCalendario, Link as IconeLink, Plus } from "@gravity-ui/icons";
+import { Button, Card, Chip, EmptyState, Modal, SearchField, Table, Tabs } from "@heroui/react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 
-import {
-  avisar,
-  CampoData,
-  CampoHora,
-  CampoNumero,
-  CampoSelect,
-  CampoTexto,
-  Confirmar,
-} from "@/components/admin/campos";
+import { avisar, CampoData, Confirmar } from "@/components/admin/campos";
 import { Cabecalho } from "@/components/admin/ui";
 import type { Reserva } from "@/lib/admin/consultas";
-import { formatarData, mascaraTelefone, telefoneWhats } from "@/lib/admin/formato";
-import {
-  excluirReserva,
-  mudarStatusReserva,
-  salvarReserva,
-  type StatusReserva,
-} from "@/lib/admin/reservas-actions";
+import { formatarData, mascaraTelefone } from "@/lib/admin/formato";
+import { excluirReserva } from "@/lib/admin/reservas-actions";
+import { rotuloOcasiao, type Bloqueio, type ReservasConfig } from "@/lib/reservas/regras";
 
-const STATUS: Record<StatusReserva, { rotulo: string; cor: "warning" | "success" | "default" | "danger" }> = {
-  pendente: { rotulo: "Pendente", cor: "warning" },
-  confirmada: { rotulo: "Confirmada", cor: "success" },
-  concluida: { rotulo: "Concluída", cor: "default" },
-  cancelada: { rotulo: "Cancelada", cor: "danger" },
-};
+import AjustesReservas from "./AjustesReservas";
+import { AcaoRapida, copiarTexto, FormReserva, MenuReserva, STATUS } from "./compartilhado";
+import VisaoDia from "./VisaoDia";
 
+type Aba = "dia" | "lista" | "ajustes";
 type Visao = "hoje" | "proximas" | "pendentes" | "anteriores";
 
-function linkConfirmacao(r: Reserva) {
-  const whats = telefoneWhats(r.telefone);
-  if (!whats) return null;
-  const quando = r.data ? formatarData(r.data, { weekday: "long", day: "2-digit", month: "long" }) : "";
-  const texto = `Olá, ${r.nome.split(" ")[0]}! Sua reserva no Rizz Cucina & Vino está confirmada para ${quando}${
-    r.hora ? ` às ${r.hora}` : ""
-  }, ${r.pessoas} ${r.pessoas === 1 ? "pessoa" : "pessoas"}. Até lá!`;
-  return `https://wa.me/${whats}?text=${encodeURIComponent(texto)}`;
-}
-
-function Acoes({
-  r,
+function Lista({
+  reservas,
+  hoje,
   onEditar,
   onExcluir,
 }: {
-  r: Reserva;
-  onEditar: () => void;
-  onExcluir: () => void;
-}) {
-  const [, iniciar] = useTransition();
-
-  function status(s: StatusReserva) {
-    iniciar(async () => {
-      const res = await mudarStatusReserva(r.id, s);
-      if (avisar(res, `Reserva ${STATUS[s].rotulo.toLowerCase()}`) && s === "confirmada") {
-        const link = linkConfirmacao(r);
-        if (link) window.open(link, "_blank", "noopener");
-      }
-    });
-  }
-
-  return (
-    <div className="flex items-center justify-end gap-1">
-      {r.status === "pendente" && (
-        <Button size="sm" variant="secondary" onPress={() => status("confirmada")}>
-          <Check /> Confirmar
-        </Button>
-      )}
-      <Dropdown>
-        <Button isIconOnly size="sm" variant="ghost" aria-label={`Ações da reserva de ${r.nome}`}>
-          <Ellipsis />
-        </Button>
-        <Dropdown.Popover placement="bottom end">
-          <Dropdown.Menu
-            disabledKeys={[r.status]}
-            onAction={(k) => {
-              if (k === "editar") return onEditar();
-              if (k === "excluir") return onExcluir();
-              if (k === "whats") {
-                const w = telefoneWhats(r.telefone);
-                if (w) window.open(`https://wa.me/${w}`, "_blank", "noopener");
-                return;
-              }
-              status(k as StatusReserva);
-            }}
-          >
-            <Dropdown.Item id="editar" textValue="Editar">
-              <Pencil className="size-4" />
-              <Label>Editar</Label>
-            </Dropdown.Item>
-            {telefoneWhats(r.telefone) ? (
-              <Dropdown.Item id="whats" textValue="WhatsApp">
-                <Handset className="size-4" />
-                <Label>Abrir WhatsApp</Label>
-              </Dropdown.Item>
-            ) : null}
-            <Dropdown.Item id="confirmada" textValue="Confirmar">
-              <CircleCheck className="size-4" />
-              <Label>Marcar confirmada</Label>
-            </Dropdown.Item>
-            <Dropdown.Item id="pendente" textValue="Pendente">
-              <Clock className="size-4" />
-              <Label>Voltar para pendente</Label>
-            </Dropdown.Item>
-            <Dropdown.Item id="concluida" textValue="Concluída">
-              <Check className="size-4" />
-              <Label>Cliente compareceu</Label>
-            </Dropdown.Item>
-            <Dropdown.Item id="cancelada" textValue="Cancelar">
-              <CircleXmark className="size-4" />
-              <Label>Cancelar reserva</Label>
-            </Dropdown.Item>
-            <Dropdown.Item id="excluir" textValue="Excluir" variant="danger">
-              <TrashBin className="size-4" />
-              <Label>Excluir</Label>
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown.Popover>
-      </Dropdown>
-    </div>
-  );
-}
-
-function FormReserva({
-  reserva,
-  hoje,
-  onFechar,
-}: {
-  reserva: Reserva | null;
-  hoje: string;
-  onFechar: () => void;
-}) {
-  const [nome, setNome] = useState(reserva?.nome ?? "");
-  const [telefone, setTelefone] = useState(reserva?.telefone ? mascaraTelefone(reserva.telefone) : "");
-  const [pessoas, setPessoas] = useState<number | null>(reserva?.pessoas ?? 2);
-  const [data, setData] = useState<string | null>(reserva?.data ?? hoje);
-  const [hora, setHora] = useState<string | null>(reserva?.hora ?? "20:00");
-  const [obs, setObs] = useState(reserva?.obs ?? "");
-  const [status, setStatus] = useState<StatusReserva>(reserva?.status ?? "confirmada");
-  const [salvando, setSalvando] = useState(false);
-
-  async function salvar() {
-    setSalvando(true);
-    const r = await salvarReserva({
-      id: reserva?.id,
-      nome,
-      telefone: telefone || null,
-      pessoas: pessoas ?? 1,
-      data: data ?? "",
-      hora: hora ?? "",
-      obs: obs || null,
-      status,
-    });
-    setSalvando(false);
-    if (avisar(r, reserva ? "Reserva atualizada" : "Reserva registrada")) onFechar();
-  }
-
-  return (
-    <>
-      <Modal.Header>
-        <Modal.Icon className="bg-accent/10 text-accent">
-          <IconeCalendario className="size-5" />
-        </Modal.Icon>
-        <Modal.Heading>{reserva ? "Editar reserva" : "Nova reserva"}</Modal.Heading>
-      </Modal.Header>
-      <Modal.Body className="flex flex-col gap-4">
-        <CampoTexto label="Nome do cliente" value={nome} onChange={setNome} obrigatorio autoFocus />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <CampoTexto
-            label="Telefone / WhatsApp"
-            tipo="tel"
-            value={telefone}
-            onChange={(v) => setTelefone(mascaraTelefone(v))}
-            placeholder="(19) 99999-9999"
-          />
-          <CampoNumero label="Pessoas" value={pessoas} onChange={setPessoas} min={1} max={200} />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <CampoData label="Data" value={data} onChange={setData} obrigatorio />
-          <CampoHora label="Horário" value={hora} onChange={setHora} obrigatorio />
-        </div>
-        <CampoSelect
-          label="Situação"
-          value={status}
-          onChange={(v) => setStatus(v as StatusReserva)}
-          opcoes={(Object.keys(STATUS) as StatusReserva[]).map((s) => ({ id: s, rotulo: STATUS[s].rotulo }))}
-        />
-        <CampoTexto
-          label="Observações"
-          value={obs}
-          onChange={setObs}
-          multilinha
-          linhas={2}
-          placeholder="Aniversário, cadeirão, restrição alimentar…"
-        />
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="tertiary" onPress={onFechar} isDisabled={salvando}>
-          Cancelar
-        </Button>
-        <Button onPress={salvar} isPending={salvando}>
-          Salvar reserva
-        </Button>
-      </Modal.Footer>
-    </>
-  );
-}
-
-export default function GestorReservas({
-  reservas,
-  hoje,
-  abrirNova,
-}: {
   reservas: Reserva[];
   hoje: string;
-  abrirNova: boolean;
+  onEditar: (r: Reserva) => void;
+  onExcluir: (r: Reserva) => void;
 }) {
-  const router = useRouter();
   const [visao, setVisao] = useState<Visao>("proximas");
   const [dia, setDia] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
-  const [editando, setEditando] = useState<Reserva | "nova" | null>(abrirNova ? "nova" : null);
-  const [excluindo, setExcluindo] = useState<Reserva | null>(null);
 
   const contagem = {
     hoje: reservas.filter((r) => r.data === hoje && r.status !== "cancelada").length,
@@ -264,37 +49,28 @@ export default function GestorReservas({
       l = l.filter((r) => (r.data ?? "9999") >= hoje && ["pendente", "confirmada"].includes(r.status));
     else if (visao === "pendentes") l = l.filter((r) => r.status === "pendente");
     else l = l.filter((r) => r.data !== null && r.data < hoje).reverse();
-    if (termo) l = l.filter((r) => `${r.nome} ${r.telefone ?? ""} ${r.obs ?? ""}`.toLowerCase().includes(termo));
+    if (termo)
+      l = l.filter((r) => `${r.nome} ${r.telefone ?? ""} ${r.obs ?? ""} ${r.mesa ?? ""}`.toLowerCase().includes(termo));
     return l;
   }, [reservas, visao, dia, busca, hoje]);
 
-  const pessoas = lista.filter((r) => r.status !== "cancelada").reduce((s, r) => s + r.pessoas, 0);
-
-  function fecharEditor() {
-    setEditando(null);
-    if (abrirNova) router.replace("/admin/reservas");
-  }
+  const pessoas = lista
+    .filter((r) => r.status !== "cancelada" && r.status !== "nao_compareceu")
+    .reduce((s, r) => s + r.pessoas, 0);
 
   const vazio = (
     <EmptyState className="flex flex-col items-center gap-2 py-12 text-center">
       <IconeCalendario className="size-6 text-muted" />
       <p className="font-medium">Nenhuma reserva aqui</p>
-      <p className="text-sm text-muted">Pedidos feitos pelo site aparecem automaticamente.</p>
+      <p className="text-sm text-muted">As reservas feitas pelo site aparecem automaticamente.</p>
     </EmptyState>
   );
 
+  const detalhe = (r: Reserva) =>
+    [rotuloOcasiao(r.ocasiao), r.mesa && `Mesa ${r.mesa}`, r.obs].filter(Boolean).join(" · ");
+
   return (
     <>
-      <Cabecalho
-        titulo="Reservas"
-        descricao="Pedidos do site chegam como pendentes. Confirme e o cliente recebe a mensagem pronta no WhatsApp."
-        acoes={
-          <Button size="sm" onPress={() => setEditando("nova")}>
-            <Plus /> Nova reserva
-          </Button>
-        }
-      />
-
       <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <Tabs
           selectedKey={visao}
@@ -329,7 +105,7 @@ export default function GestorReservas({
           <SearchField value={busca} onChange={setBusca} aria-label="Buscar reserva">
             <SearchField.Group>
               <SearchField.SearchIcon />
-              <SearchField.Input placeholder="Nome, telefone…" className="w-full" />
+              <SearchField.Input placeholder="Nome, telefone, mesa…" className="w-full" />
               <SearchField.ClearButton />
             </SearchField.Group>
           </SearchField>
@@ -369,7 +145,7 @@ export default function GestorReservas({
                       <p className="font-medium">{r.nome}</p>
                       <p className="text-xs text-muted">
                         {r.telefone ? mascaraTelefone(r.telefone) : "sem telefone"}
-                        {r.obs ? ` · ${r.obs}` : ""}
+                        {detalhe(r) ? ` · ${detalhe(r)}` : ""}
                       </p>
                     </Table.Cell>
                     <Table.Cell>
@@ -388,7 +164,10 @@ export default function GestorReservas({
                       <span className="text-xs text-muted">{r.origem === "site" ? "Site" : "Painel"}</span>
                     </Table.Cell>
                     <Table.Cell>
-                      <Acoes r={r} onEditar={() => setEditando(r)} onExcluir={() => setExcluindo(r)} />
+                      <div className="flex items-center justify-end gap-1">
+                        <AcaoRapida r={r} hoje={hoje} />
+                        <MenuReserva r={r} onEditar={() => onEditar(r)} onExcluir={() => onExcluir(r)} />
+                      </div>
                     </Table.Cell>
                   </Table.Row>
                 )}
@@ -423,12 +202,101 @@ export default function GestorReservas({
                   {r.pessoas} {r.pessoas === 1 ? "pessoa" : "pessoas"}
                 </span>
               </div>
-              {r.obs && <p className="rounded-xl bg-default px-3 py-2 text-xs text-muted">{r.obs}</p>}
-              <Acoes r={r} onEditar={() => setEditando(r)} onExcluir={() => setExcluindo(r)} />
+              {detalhe(r) && <p className="rounded-xl bg-default px-3 py-2 text-xs text-muted">{detalhe(r)}</p>}
+              <div className="flex items-center justify-end gap-1">
+                <AcaoRapida r={r} hoje={hoje} />
+                <MenuReserva r={r} onEditar={() => onEditar(r)} onExcluir={() => onExcluir(r)} />
+              </div>
             </Card>
           ))
         )}
       </div>
+    </>
+  );
+}
+
+export default function GestorReservas({
+  reservas,
+  config,
+  bloqueios,
+  hoje,
+  abrirNova,
+}: {
+  reservas: Reserva[];
+  config: ReservasConfig;
+  bloqueios: Bloqueio[];
+  hoje: string;
+  abrirNova: boolean;
+}) {
+  const router = useRouter();
+  const [aba, setAba] = useState<Aba>("dia");
+  const [editando, setEditando] = useState<Reserva | { nova: string } | null>(abrirNova ? { nova: hoje } : null);
+  const [excluindo, setExcluindo] = useState<Reserva | null>(null);
+
+  function fecharEditor() {
+    setEditando(null);
+    if (abrirNova) router.replace("/admin/reservas");
+  }
+
+  const nova = editando && "nova" in editando ? editando : null;
+
+  return (
+    <>
+      <Cabecalho
+        titulo="Reservas"
+        descricao={
+          config.ativo
+            ? "O cliente reserva pelo site entre os horários livres. Envie o link para quem pedir uma mesa."
+            : "As reservas pelo site estão pausadas: o site monta o pedido no WhatsApp da equipe."
+        }
+        acoes={
+          <>
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={() => copiarTexto(`${window.location.origin}/reservas`, "Link de reservas copiado")}
+            >
+              <IconeLink /> Copiar link de reservas
+            </Button>
+            <Button size="sm" onPress={() => setEditando({ nova: hoje })}>
+              <Plus /> Nova reserva
+            </Button>
+          </>
+        }
+      />
+
+      <Tabs selectedKey={aba} onSelectionChange={(k) => setAba(k as Aba)} className="mb-6">
+        <Tabs.ListContainer>
+          <Tabs.List aria-label="Seções de reservas">
+            <Tabs.Tab id="dia">
+              Dia
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="lista">
+              Todas
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="ajustes">
+              Ajustes
+              <Tabs.Indicator />
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs.ListContainer>
+      </Tabs>
+
+      {aba === "dia" && (
+        <VisaoDia
+          reservas={reservas}
+          config={config}
+          bloqueios={bloqueios}
+          hoje={hoje}
+          onNova={(dia) => setEditando({ nova: dia })}
+          onEditar={setEditando}
+          onExcluir={setExcluindo}
+        />
+      )}
+      {aba === "lista" && <Lista reservas={reservas} hoje={hoje} onEditar={setEditando} onExcluir={setExcluindo} />}
+      {aba === "ajustes" && <AjustesReservas config={config} bloqueios={bloqueios} hoje={hoje} />}
 
       <Modal>
         <Modal.Backdrop isOpen={editando !== null} onOpenChange={(v) => !v && fecharEditor()}>
@@ -437,9 +305,9 @@ export default function GestorReservas({
               <Modal.CloseTrigger />
               {editando !== null && (
                 <FormReserva
-                  key={editando === "nova" ? "nova" : editando.id}
-                  reserva={editando === "nova" ? null : editando}
-                  hoje={hoje}
+                  key={nova ? `nova-${nova.nova}` : (editando as Reserva).id}
+                  reserva={nova ? null : (editando as Reserva)}
+                  dataInicial={nova?.nova ?? hoje}
                   onFechar={fecharEditor}
                 />
               )}

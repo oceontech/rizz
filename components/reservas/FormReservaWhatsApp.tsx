@@ -13,13 +13,10 @@ const rotulo =
   "mb-2 block text-[0.625rem] uppercase tracking-[0.18em] text-creme/45";
 
 /**
- * A reserva vira uma mensagem pronta no WhatsApp — e, em paralelo, um pedido
- * "pendente" no painel (/admin/reservas), onde a equipe confirma e responde.
- *
- * O registro vai por sendBeacon, sem esperar resposta: o window.open precisa
- * sair no mesmo gesto do clique, senão o navegador bloqueia a aba nova.
+ * Alternativa ao fluxo online: quando as reservas pelo site estão pausadas
+ * (ou o banco está fora), o pedido vira uma mensagem pronta no WhatsApp.
  */
-export default function FormReserva() {
+export default function FormReservaWhatsApp() {
   const [dados, setDados] = useState({
     nome: "",
     telefone: "",
@@ -46,29 +43,8 @@ export default function FormReserva() {
       .join("\n");
   }
 
-  function registrarNoPainel() {
-    const corpo = JSON.stringify({
-      nome: dados.nome,
-      telefone: dados.telefone,
-      pessoas: dados.pessoas === "mais de 12" ? 13 : Number(dados.pessoas),
-      data: dados.data,
-      hora: dados.hora,
-      obs: dados.obs,
-      site: "",
-    });
-    try {
-      const blob = new Blob([corpo], { type: "application/json" });
-      if (!navigator.sendBeacon?.("/api/reservas", blob)) {
-        void fetch("/api/reservas", { method: "POST", body: corpo, keepalive: true, headers: { "content-type": "application/json" } });
-      }
-    } catch {
-      /* o WhatsApp segue sendo o canal principal */
-    }
-  }
-
   function enviar(evento: React.FormEvent) {
     evento.preventDefault();
-    registrarNoPainel();
     window.open(whatsappLink(montarMensagem()), "_blank", "noopener");
   }
 

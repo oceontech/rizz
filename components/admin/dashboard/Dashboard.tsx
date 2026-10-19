@@ -28,8 +28,9 @@ function saudacao() {
 const STATUS = {
   pendente: { rotulo: "Pendente", cor: "warning" },
   confirmada: { rotulo: "Confirmada", cor: "success" },
-  concluida: { rotulo: "Concluída", cor: "default" },
+  concluida: { rotulo: "Chegou", cor: "default" },
   cancelada: { rotulo: "Cancelada", cor: "danger" },
+  nao_compareceu: { rotulo: "Não veio", cor: "danger" },
 } as const;
 
 /** Visitas carimbadas por dia — série única, barras finas, tooltip por barra. */

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import FormReserva from "@/components/reservas/FormReserva";
+import ReservaOnline from "@/components/reservas/ReservaOnline";
 import Filete from "@/components/motion/Filete";
 import Reveal from "@/components/motion/Reveal";
 import RevealScrub from "@/components/motion/RevealScrub";
@@ -10,7 +10,7 @@ import { enderecoLinha, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Reservas",
-  description: `Consulte a disponibilidade de mesas no ${site.nome} pelo WhatsApp. Veja o endereço e os horários para planejar sua visita.`,
+  description: `Reserve sua mesa no ${site.nome} em poucos toques: escolha o dia, o horário e receba a confirmação na hora.`,
   alternates: { canonical: "/reservas" },
 };
 
@@ -21,12 +21,12 @@ export default function ReservasPage() {
         <p className="eyebrow text-ambar">Reservas</p>
 
         <RevealScrub as="h1" className="mt-5 text-display text-creme">
-          Solicite sua reserva
+          Reserve sua mesa
         </RevealScrub>
 
         <p className="mt-6 max-w-prose leading-relaxed text-creme/70">
-          Preencha os dados para preparar sua mensagem no WhatsApp. A equipe
-          confirma a disponibilidade e a reserva na conversa.
+          Escolha o dia e o horário entre os que estão livres. A confirmação
+          sai na hora, com um link para alterar ou cancelar quando quiser.
         </p>
 
         <Reveal delay={0.1}>
@@ -39,7 +39,7 @@ export default function ReservasPage() {
       </header>
 
       <div className="wrap grid gap-16 pb-24 pt-14 md:grid-cols-[1.15fr_1fr] md:gap-24 md:pb-32">
-        <FormReserva />
+        <ReservaOnline />
 
         <aside>
           <Reveal>

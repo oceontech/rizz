@@ -81,6 +81,29 @@ create table if not exists reservas (
 );
 create index if not exists reservas_data_idx on reservas (data, hora);
 
+-- Reservas com lotação: código do link do cliente, ocasião, mesa e o
+-- status "não compareceu". "concluida" é exibido como "Chegou".
+alter table reservas add column if not exists codigo        text;
+alter table reservas add column if not exists ocasiao       text;
+alter table reservas add column if not exists mesa          text;
+alter table reservas add column if not exists atualizado_em timestamptz;
+create unique index if not exists reservas_codigo_idx on reservas (codigo);
+alter table reservas drop constraint if exists reservas_status_check;
+alter table reservas add constraint reservas_status_check
+  check (status in ('pendente','confirmada','concluida','cancelada','nao_compareceu'));
+
+-- Bloqueios: fecha um dia ou turno, ou reduz a lotação dele.
+-- turno nulo = o dia inteiro; lotacao nula = fechado para reservas.
+create table if not exists reserva_bloqueios (
+  id        serial primary key,
+  data      date not null,
+  turno     text check (turno in ('almoco','jantar')),
+  lotacao   int  check (lotacao >= 0),
+  motivo    text,
+  criado_em timestamptz not null default now()
+);
+create index if not exists reserva_bloqueios_data_idx on reserva_bloqueios (data);
+
 -- Promoções / pop-up -------------------------------------------
 
 create table if not exists promocoes (

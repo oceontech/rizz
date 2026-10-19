@@ -13,6 +13,9 @@ export type Reserva = {
   data: string | null;
   hora: string | null;
   obs: string | null;
+  ocasiao: string | null;
+  mesa: string | null;
+  codigo: string | null;
   status: StatusReserva;
   origem: "site" | "painel";
   criadoEm: string;
@@ -46,6 +49,9 @@ export function mapReserva(l: Linha): Reserva {
     data: paraDataISO(l.data),
     hora: l.hora ? String(l.hora) : null,
     obs: l.obs ? String(l.obs) : null,
+    ocasiao: l.ocasiao ? String(l.ocasiao) : null,
+    mesa: l.mesa ? String(l.mesa) : null,
+    codigo: l.codigo ? String(l.codigo) : null,
     status: l.status as StatusReserva,
     origem: l.origem as Reserva["origem"],
     criadoEm: iso(l.criado_em)!,
