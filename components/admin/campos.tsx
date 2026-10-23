@@ -236,7 +236,7 @@ export function CampoOpcoes<T extends string>({
         valor={value}
         aoMudar={onChange}
         opcoes={opcoes.map((o) => ({ valor: o.id, rotulo: o.rotulo }))}
-        className="flex w-full [&>button]:flex-1"
+        className="flex w-full [&>button]:flex-1 [&>button]:px-3"
       />
       {descricao && <p className="text-[0.8rem] leading-snug text-muted-foreground">{descricao}</p>}
     </div>

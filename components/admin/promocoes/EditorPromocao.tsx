@@ -102,7 +102,7 @@ function Formulario({ aberto, promocao, onFechar }: { aberto: boolean; promocao:
       aoFechar={onFechar}
       icone={Megaphone}
       titulo={promocao ? "Editar promoção" : "Nova promoção"}
-      descricao="A prévia ao lado mostra o pop-up como o cliente vai ver."
+      descricao="A prévia mostra o pop-up como o cliente vai ver."
       largura="sm:max-w-[min(1040px,calc(100%-2rem))]"
       rodape={
         <>
@@ -157,7 +157,7 @@ function Formulario({ aberto, promocao, onFechar }: { aberto: boolean; promocao:
               value={f.imagemUrl}
               onChange={muda("imagemUrl")}
               pasta="promocoes"
-              proporcao="aspect-[16/9]"
+              proporcao="aspect-[21/9]"
               descricao="Formato paisagem funciona melhor. Até 4,5 MB."
             />
           </Grupo>

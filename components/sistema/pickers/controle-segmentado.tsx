@@ -60,7 +60,7 @@ export function ControleSegmentado<T extends string>({
             onClick={() => aoMudar(opcao.valor)}
             onKeyDown={(evento) => aoTeclar(evento, indice)}
             className={cn(
-              "relative rounded-full font-medium whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "relative min-w-0 rounded-full font-medium whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               tamanho === "padrao" ? "h-9 px-4 text-sm" : "h-7 px-3 text-xs",
               ativo ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
@@ -72,8 +72,8 @@ export function ControleSegmentado<T extends string>({
                 transition={{ type: "spring", stiffness: 500, damping: 38 }}
               />
             )}
-            <span className="relative flex items-center gap-1.5">
-              {opcao.rotulo}
+            <span className="relative flex min-w-0 items-center justify-center gap-1.5">
+              <span className="truncate">{opcao.rotulo}</span>
               {opcao.contagem !== undefined && (
                 <span className={cn("numeros", ativo ? "opacity-80" : "opacity-60")}>{opcao.contagem}</span>
               )}

@@ -242,7 +242,7 @@ function BarraCelular({ usuario, pendentes }: { usuario: Props["usuario"]; pende
     <>
       <nav
         aria-label="Atalhos"
-        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 md:hidden"
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-5 rounded-full bg-sidebar p-1.5 shadow-modal">
           {NAV.filter((n) => NAV_BARRA.includes(n.href)).map(({ href, curto, Icone }) => {
@@ -317,13 +317,13 @@ export default function Shell({ usuario, pendentes, recolhidaInicial, children }
   }
 
   return (
-    <div className="flex min-h-dvh flex-col md:flex-row">
+    <div className="flex min-h-dvh flex-col lg:flex-row">
       {/* Sidebar escura e flutuante — desktop */}
       <motion.aside
         initial={false}
         animate={{ width: LARGURA[recolhida ? "recolhida" : "aberta"] }}
         transition={MOLA}
-        className="sticky top-0 hidden h-dvh shrink-0 p-3 md:block"
+        className="sticky top-0 hidden h-dvh shrink-0 p-3 lg:block"
       >
         <div className="flex h-full flex-col overflow-hidden rounded-[28px] bg-sidebar px-3 py-5 text-sidebar-foreground baixa:py-4 dark:border dark:border-sidebar-border">
           <div
@@ -355,7 +355,7 @@ export default function Shell({ usuario, pendentes, recolhidaInicial, children }
       </motion.aside>
 
       {/* Topo — celular */}
-      <header className="sticky top-0 z-30 flex items-center justify-between bg-background/80 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur-xl md:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between bg-background/80 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur-xl lg:hidden">
         <Link href="/admin" aria-label="Rizz, visão geral" className="grid h-11 place-items-center">
           <Logo variante="vinho" decorativo className="h-auto w-16 dark:hidden" sizes="64px" />
           <Logo variante="branca" decorativo className="hidden h-auto w-16 dark:block" sizes="64px" />
@@ -363,12 +363,12 @@ export default function Shell({ usuario, pendentes, recolhidaInicial, children }
         <BotaoTema />
       </header>
 
-      <div className="relative flex min-w-0 flex-1 flex-col px-4 pb-32 md:px-8 md:pt-6 md:pb-12">
+      <div className="relative flex min-w-0 flex-1 flex-col px-4 pb-32 lg:px-8 lg:pt-6 lg:pb-12">
         {/* Tema no canto, fora do fluxo; o primeiro cabeçalho da página deixa o espaço dele */}
-        <div className="absolute top-6 right-8 z-10 hidden md:block">
+        <div className="absolute top-6 right-8 z-10 hidden lg:block">
           <BotaoTema className="bg-card shadow-suave hover:bg-accent" />
         </div>
-        <main className="mx-auto mt-2 w-full max-w-[1240px] flex-1 md:mt-1 md:[&_header:first-of-type]:pr-14">
+        <main className="mx-auto mt-2 w-full max-w-[1240px] flex-1 lg:mt-1 lg:[&_header:first-of-type]:pr-14">
           <TransicaoPagina key={pathname}>{children}</TransicaoPagina>
         </main>
       </div>

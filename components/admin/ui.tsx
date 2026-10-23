@@ -108,7 +108,7 @@ export function Kpi({
   tom?: Tom;
 }) {
   return (
-    <Card className="gap-3">
+    <Card className="h-full gap-3">
       <div className="flex items-center justify-between gap-3 px-(--card-spacing)">
         <p className="text-[13px] font-medium text-muted-foreground">{rotulo}</p>
         <SeloIcone icone={icone} tom={tom} className="size-8 rounded-lg" />
@@ -146,9 +146,9 @@ export function Secao({
           <h2 className="text-[15px] leading-[22px] font-semibold">{titulo}</h2>
           {descricao && <p className="mt-0.5 text-sm text-muted-foreground">{descricao}</p>}
         </div>
-        {acoes}
+        {acoes && <div className="shrink-0">{acoes}</div>}
       </div>
-      <div className="flex flex-col gap-5 px-(--card-spacing)">{children}</div>
+      <div className="@container flex flex-col gap-5 px-(--card-spacing)">{children}</div>
     </Card>
   );
 }

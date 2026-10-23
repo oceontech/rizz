@@ -155,7 +155,7 @@ export default function Dashboard({ nome, resumo }: { nome: string; resumo: Resu
         </div>
       </header>
 
-      <ListaEscalonada className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+      <ListaEscalonada className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
         <ItemEscalonado>
           <Kpi
             rotulo="Reservas hoje"
@@ -246,7 +246,7 @@ export default function Dashboard({ nome, resumo }: { nome: string; resumo: Resu
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Card>
           <TituloBloco icone={Gift} titulo="Aniversariantes do mês" descricao="Uma mensagem com um mimo traz o cliente de volta" />
           {resumo.aniversariantes.length === 0 ? (

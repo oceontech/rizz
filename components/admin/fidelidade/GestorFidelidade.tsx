@@ -557,7 +557,7 @@ export default function GestorFidelidade({
 
       <ListaEscalonada className="mb-5 grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         <ItemEscalonado>
-          <Kpi rotulo="Clientes" valor={clientes.length} icone={Users} tom="marca" />
+          <Kpi rotulo="Clientes" valor={clientes.length} detalhe="Cadastrados no cartão" icone={Users} tom="marca" />
         </ItemEscalonado>
         <ItemEscalonado>
           <Kpi rotulo="Com prêmio" valor={contagem.premio} detalhe="Prontos para resgatar" icone={Gift} tom="atencao" />

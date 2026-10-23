@@ -260,17 +260,19 @@ export default function GestorCardapio({ categorias }: { categorias: CategoriaCa
           aria-label="Buscar prato"
           classeCaixa="rounded-full border-0 bg-card shadow-suave md:max-w-xs"
         />
-        <ControleSegmentado
-          rotulo="Filtrar pratos"
-          sobrePagina
-          valor={filtro}
-          aoMudar={setFiltro}
-          opcoes={[
-            { valor: "todos", rotulo: "Todos", contagem: contagem.todos },
-            { valor: "esgotados", rotulo: "Esgotados", contagem: contagem.esgotados },
-            { valor: "ocultos", rotulo: "Ocultos", contagem: contagem.ocultos },
-          ]}
-        />
+        <div className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:px-0">
+          <ControleSegmentado
+            rotulo="Filtrar pratos"
+            sobrePagina
+            valor={filtro}
+            aoMudar={setFiltro}
+            opcoes={[
+              { valor: "todos", rotulo: "Todos", contagem: contagem.todos },
+              { valor: "esgotados", rotulo: "Esgotados", contagem: contagem.esgotados },
+              { valor: "ocultos", rotulo: "Ocultos", contagem: contagem.ocultos },
+            ]}
+          />
+        </div>
       </div>
 
       {exibidas.length === 0 ? (

@@ -16,6 +16,7 @@ import {
 import { Secao, Selo } from "@/components/admin/ui";
 import { Button } from "@/components/sistema/ui/button";
 import { formatarData } from "@/lib/admin/formato";
+import { cn } from "@/lib/utils";
 import { criarBloqueio, excluirBloqueio, salvarConfigReservas } from "@/lib/admin/reservas-actions";
 import { NOME_TURNO, type Bloqueio, type ReservasConfig, type Turno } from "@/lib/reservas/regras";
 
@@ -72,7 +73,7 @@ function Regras({ config }: { config: ReservasConfig }) {
         titulo="Lotação"
         descricao="Quantas pessoas cabem no salão ao mesmo tempo. Cada reserva ocupa lugares pela permanência média."
       >
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 @md:grid-cols-2">
           <CampoNumero label="Lugares no almoço" value={c.lotacaoAlmoco} onChange={(v) => mudar("lotacaoAlmoco", v ?? 0)} min={0} />
           <CampoNumero label="Lugares no jantar" value={c.lotacaoJantar} onChange={(v) => mudar("lotacaoJantar", v ?? 0)} min={0} />
           <CampoNumero
@@ -97,7 +98,7 @@ function Regras({ config }: { config: ReservasConfig }) {
       </Secao>
 
       <Secao icone={Clock} titulo="Horários oferecidos" descricao="Os horários seguem o expediente de cada dia da semana.">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 @md:grid-cols-2">
           <CampoSelect
             label="Intervalo entre horários"
             value={String(c.intervalo)}
@@ -105,14 +106,14 @@ function Regras({ config }: { config: ReservasConfig }) {
             opcoes={INTERVALOS}
           />
           <CampoNumero
-            label="Último horário antes do fechamento"
+            label="Último horário"
             unidade="min"
             value={c.ultimoAntesDoFim}
             onChange={(v) => mudar("ultimoAntesDoFim", v ?? 60)}
             min={0}
             max={240}
             passo={15}
-            descricao="Ex.: jantar até 23h e 60 min → último horário às 22h."
+            descricao="Tempo antes do fechamento. Ex.: jantar até 23h e 60 min → último às 22h."
           />
           <CampoSelect
             label="Antecedência mínima"
@@ -121,17 +122,19 @@ function Regras({ config }: { config: ReservasConfig }) {
             opcoes={ANTECEDENCIAS}
           />
           <CampoNumero
-            label="Aceitar até quantos dias à frente"
+            label="Antecedência máxima"
             unidade="dias"
             value={c.diasAFrente}
             onChange={(v) => mudar("diasAFrente", v ?? 60)}
             min={1}
             max={180}
+            descricao="Até quantos dias à frente o site aceita."
           />
         </div>
       </Secao>
 
-      <div className="sticky bottom-28 z-10 flex justify-end md:bottom-6">
+      {/* Só flutua sobre o conteúdo quando há o que salvar */}
+      <div className={cn("flex justify-end", alterado && "sticky bottom-28 z-10 lg:bottom-6")}>
         <BotaoSalvar pendente={salvando} onClick={salvar} disabled={!alterado} size="lg" className="shadow-flutuante">
           {alterado ? "Salvar regras" : "Regras salvas"}
         </BotaoSalvar>
@@ -174,7 +177,7 @@ function Bloqueios({ bloqueios, hoje }: { bloqueios: Bloqueio[]; hoje: string })
       titulo="Feriados, eventos e bloqueios"
       descricao="Feche um dia ou turno para reservas pelo site, ou reduza a lotação (ex.: salão parcialmente reservado)."
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 @xl:grid-cols-2">
         <CampoData label="Data" value={data} onChange={setData} minimo={hoje} />
         <CampoOpcoes
           label="Turno"
@@ -198,14 +201,14 @@ function Bloqueios({ bloqueios, hoje }: { bloqueios: Bloqueio[]; hoje: string })
         {tipo === "reduzir" ? (
           <CampoNumero label="Lugares disponíveis" value={lotacao} onChange={setLotacao} min={0} />
         ) : (
-          <div className="hidden sm:block" />
+          <div className="hidden @xl:block" />
         )}
         <CampoTexto
           label="Motivo (só a equipe vê)"
           value={motivo}
           onChange={setMotivo}
           placeholder="Ex.: Feriado, evento fechado"
-          className="sm:col-span-2"
+          className="@xl:col-span-2"
         />
       </div>
       <BotaoSalvar pendente={salvando} onClick={adicionar} disabled={!data} className="self-start">
