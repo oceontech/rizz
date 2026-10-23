@@ -4,7 +4,7 @@ Atualizado em 19/10/2026. Ao resolver um item, apague-o daqui (ou mova para "Fei
 
 ## Feito recentemente
 
-- **Nova UI do painel e da reserva** (branch `feat/nova-ui`, 23/10/2026; ainda não está na `main`).
+- **Nova UI do painel e da reserva** (em produção desde 23/10/2026).
   - Painel: saiu o HeroUI; entrou o sistema visual do Ge System (cinza neutro, cards sem borda, sidebar escura flutuante e recolhível, barra inferior em pílula no celular, tema claro/escuro), com o vinho do Rizz no lugar do azul. Componentes base em `components/sistema/`, tokens em `app/(admin)/admin.css`.
   - Reserva online: saiu do layout escuro do site para `app/(reserva)/`, com root layout próprio, branco. Fluxo em etapas (pessoas → dia → horário → dados → revisão), calendário e seletores próprios, resumo ao lado no computador. Com a reserva online pausada, o mesmo fluxo termina no WhatsApp (substitui o antigo formulário com `<select>` e `input date/time` nativos).
   - Conferido: lint, typecheck, build e capturas locais (reserva completa até a revisão, sem enviar; login; telas do painel por uma rota temporária só de leitura, já apagada). **Não testado logado** no painel: salvar, excluir e mudar status pelas telas novas.
