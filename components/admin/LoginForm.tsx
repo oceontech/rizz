@@ -1,80 +1,48 @@
 "use client";
 
-import { Eye, EyeSlash, Envelope, Lock } from "@gravity-ui/icons";
-import { Alert, Button, Form, InputGroup, Label, Spinner, TextField } from "@heroui/react";
+import { CircleAlert, Loader2 } from "lucide-react";
 import { useActionState, useState } from "react";
 
+import { Campo } from "@/components/sistema/formulario/campo";
+import { InputSenha } from "@/components/sistema/inputs/input-senha";
+import { InputEmail } from "@/components/sistema/inputs/input-web";
+import { Button } from "@/components/sistema/ui/button";
 import { entrar, type EstadoLogin } from "@/lib/admin/sessao-actions";
 
 export default function LoginForm({ de }: { de?: string }) {
   const [estado, acao, pendente] = useActionState<EstadoLogin, FormData>(entrar, {});
-  const [verSenha, setVerSenha] = useState(false);
+  const [email, setEmail] = useState(estado.email ?? "");
 
   return (
-    <Form action={acao} className="flex flex-col gap-5">
+    <form action={acao} className="flex flex-col gap-5">
       {de && <input type="hidden" name="de" value={de} />}
 
       {estado.erro && (
-        <Alert status="danger">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Title>{estado.erro}</Alert.Title>
-          </Alert.Content>
-        </Alert>
+        <p role="alert" className="flex items-start gap-2.5 rounded-xl bg-negativo/10 px-3.5 py-3 text-sm text-negativo-texto">
+          <CircleAlert className="mt-0.5 size-4 shrink-0" />
+          {estado.erro}
+        </p>
       )}
 
-      <TextField
-        isRequired
-        name="email"
-        type="email"
-        autoComplete="username"
-        defaultValue={estado.email}
-        fullWidth
-      >
-        <Label>E-mail</Label>
-        <InputGroup fullWidth>
-          <InputGroup.Prefix>
-            <Envelope className="size-4 text-muted" />
-          </InputGroup.Prefix>
-          <InputGroup.Input placeholder="voce@rizzrestaurante.com.br" />
-        </InputGroup>
-      </TextField>
+      <Campo id="email" rotulo="E-mail">
+        <InputEmail
+          name="email"
+          autoComplete="username"
+          required
+          valor={email}
+          aoMudar={(v) => setEmail(v ?? "")}
+          placeholder="voce@rizzrestaurante.com.br"
+        />
+      </Campo>
 
-      <TextField
-        isRequired
-        name="senha"
-        type={verSenha ? "text" : "password"}
-        autoComplete="current-password"
-        fullWidth
-      >
-        <Label>Senha</Label>
-        <InputGroup fullWidth>
-          <InputGroup.Prefix>
-            <Lock className="size-4 text-muted" />
-          </InputGroup.Prefix>
-          <InputGroup.Input placeholder="••••••••" />
-          <InputGroup.Suffix className="pr-1">
-            <Button
-              isIconOnly
-              size="sm"
-              variant="ghost"
-              aria-label={verSenha ? "Ocultar senha" : "Mostrar senha"}
-              onPress={() => setVerSenha((v) => !v)}
-            >
-              {verSenha ? <EyeSlash /> : <Eye />}
-            </Button>
-          </InputGroup.Suffix>
-        </InputGroup>
-      </TextField>
+      <Campo id="senha" rotulo="Senha">
+        <InputSenha name="senha" autoComplete="current-password" required placeholder="••••••••" />
+      </Campo>
 
-      <Button type="submit" size="lg" fullWidth isPending={pendente} className="mt-1">
-        {({ isPending }) => (
-          <>
-            {isPending && <Spinner color="current" size="sm" />}
-            {isPending ? "Entrando…" : "Entrar no painel"}
-          </>
-        )}
+      <Button type="submit" size="lg" disabled={pendente} className="mt-1 w-full rounded-full">
+        {pendente && <Loader2 className="animate-spin" />}
+        {pendente ? "Entrando…" : "Entrar no painel"}
       </Button>
-    </Form>
+    </form>
   );
 }

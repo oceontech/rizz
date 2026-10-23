@@ -1,22 +1,20 @@
 "use client";
 
-import { Toast } from "@heroui/react";
-import { useRouter } from "next/navigation";
-import { I18nProvider, RouterProvider } from "react-aria-components";
+import { ProvedorMovimento } from "@/components/sistema/movimento/provedor-movimento";
+import { ProvedorTema } from "@/components/sistema/tema/provedor-tema";
+import { Toaster } from "@/components/sistema/ui/sonner";
+import { TooltipProvider } from "@/components/sistema/ui/tooltip";
 
-/**
- * pt-BR para datas, horas e números de todos os pickers do HeroUI, e o
- * roteador do Next para os links internos dos componentes React Aria.
- */
+/** Tema claro/escuro (segue o aparelho), movimento reduzido, dicas e avisos do painel. */
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-
   return (
-    <I18nProvider locale="pt-BR">
-      <RouterProvider navigate={router.push}>
-        {children}
-        <Toast.Provider placement="bottom end" />
-      </RouterProvider>
-    </I18nProvider>
+    <ProvedorTema>
+      <ProvedorMovimento>
+        <TooltipProvider delayDuration={300}>
+          {children}
+          <Toaster position="top-center" />
+        </TooltipProvider>
+      </ProvedorMovimento>
+    </ProvedorTema>
   );
 }

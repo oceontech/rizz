@@ -21,7 +21,7 @@ O estado atual e o que falta fazer estão em [`docs/ESTADO.md`](docs/ESTADO.md).
 
 - Next.js 16.3 (App Router, `proxy.ts` no lugar de `middleware.ts`), React 19.2, TypeScript, Tailwind v4.
 - Site: GSAP + Lenis (regras de animação em `ENTREGA.md`, seção "Cenas de scroll").
-- Painel: HeroUI v3 e ícones `@gravity-ui/icons`.
+- Painel e reserva online: sistema de componentes copiado do Ge System (shadcn/ui sobre Radix, `motion`, `react-day-picker`, `vaul`, `sonner`, ícones `lucide-react`) em `components/sistema/`. Nenhum controle nativo (`<select>`, `input type="date|time"`): use os pickers e smart inputs de lá.
 - Banco: Postgres no **Neon**, via `@neondatabase/serverless` (driver HTTP, uma requisição por consulta), com SQL escrito à mão em `` sql`...` ``. Não há ORM.
 - Arquivos: **Vercel Blob** (fotos de pratos e promoções).
 - Login do painel: JWT próprio (`jose`) num cookie `rizz_sessao` e senhas com `bcryptjs`. Não usa Neon Auth, apesar das variáveis `NEON_AUTH_*` existirem.
@@ -69,10 +69,11 @@ Os nomes estão em `.env.example`; os valores ficam no `.env.local` e na Vercel.
 ## Estrutura
 
 ```
-app/(site)/          páginas públicas (reservas/[codigo] = link pessoal da reserva)
-app/(admin)/admin/   login e painel ((painel)/ = páginas que exigem sessão)
+app/(site)/          páginas públicas do site (layout escuro, GSAP/Lenis)
+app/(reserva)/       reserva online em etapas e link pessoal (reservas/[codigo]); root layout próprio, branco
+app/(admin)/admin/   login e painel ((painel)/ = páginas que exigem sessão; tema claro/escuro)
 app/api/             reservas, fidelidade, promoções (rotas públicas)
-components/          site (home, menu, reservas, ...) e admin/ (painel)
+components/          site (home, menu, reservas, ...), admin/ (telas do painel) e sistema/ (UI base: ui, pickers, inputs, movimento)
 lib/
   site.ts            nome, endereço, telefone, URL e links do restaurante
   hours.ts           horários de funcionamento (base dos turnos de reserva)
@@ -92,7 +93,8 @@ Convenções do código: nomes em português (`salvarReserva`, `lerConfig`), com
 
 ## Contas e CLIs
 
-- Este projeto usa os tokens de `.claude/settings.local.json`, que valem só para esta pasta (GitHub: `oceontech`, repositório `oceontech/rizz`; Vercel: time `oceon`).
+- Tokens pelo cofre do Gestoken: área `Oceon` (GitHub: `oceontech`, repositório `oceontech/rizz`; Vercel: time `oceon`). Abra o Claude Code com `claude1` para receber as variáveis; em outro terminal, `gestoken exec -- <comando>`. Conferir com `gestoken env` (só nomes).
+- O Git usa o credential helper do `gestoken`, configurado só neste repositório (`git config --local`).
 - Nunca rodar `gh auth login`, `supabase login` ou `vercel login`, nem alterar configurações globais (git, gh, supabase, vercel).
 - Todo comando da Vercel usa `--token $VERCEL_TOKEN` e o escopo da conta deste projeto: `--scope team_jsF9ervoTl8eJv5RwbwjQAlC` (time `oceon`). No PowerShell, use `$env:VERCEL_TOKEN`.
 - Resend: conta da Oceon, domínio de envio `mail.oceontech.com.br` (DNS do `oceontech.com.br` na Hostinger). A chave vai só no `.env.local` e na Vercel, colocada pelo usuário.

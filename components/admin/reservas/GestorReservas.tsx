@@ -1,23 +1,73 @@
 "use client";
 
-import { Calendar as IconeCalendario, Link as IconeLink, Plus } from "@gravity-ui/icons";
-import { Button, Card, Chip, EmptyState, Modal, SearchField, Table, Tabs } from "@heroui/react";
+import { format, parse } from "date-fns";
+import { CalendarDays, Link as IconeLink, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import { avisar, CampoData, Confirmar } from "@/components/admin/campos";
-import { Cabecalho } from "@/components/admin/ui";
+import { avisar, Confirmar } from "@/components/admin/campos";
+import { Cabecalho, Selo, useUltimo } from "@/components/admin/ui";
+import { EstadoVazio } from "@/components/sistema/estados/estado-vazio";
+import { InputBusca } from "@/components/sistema/inputs/input-texto";
+import { Calendario } from "@/components/sistema/pickers/calendario";
+import { ControleSegmentado } from "@/components/sistema/pickers/controle-segmentado";
+import { GatilhoCampo } from "@/components/sistema/pickers/gatilho-campo";
+import { PainelAdaptavel } from "@/components/sistema/pickers/painel-adaptavel";
+import { Button } from "@/components/sistema/ui/button";
+import { Card } from "@/components/sistema/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/sistema/ui/table";
 import type { Reserva } from "@/lib/admin/consultas";
 import { formatarData, mascaraTelefone } from "@/lib/admin/formato";
 import { excluirReserva } from "@/lib/admin/reservas-actions";
 import { rotuloOcasiao, type Bloqueio, type ReservasConfig } from "@/lib/reservas/regras";
 
 import AjustesReservas from "./AjustesReservas";
-import { AcaoRapida, copiarTexto, FormReserva, MenuReserva, STATUS } from "./compartilhado";
+import { AcaoRapida, copiarTexto, EditorReserva, MenuReserva, STATUS } from "./compartilhado";
 import VisaoDia from "./VisaoDia";
 
 type Aba = "dia" | "lista" | "ajustes";
-type Visao = "hoje" | "proximas" | "pendentes" | "anteriores";
+type Visao = "proximas" | "hoje" | "pendentes" | "anteriores";
+
+/** Filtro de um dia só, em pílula clara sobre a página. */
+function FiltroDia({ dia, aoMudar }: { dia: string | null; aoMudar: (d: string | null) => void }) {
+  const [aberto, setAberto] = useState(false);
+  const data = dia ? parse(dia, "yyyy-MM-dd", new Date()) : undefined;
+  return (
+    <div className="flex items-center gap-1">
+      <PainelAdaptavel
+        aberto={aberto}
+        aoMudar={setAberto}
+        titulo="Ir para o dia"
+        alinhar="end"
+        gatilho={
+          <GatilhoCampo
+            icone={CalendarDays}
+            variante="pilula-clara"
+            valor={dia ? formatarData(dia, { weekday: "short", day: "2-digit", month: "short" }) : null}
+            placeholder="Qualquer dia"
+            className="w-full sm:w-48"
+          />
+        }
+      >
+        <Calendario
+          mode="single"
+          selected={data}
+          defaultMonth={data}
+          onSelect={(d) => {
+            aoMudar(d ? format(d, "yyyy-MM-dd") : null);
+            setAberto(false);
+          }}
+          className="mx-auto"
+        />
+      </PainelAdaptavel>
+      {dia && (
+        <Button size="icon-sm" variant="ghost" className="rounded-full" aria-label="Limpar dia" onClick={() => aoMudar(null)}>
+          <X />
+        </Button>
+      )}
+    </div>
+  );
+}
 
 function Lista({
   reservas,
@@ -59,11 +109,11 @@ function Lista({
     .reduce((s, r) => s + r.pessoas, 0);
 
   const vazio = (
-    <EmptyState className="flex flex-col items-center gap-2 py-12 text-center">
-      <IconeCalendario className="size-6 text-muted" />
-      <p className="font-medium">Nenhuma reserva aqui</p>
-      <p className="text-sm text-muted">As reservas feitas pelo site aparecem automaticamente.</p>
-    </EmptyState>
+    <EstadoVazio
+      icone={CalendarDays}
+      titulo="Nenhuma reserva aqui"
+      descricao={busca || dia ? "Ajuste a busca ou o dia." : "As reservas feitas pelo site aparecem sozinhas."}
+    />
   );
 
   const detalhe = (r: Reserva) =>
@@ -71,111 +121,94 @@ function Lista({
 
   return (
     <>
-      <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-        <Tabs
-          selectedKey={visao}
-          onSelectionChange={(k) => {
-            setDia(null);
-            setVisao(k as Visao);
-          }}
-        >
-          <Tabs.ListContainer>
-            <Tabs.List aria-label="Filtrar reservas">
-              <Tabs.Tab id="proximas" className="whitespace-nowrap">
-                Próximas <span className="ml-1 text-muted tabular-nums">{contagem.proximas}</span>
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="hoje" className="whitespace-nowrap">
-                Hoje <span className="ml-1 text-muted tabular-nums">{contagem.hoje}</span>
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="pendentes" className="whitespace-nowrap">
-                Pendentes <span className="ml-1 text-muted tabular-nums">{contagem.pendentes}</span>
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="anteriores" className="whitespace-nowrap">
-                Anteriores
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            </Tabs.List>
-          </Tabs.ListContainer>
-        </Tabs>
-
-        <div className="grid gap-3 sm:grid-cols-[1fr_220px] xl:w-[520px]">
-          <SearchField value={busca} onChange={setBusca} aria-label="Buscar reserva">
-            <SearchField.Group>
-              <SearchField.SearchIcon />
-              <SearchField.Input placeholder="Nome, telefone, mesa…" className="w-full" />
-              <SearchField.ClearButton />
-            </SearchField.Group>
-          </SearchField>
-          <div className="flex items-center gap-1">
-            <CampoData label="Ir para o dia" value={dia} onChange={setDia} className="w-full" ocultarLabel />
-            {dia && (
-              <Button size="sm" variant="ghost" onPress={() => setDia(null)} className="mb-1">
-                Limpar
-              </Button>
-            )}
-          </div>
+      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:px-0">
+          <ControleSegmentado
+            rotulo="Filtrar reservas"
+            sobrePagina
+            valor={dia ? ("" as Visao) : visao}
+            aoMudar={(v) => {
+              setDia(null);
+              setVisao(v);
+            }}
+            opcoes={[
+              { valor: "proximas", rotulo: "Próximas", contagem: contagem.proximas },
+              { valor: "hoje", rotulo: "Hoje", contagem: contagem.hoje },
+              { valor: "pendentes", rotulo: "Pendentes", contagem: contagem.pendentes },
+              { valor: "anteriores", rotulo: "Anteriores" },
+            ]}
+          />
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row xl:w-[520px]">
+          <InputBusca
+            valor={busca}
+            aoMudar={setBusca}
+            placeholder="Nome, telefone, mesa…"
+            aria-label="Buscar reserva"
+            classeCaixa="rounded-full border-0 bg-card shadow-suave"
+          />
+          <FiltroDia dia={dia} aoMudar={setDia} />
         </div>
       </div>
 
-      <p className="mb-3 text-sm text-muted">
+      <p className="numeros mb-3 text-[13px] text-muted-foreground">
         {dia ? `${formatarData(dia, { weekday: "long", day: "2-digit", month: "long" })} · ` : ""}
         {lista.length} {lista.length === 1 ? "reserva" : "reservas"} · {pessoas} pessoas
       </p>
 
       {/* Desktop: tabela */}
-      <div className="hidden md:block">
-        <Table>
-          <Table.ScrollContainer>
-            <Table.Content aria-label="Reservas" className="min-w-[760px]">
-              <Table.Header>
-                <Table.Column isRowHeader>Cliente</Table.Column>
-                <Table.Column>Quando</Table.Column>
-                <Table.Column>Pessoas</Table.Column>
-                <Table.Column>Situação</Table.Column>
-                <Table.Column>Origem</Table.Column>
-                <Table.Column className="text-right">Ações</Table.Column>
-              </Table.Header>
-              <Table.Body items={lista} renderEmptyState={() => vazio}>
-                {(r) => (
-                  <Table.Row id={r.id}>
-                    <Table.Cell>
-                      <p className="font-medium">{r.nome}</p>
-                      <p className="text-xs text-muted">
+      <Card className="hidden py-0 md:flex">
+        {lista.length === 0 ? (
+          vazio
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="h-11 pl-5">Cliente</TableHead>
+                <TableHead>Quando</TableHead>
+                <TableHead>Pessoas</TableHead>
+                <TableHead>Situação</TableHead>
+                <TableHead>Origem</TableHead>
+                <TableHead className="pr-5 text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {lista.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="py-3 pl-5">
+                    <button type="button" onClick={() => onEditar(r)} className="text-left">
+                      <span className="block font-medium hover:underline">{r.nome}</span>
+                      <span className="numeros block max-w-72 truncate text-xs text-muted-foreground">
                         {r.telefone ? mascaraTelefone(r.telefone) : "sem telefone"}
                         {detalhe(r) ? ` · ${detalhe(r)}` : ""}
-                      </p>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <p className="tabular-nums">
-                        {formatarData(r.data, { weekday: "short", day: "2-digit", month: "short" })}
-                      </p>
-                      <p className="text-xs text-muted tabular-nums">{r.hora ?? "sem horário"}</p>
-                    </Table.Cell>
-                    <Table.Cell className="tabular-nums">{r.pessoas}</Table.Cell>
-                    <Table.Cell>
-                      <Chip size="sm" variant="soft" color={STATUS[r.status].cor}>
-                        {STATUS[r.status].rotulo}
-                      </Chip>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-xs text-muted">{r.origem === "site" ? "Site" : "Painel"}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex items-center justify-end gap-1">
-                        <AcaoRapida r={r} hoje={hoje} />
-                        <MenuReserva r={r} onEditar={() => onEditar(r)} onExcluir={() => onExcluir(r)} />
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                )}
-              </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
-      </div>
+                      </span>
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                    <span className="numeros block first-letter:uppercase">
+                      {formatarData(r.data, { weekday: "short", day: "2-digit", month: "short" })}
+                    </span>
+                    <span className="numeros block text-xs text-muted-foreground">{r.hora ?? "sem horário"}</span>
+                  </TableCell>
+                  <TableCell className="numeros">{r.pessoas}</TableCell>
+                  <TableCell>
+                    <Selo tom={STATUS[r.status].tom} ponto>
+                      {STATUS[r.status].rotulo}
+                    </Selo>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{r.origem === "site" ? "Site" : "Painel"}</TableCell>
+                  <TableCell className="pr-5">
+                    <div className="flex items-center justify-end gap-1">
+                      <AcaoRapida r={r} hoje={hoje} />
+                      <MenuReserva r={r} onEditar={() => onEditar(r)} onExcluir={() => onExcluir(r)} />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
 
       {/* Celular: cartões */}
       <div className="flex flex-col gap-3 md:hidden">
@@ -183,27 +216,31 @@ function Lista({
           <Card>{vazio}</Card>
         ) : (
           lista.map((r) => (
-            <Card key={r.id} className="gap-3 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{r.nome}</p>
-                  <p className="text-xs text-muted">{r.telefone ? mascaraTelefone(r.telefone) : "sem telefone"}</p>
-                </div>
-                <Chip size="sm" variant="soft" color={STATUS[r.status].cor}>
+            <Card key={r.id} size="sm" className="gap-3">
+              <div className="flex items-start justify-between gap-3 px-(--card-spacing)">
+                <button type="button" onClick={() => onEditar(r)} className="min-w-0 text-left">
+                  <p className="truncate text-[15px] font-semibold">{r.nome}</p>
+                  <p className="numeros text-[13px] text-muted-foreground">
+                    {r.telefone ? mascaraTelefone(r.telefone) : "sem telefone"}
+                  </p>
+                </button>
+                <Selo tom={STATUS[r.status].tom} ponto>
                   {STATUS[r.status].rotulo}
-                </Chip>
+                </Selo>
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                <span className="tabular-nums">
+              <div className="numeros flex flex-wrap gap-x-4 gap-y-1 px-(--card-spacing) text-sm">
+                <span className="first-letter:uppercase">
                   {formatarData(r.data, { weekday: "short", day: "2-digit", month: "short" })}
                 </span>
-                <span className="tabular-nums">{r.hora ?? "—"}</span>
+                <span>{r.hora ?? "—"}</span>
                 <span>
                   {r.pessoas} {r.pessoas === 1 ? "pessoa" : "pessoas"}
                 </span>
               </div>
-              {detalhe(r) && <p className="rounded-xl bg-default px-3 py-2 text-xs text-muted">{detalhe(r)}</p>}
-              <div className="flex items-center justify-end gap-1">
+              {detalhe(r) && (
+                <p className="mx-(--card-spacing) rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">{detalhe(r)}</p>
+              )}
+              <div className="flex items-center justify-end gap-1 px-(--card-spacing)">
                 <AcaoRapida r={r} hoje={hoje} />
                 <MenuReserva r={r} onEditar={() => onEditar(r)} onExcluir={() => onExcluir(r)} />
               </div>
@@ -232,13 +269,12 @@ export default function GestorReservas({
   const [aba, setAba] = useState<Aba>("dia");
   const [editando, setEditando] = useState<Reserva | { nova: string } | null>(abrirNova ? { nova: hoje } : null);
   const [excluindo, setExcluindo] = useState<Reserva | null>(null);
+  const excluida = useUltimo(excluindo);
 
   function fecharEditor() {
     setEditando(null);
     if (abrirNova) router.replace("/admin/reservas");
   }
-
-  const nova = editando && "nova" in editando ? editando : null;
 
   return (
     <>
@@ -252,37 +288,37 @@ export default function GestorReservas({
         acoes={
           <>
             <Button
-              size="sm"
               variant="secondary"
-              onPress={() => copiarTexto(`${window.location.origin}/reservas`, "Link de reservas copiado")}
+              className="rounded-full bg-card shadow-suave hover:bg-accent"
+              onClick={() => copiarTexto(`${window.location.origin}/reservas`, "Link de reservas copiado")}
             >
-              <IconeLink /> Copiar link de reservas
+              <IconeLink /> Copiar link
             </Button>
-            <Button size="sm" onPress={() => setEditando({ nova: hoje })}>
+            <Button className="rounded-full" onClick={() => setEditando({ nova: hoje })}>
               <Plus /> Nova reserva
             </Button>
           </>
         }
       />
 
-      <Tabs selectedKey={aba} onSelectionChange={(k) => setAba(k as Aba)} className="mb-6">
-        <Tabs.ListContainer>
-          <Tabs.List aria-label="Seções de reservas">
-            <Tabs.Tab id="dia">
-              Dia
-              <Tabs.Indicator />
-            </Tabs.Tab>
-            <Tabs.Tab id="lista">
-              Todas
-              <Tabs.Indicator />
-            </Tabs.Tab>
-            <Tabs.Tab id="ajustes">
-              Ajustes
-              <Tabs.Indicator />
-            </Tabs.Tab>
-          </Tabs.List>
-        </Tabs.ListContainer>
-      </Tabs>
+      <ControleSegmentado
+        rotulo="Seções de reservas"
+        sobrePagina
+        valor={aba}
+        aoMudar={setAba}
+        className="mb-5"
+        opcoes={[
+          { valor: "dia", rotulo: "Dia" },
+          { valor: "lista", rotulo: "Todas" },
+          { valor: "ajustes", rotulo: "Ajustes" },
+        ]}
+      />
+
+      {!config.ativo && aba !== "ajustes" && (
+        <p className="mb-4 rounded-2xl bg-atencao/14 px-4 py-3 text-sm text-atencao-texto">
+          Reservas pelo site pausadas. Religue em <strong>Ajustes</strong>.
+        </p>
+      )}
 
       {aba === "dia" && (
         <VisaoDia
@@ -298,23 +334,7 @@ export default function GestorReservas({
       {aba === "lista" && <Lista reservas={reservas} hoje={hoje} onEditar={setEditando} onExcluir={setExcluindo} />}
       {aba === "ajustes" && <AjustesReservas config={config} bloqueios={bloqueios} hoje={hoje} />}
 
-      <Modal>
-        <Modal.Backdrop isOpen={editando !== null} onOpenChange={(v) => !v && fecharEditor()}>
-          <Modal.Container size="md" scroll="inside">
-            <Modal.Dialog>
-              <Modal.CloseTrigger />
-              {editando !== null && (
-                <FormReserva
-                  key={nova ? `nova-${nova.nova}` : (editando as Reserva).id}
-                  reserva={nova ? null : (editando as Reserva)}
-                  dataInicial={nova?.nova ?? hoje}
-                  onFechar={fecharEditor}
-                />
-              )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+      <EditorReserva editando={editando} hoje={hoje} onFechar={fecharEditor} />
 
       <Confirmar
         aberto={excluindo !== null}
@@ -322,8 +342,8 @@ export default function GestorReservas({
         titulo="Excluir reserva?"
         texto={
           <>
-            A reserva de <strong>{excluindo?.nome}</strong> será apagada. Para manter o histórico, prefira
-            cancelar.
+            A reserva de <strong className="text-foreground">{excluida?.nome}</strong> será apagada. Para manter o
+            histórico, prefira cancelar.
           </>
         }
         onConfirmar={async () => {

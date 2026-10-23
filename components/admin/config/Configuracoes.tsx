@@ -1,11 +1,14 @@
 "use client";
 
-import { Bell, Lock, Person } from "@gravity-ui/icons";
-import { Alert, Button, Card, Form, Input, Label, TextField, FieldError } from "@heroui/react";
+import { ArrowRight, Bell, CircleAlert, KeyRound, UserRound } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 
-import { avisar, CampoSelect, CampoSwitch, CampoTexto } from "@/components/admin/campos";
-import { Cabecalho } from "@/components/admin/ui";
+import { avisar, BotaoSalvar, CampoSelect, CampoSwitch, CampoTexto } from "@/components/admin/campos";
+import { Cabecalho, Secao } from "@/components/admin/ui";
+import { Campo } from "@/components/sistema/formulario/campo";
+import { InputSenha } from "@/components/sistema/inputs/input-senha";
+import { InputTexto } from "@/components/sistema/inputs/input-texto";
+import { InputEmail } from "@/components/sistema/inputs/input-web";
 import { salvarAviso } from "@/lib/admin/config-actions";
 import { atualizarPerfil, trocarSenha, type EstadoSenha } from "@/lib/admin/sessao-actions";
 import type { AvisoConfig } from "@/lib/dados";
@@ -18,28 +21,13 @@ const DESTINOS = [
   { id: "/fidelidade", rotulo: "Fidelidade" },
 ];
 
-function Secao({
-  icone,
-  titulo,
-  descricao,
-  children,
-}: {
-  icone: React.ReactNode;
-  titulo: string;
-  descricao: string;
-  children: React.ReactNode;
-}) {
+function Erro({ texto }: { texto?: string }) {
+  if (!texto) return null;
   return (
-    <Card className="gap-5 p-5 sm:p-6">
-      <div className="flex items-start gap-3">
-        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">{icone}</span>
-        <div>
-          <h2 className="font-medium">{titulo}</h2>
-          <p className="text-sm text-muted">{descricao}</p>
-        </div>
-      </div>
-      {children}
-    </Card>
+    <p role="alert" className="flex items-start gap-2.5 rounded-xl bg-negativo/10 px-3.5 py-3 text-sm text-negativo-texto">
+      <CircleAlert className="mt-0.5 size-4 shrink-0" />
+      {texto}
+    </p>
   );
 }
 
@@ -59,7 +47,7 @@ function AvisoSite({ aviso }: { aviso: AvisoConfig }) {
 
   return (
     <Secao
-      icone={<Bell className="size-5" />}
+      icone={Bell}
       titulo="Barra de aviso do site"
       descricao="Faixa fina no topo de todas as páginas. Ideal para feriados, eventos e mudanças de horário."
     >
@@ -70,68 +58,63 @@ function AvisoSite({ aviso }: { aviso: AvisoConfig }) {
         onChange={setTexto}
         maxLength={140}
         placeholder="Feriado de 12/10: abriremos no almoço e no jantar."
-        descricao={`${texto.length}/140`}
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <CampoSelect
           label="Link"
-          value={DESTINOS.some((d) => d.id === link) ? link : ""}
-          onChange={setLink}
-          opcoes={DESTINOS}
+          // O select do Radix não aceita valor vazio: "nenhum" representa "sem link"
+          value={link && DESTINOS.some((d) => d.id === link) ? link : "nenhum"}
+          onChange={(v) => setLink(v === "nenhum" ? "" : v)}
+          opcoes={DESTINOS.map((d) => ({ ...d, id: d.id || "nenhum" }))}
         />
         {link && <CampoTexto label="Texto do link" value={linkTexto} onChange={setLinkTexto} maxLength={30} placeholder="Reservar" />}
       </div>
 
       {texto && (
         <div>
-          <p className="mb-1.5 text-xs text-muted">Prévia</p>
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-xl bg-[#e8890c] px-4 py-2 text-center text-[0.8125rem] text-[#2b0710]">
+          <p className="mb-1.5 text-[0.7rem] font-semibold tracking-[0.08em] text-muted-foreground uppercase">Prévia</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-xl bg-[#e8890c] px-4 py-2.5 text-center text-[0.8125rem] text-[#2b0710]">
             <span>{texto}</span>
-            {link && linkTexto && <span className="font-medium underline underline-offset-4">{linkTexto} →</span>}
+            {link && linkTexto && (
+              <span className="inline-flex items-center gap-1 font-medium underline underline-offset-4">
+                {linkTexto} <ArrowRight className="size-3.5" />
+              </span>
+            )}
           </div>
         </div>
       )}
 
-      <Button onPress={salvar} isPending={salvando} className="self-start">
+      <BotaoSalvar pendente={salvando} onClick={salvar} className="self-start">
         Salvar aviso
-      </Button>
+      </BotaoSalvar>
     </Secao>
   );
 }
 
 function Perfil({ usuario }: { usuario: { nome: string; email: string } }) {
   const [estado, acao, pendente] = useActionState<EstadoSenha, FormData>(atualizarPerfil, {});
+  const [nome, setNome] = useState(usuario.nome);
+  const [email, setEmail] = useState(usuario.email);
   useEffect(() => {
     if (estado.ok) avisar({ ok: true }, "Perfil atualizado");
   }, [estado]);
 
   return (
-    <Secao icone={<Person className="size-5" />} titulo="Seu acesso" descricao="Nome e e-mail usados para entrar no painel.">
-      <Form action={acao} className="flex flex-col gap-4">
-        {estado.erro && (
-          <Alert status="danger">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title>{estado.erro}</Alert.Title>
-            </Alert.Content>
-          </Alert>
-        )}
+    <Secao icone={UserRound} titulo="Seu acesso" descricao="Nome e e-mail usados para entrar no painel.">
+      <form action={acao} className="flex flex-col gap-4">
+        <Erro texto={estado.erro} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField name="nome" defaultValue={usuario.nome} isRequired fullWidth>
-            <Label>Nome</Label>
-            <Input className="w-full" />
-            <FieldError />
-          </TextField>
-          <TextField name="email" type="email" defaultValue={usuario.email} isRequired fullWidth>
-            <Label>E-mail</Label>
-            <Input className="w-full" />
-            <FieldError />
-          </TextField>
+          <Campo id="perfil-nome" rotulo="Nome">
+            <InputTexto name="nome" required value={nome} onChange={(e) => setNome(e.currentTarget.value)} />
+          </Campo>
+          <Campo id="perfil-email" rotulo="E-mail">
+            <InputEmail name="email" required valor={email} aoMudar={(v) => setEmail(v ?? "")} />
+          </Campo>
         </div>
-        <Button type="submit" isPending={pendente} className="self-start">
+        <BotaoSalvar type="submit" pendente={pendente} className="self-start">
           Salvar perfil
-        </Button>
-      </Form>
+        </BotaoSalvar>
+      </form>
     </Secao>
   );
 }
@@ -147,35 +130,24 @@ function Senha() {
   }, [estado]);
 
   return (
-    <Secao icone={<Lock className="size-5" />} titulo="Trocar senha" descricao="Mínimo de 8 caracteres.">
-      <Form ref={form} action={acao} className="flex flex-col gap-4">
-        {estado.erro && (
-          <Alert status="danger">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title>{estado.erro}</Alert.Title>
-            </Alert.Content>
-          </Alert>
-        )}
-        <TextField name="atual" type="password" autoComplete="current-password" isRequired fullWidth>
-          <Label>Senha atual</Label>
-          <Input className="w-full" />
-        </TextField>
+    <Secao icone={KeyRound} titulo="Trocar senha" descricao="Mínimo de 8 caracteres.">
+      <form ref={form} action={acao} className="flex flex-col gap-4">
+        <Erro texto={estado.erro} />
+        <Campo id="senha-atual" rotulo="Senha atual">
+          <InputSenha name="atual" autoComplete="current-password" required />
+        </Campo>
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField name="nova" type="password" autoComplete="new-password" isRequired minLength={8} fullWidth>
-            <Label>Nova senha</Label>
-            <Input className="w-full" />
-            <FieldError />
-          </TextField>
-          <TextField name="confirmacao" type="password" autoComplete="new-password" isRequired fullWidth>
-            <Label>Confirmar nova senha</Label>
-            <Input className="w-full" />
-          </TextField>
+          <Campo id="senha-nova" rotulo="Nova senha">
+            <InputSenha name="nova" autoComplete="new-password" required minLength={8} />
+          </Campo>
+          <Campo id="senha-confirmacao" rotulo="Confirmar nova senha">
+            <InputSenha name="confirmacao" autoComplete="new-password" required />
+          </Campo>
         </div>
-        <Button type="submit" isPending={pendente} className="self-start">
+        <BotaoSalvar type="submit" pendente={pendente} className="self-start">
           Alterar senha
-        </Button>
-      </Form>
+        </BotaoSalvar>
+      </form>
     </Secao>
   );
 }
@@ -190,9 +162,9 @@ export default function Configuracoes({
   return (
     <>
       <Cabecalho titulo="Configurações" descricao="Aviso do site e dados de acesso ao painel." />
-      <div className="grid items-start gap-5 xl:grid-cols-2">
+      <div className="grid items-start gap-4 xl:grid-cols-2">
         <AvisoSite aviso={aviso} />
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <Perfil usuario={usuario} />
           <Senha />
         </div>

@@ -1,7 +1,28 @@
 "use client";
 
-import { Card, buttonVariants } from "@heroui/react";
+import { MoreHorizontal, type LucideIcon } from "lucide-react";
 import NextLink from "next/link";
+import { Fragment, useState, type ReactNode } from "react";
+
+import { NumeroAnimado } from "@/components/sistema/movimento";
+import { Button, buttonVariants } from "@/components/sistema/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/sistema/ui/dropdown-menu";
+import { Card } from "@/components/sistema/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/sistema/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/sistema/ui/sheet";
+import { cn } from "@/lib/utils";
 
 /** Cabeçalho padrão das páginas do painel. */
 export function Cabecalho({
@@ -11,73 +32,300 @@ export function Cabecalho({
 }: {
   titulo: string;
   descricao?: string;
-  acoes?: React.ReactNode;
+  acoes?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between lg:mb-8">
+    <header className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0">
-        <h1 className="titulo-display text-[2rem] leading-tight text-accent sm:text-[2.5rem]">
-          {titulo}
-        </h1>
-        {descricao && <p className="mt-1 max-w-2xl text-sm text-muted">{descricao}</p>}
+        <h1 className="text-2xl leading-8 font-semibold tracking-tight text-balance">{titulo}</h1>
+        {descricao && <p className="mt-1.5 max-w-2xl text-sm text-pretty text-muted-foreground">{descricao}</p>}
       </div>
-      {acoes && <div className="flex shrink-0 flex-wrap gap-2">{acoes}</div>}
-    </div>
+      {acoes && <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:justify-end">{acoes}</div>}
+    </header>
   );
 }
 
-/** Indicador numérico do painel. */
+// Classes completas: o Tailwind só gera as que aparecem escritas no código.
+const TONS = {
+  neutro: "bg-muted text-muted-foreground",
+  marca: "bg-primary-suave text-primary-texto",
+  positivo: "bg-positivo/12 text-positivo-texto",
+  negativo: "bg-negativo/10 text-negativo-texto",
+  atencao: "bg-atencao/14 text-atencao-texto",
+} as const;
+
+export type Tom = keyof typeof TONS;
+
+/** Selo de situação (reserva confirmada, prato esgotado…): mesmo formato em todo o painel. */
+export function Selo({
+  tom = "neutro",
+  ponto,
+  children,
+  className,
+}: {
+  tom?: Tom;
+  ponto?: boolean;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap [&_svg]:size-3",
+        TONS[tom],
+        className,
+      )}
+    >
+      {ponto && <span className="size-1.5 rounded-full bg-current" aria-hidden />}
+      {children}
+    </span>
+  );
+}
+
+/** Quadrado arredondado com o ícone, à esquerda de títulos de bloco. */
+export function SeloIcone({ icone: Icone, tom = "marca", className }: { icone: LucideIcon; tom?: Tom; className?: string }) {
+  return (
+    <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", TONS[tom], className)}>
+      <Icone className="size-[18px]" strokeWidth={1.75} aria-hidden />
+    </span>
+  );
+}
+
+/** Indicador numérico do painel: ícone, número grande que conta ao aparecer e uma linha de contexto. */
 export function Kpi({
   rotulo,
   valor,
+  sufixo,
   detalhe,
   icone,
-  tom = "default",
+  tom = "neutro",
 }: {
   rotulo: string;
-  valor: React.ReactNode;
-  detalhe?: React.ReactNode;
-  icone?: React.ReactNode;
-  tom?: "default" | "accent" | "warning" | "success";
+  valor: number;
+  sufixo?: string;
+  detalhe?: ReactNode;
+  icone: LucideIcon;
+  tom?: Tom;
 }) {
-  const tons = {
-    default: "bg-default text-foreground",
-    accent: "bg-accent/10 text-accent",
-    warning: "bg-warning/15 text-[oklch(0.5_0.14_60)]",
-    success: "bg-success/12 text-success",
-  } as const;
-
   return (
-    <Card className="gap-3 p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">{rotulo}</p>
-        {icone && (
-          <span className={`grid size-9 place-items-center rounded-xl ${tons[tom]}`}>{icone}</span>
-        )}
+    <Card className="gap-3">
+      <div className="flex items-center justify-between gap-3 px-(--card-spacing)">
+        <p className="text-[13px] font-medium text-muted-foreground">{rotulo}</p>
+        <SeloIcone icone={icone} tom={tom} className="size-8 rounded-lg" />
       </div>
-      <p className="text-3xl font-medium tabular-nums tracking-tight">{valor}</p>
-      {detalhe && <p className="text-xs text-muted">{detalhe}</p>}
+      <p className="px-(--card-spacing) text-[2rem] leading-none font-semibold tracking-tight">
+        <NumeroAnimado valor={valor} />
+        {sufixo && <span className="ml-0.5 text-xl font-medium text-muted-foreground">{sufixo}</span>}
+      </p>
+      {detalhe && <p className="px-(--card-spacing) text-[13px] leading-snug text-muted-foreground">{detalhe}</p>}
     </Card>
   );
 }
 
-/** Link do Next com a aparência do Button do HeroUI (sem aninhar interativos). */
+/** Bloco de formulário ou ajustes: selo de ícone, título, descrição e o conteúdo. */
+export function Secao({
+  icone,
+  titulo,
+  descricao,
+  acoes,
+  children,
+  className,
+}: {
+  icone?: LucideIcon;
+  titulo: string;
+  descricao?: string;
+  acoes?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Card className={cn("gap-5", className)}>
+      <div className="flex items-start gap-3 px-(--card-spacing)">
+        {icone && <SeloIcone icone={icone} />}
+        <div className="min-w-0 grow">
+          <h2 className="text-[15px] leading-[22px] font-semibold">{titulo}</h2>
+          {descricao && <p className="mt-0.5 text-sm text-muted-foreground">{descricao}</p>}
+        </div>
+        {acoes}
+      </div>
+      <div className="flex flex-col gap-5 px-(--card-spacing)">{children}</div>
+    </Card>
+  );
+}
+
+/** Link do Next com a aparência de botão. */
 export function BotaoLink({
   href,
-  variant = "primary",
-  size = "md",
-  className = "",
+  variant = "default",
+  size = "default",
+  className,
   children,
 }: {
   href: string;
-  variant?: "primary" | "secondary" | "tertiary" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
+  variant?: "default" | "secondary" | "ghost";
+  size?: "default" | "sm" | "lg";
   className?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <NextLink href={href} className={`${buttonVariants({ variant, size })} ${className}`}>
+    <NextLink href={href} className={cn(buttonVariants({ variant, size }), "rounded-full", className)}>
       {children}
     </NextLink>
   );
+}
+
+/**
+ * Janela central, para formulários curtos (até uns 4 campos). Cabeçalho e
+ * rodapé fixos; só o meio rola, então os botões nunca somem em tela baixa.
+ */
+export function Janela({
+  aberta,
+  aoFechar,
+  icone,
+  titulo,
+  descricao,
+  rodape,
+  largura = "sm:max-w-lg",
+  children,
+}: {
+  aberta: boolean;
+  aoFechar: () => void;
+  icone?: LucideIcon;
+  titulo: string;
+  descricao?: string;
+  rodape?: ReactNode;
+  largura?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Dialog open={aberta} onOpenChange={(v) => !v && aoFechar()}>
+      <DialogContent className={cn("flex max-h-[min(92dvh,52rem)] flex-col gap-0 p-0", largura)}>
+        <DialogHeader className="shrink-0 flex-row items-center gap-3 px-6 pt-6 pb-4 pr-14">
+          {icone && <SeloIcone icone={icone} />}
+          <div className="min-w-0">
+            <DialogTitle className="text-[17px] font-semibold">{titulo}</DialogTitle>
+            <DialogDescription className={descricao ? "mt-0.5" : "sr-only"}>{descricao ?? titulo}</DialogDescription>
+          </div>
+        </DialogHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6">{children}</div>
+        {rodape && (
+          <div className="rodape-de-painel flex shrink-0 flex-col-reverse gap-2 rounded-b-3xl bg-dialogo px-6 py-4 sm:flex-row sm:justify-end">
+            {rodape}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Painel lateral flutuante, para formulários longos e fichas. Cabeçalho e
+ * rodapé fixos; só o meio rola.
+ */
+export function PainelLateral({
+  aberto,
+  aoFechar,
+  icone,
+  titulo,
+  descricao,
+  topo,
+  rodape,
+  largura = "data-[side=right]:sm:max-w-lg",
+  children,
+}: {
+  aberto: boolean;
+  aoFechar: () => void;
+  icone?: LucideIcon;
+  titulo: string;
+  descricao?: string;
+  /** Substitui o ícone (ex.: avatar do cliente) */
+  topo?: ReactNode;
+  rodape?: ReactNode;
+  largura?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Sheet open={aberto} onOpenChange={(v) => !v && aoFechar()}>
+      <SheetContent side="right" className={cn("gap-0 data-[side=right]:w-full", largura)}>
+        <SheetHeader className="shrink-0 flex-row items-center gap-3 px-5 pt-5 pb-4 pr-14">
+          {topo ?? (icone && <SeloIcone icone={icone} />)}
+          <div className="min-w-0">
+            <SheetTitle className="truncate text-[17px] font-semibold">{titulo}</SheetTitle>
+            <SheetDescription className={descricao ? "truncate" : "sr-only"}>{descricao ?? titulo}</SheetDescription>
+          </div>
+        </SheetHeader>
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 pt-1 pb-8">{children}</div>
+        {rodape && (
+          <div className="rodape-de-painel flex shrink-0 items-center gap-2 bg-dialogo px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            {rodape}
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export type AcaoMenu = {
+  id: string;
+  rotulo: string;
+  icone: LucideIcon;
+  perigo?: boolean;
+  desabilitada?: boolean;
+  /** Linha divisória antes do item */
+  separar?: boolean;
+};
+
+/** Botão "…" com o menu de ações de um item. */
+export function MenuAcoes({
+  rotulo,
+  acoes,
+  aoEscolher,
+}: {
+  rotulo: string;
+  acoes: (AcaoMenu | null | false)[];
+  aoEscolher: (id: string) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-sm" className="rounded-full" aria-label={rotulo}>
+          <MoreHorizontal />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60">
+        {acoes.filter(Boolean).map((a) => {
+          const { id, rotulo: texto, icone: Icone, perigo, desabilitada, separar } = a as AcaoMenu;
+          return (
+            <Fragment key={id}>
+              {separar && <DropdownMenuSeparator />}
+              <DropdownMenuItem
+                variant={perigo ? "destructive" : "default"}
+                disabled={desabilitada}
+                onSelect={() => aoEscolher(id)}
+                className="min-h-10 gap-2.5 px-2.5 md:min-h-9"
+              >
+                <Icone strokeWidth={1.75} />
+                {texto}
+              </DropdownMenuItem>
+            </Fragment>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/**
+ * Guarda o último valor não nulo: a janela continua mostrando o conteúdo
+ * enquanto fecha (animação de saída), mesmo depois de o estado virar null.
+ */
+export function useUltimo<T>(valor: T | null): T | null {
+  const [ultimo, setUltimo] = useState(valor);
+  if (valor !== null && valor !== ultimo) setUltimo(valor);
+  return valor ?? ultimo;
+}
+
+/** Lista dentro de card, com divisórias finas. */
+export function ListaCard({ children, className }: { children: ReactNode; className?: string }) {
+  return <ul className={cn("divide-y divide-border", className)}>{children}</ul>;
 }

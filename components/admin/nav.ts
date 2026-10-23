@@ -1,25 +1,30 @@
 import {
-  Book,
-  Briefcase,
-  Calendar,
-  Gear,
+  BookOpen,
+  BriefcaseBusiness,
+  CalendarDays,
   Heart,
-  House,
+  LayoutGrid,
   Megaphone,
-} from "@gravity-ui/icons";
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
 
-export const NAV = [
-  { href: "/admin", rotulo: "Visão geral", curto: "Início", Icone: House },
-  { href: "/admin/cardapio", rotulo: "Cardápio", curto: "Cardápio", Icone: Book },
-  { href: "/admin/executivo", rotulo: "Menu executivo", curto: "Executivo", Icone: Briefcase },
-  { href: "/admin/reservas", rotulo: "Reservas", curto: "Reservas", Icone: Calendar },
-  { href: "/admin/promocoes", rotulo: "Promoções e pop-up", curto: "Promoções", Icone: Megaphone },
-  { href: "/admin/fidelidade", rotulo: "Fidelidade", curto: "Fidelidade", Icone: Heart },
-  { href: "/admin/configuracoes", rotulo: "Configurações", curto: "Ajustes", Icone: Gear },
-] as const;
+type ItemNav = { href: string; rotulo: string; curto: string; Icone: LucideIcon; grupo: "principal" | "rodape" };
+
+export const NAV: ItemNav[] = [
+  { href: "/admin", rotulo: "Visão geral", curto: "Início", Icone: LayoutGrid, grupo: "principal" },
+  { href: "/admin/reservas", rotulo: "Reservas", curto: "Reservas", Icone: CalendarDays, grupo: "principal" },
+  { href: "/admin/cardapio", rotulo: "Cardápio", curto: "Cardápio", Icone: BookOpen, grupo: "principal" },
+  { href: "/admin/executivo", rotulo: "Menu executivo", curto: "Executivo", Icone: BriefcaseBusiness, grupo: "principal" },
+  { href: "/admin/fidelidade", rotulo: "Fidelidade", curto: "Fidelidade", Icone: Heart, grupo: "principal" },
+  { href: "/admin/promocoes", rotulo: "Promoções e pop-up", curto: "Promoções", Icone: Megaphone, grupo: "principal" },
+  { href: "/admin/configuracoes", rotulo: "Configurações", curto: "Ajustes", Icone: Settings, grupo: "rodape" },
+];
 
 /** As quatro que cabem na barra inferior do celular; o resto fica no "Mais". */
-export const NAV_BARRA = ["/admin", "/admin/cardapio", "/admin/reservas", "/admin/fidelidade"];
+export const NAV_BARRA = ["/admin", "/admin/reservas", "/admin/cardapio", "/admin/fidelidade"];
+
+export const COOKIE_SIDEBAR = "rizz_sidebar";
 
 export function ativo(pathname: string, href: string) {
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);

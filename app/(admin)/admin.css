@@ -1,105 +1,317 @@
-@layer theme, base, components, utilities;
-
 @import "tailwindcss";
-@import "@heroui/styles";
+@import "tw-animate-css";
+@import "../shadcn-base.css";
 
 /* ───────────────────────────────────────────────────────────
-   Painel Rizz — tema HeroUI com as cores da marca.
-   Só é carregado nas rotas /admin (root layout próprio), então
-   nada daqui vaza para o site público.
+   Painel Rizz — sistema visual do Ge System (cinza neutro, cards
+   sem borda, sidebar escura flutuante), com o vinho da marca no
+   lugar do azul. Só é carregado nas rotas /admin (root layout
+   próprio), então nada daqui vaza para o site público.
    ─────────────────────────────────────────────────────────── */
 
-@theme {
-  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+@custom-variant dark (&:is(.dark *));
+/* Telas baixas (celular deitado): menos respiro na sidebar */
+@custom-variant baixa (@media (max-height: 700px));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  /* Só a prévia do pop-up (componente do site) usa a serifada */
   --font-display: var(--font-cormorant), Georgia, serif;
 
-  --color-vinho: #70012a;
-  --color-ambar: #e8890c;
-  --color-ouro: #c9a227;
-  --color-creme: #fdf1e5;
-  --color-noite: #2b0710;
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-texto: var(--primary-texto);
+  --color-primary-suave: var(--primary-suave);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-hover: var(--muted-hover);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-texto-terciario: var(--texto-terciario);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-hover: var(--input-hover);
+  --color-controle-pagina: var(--controle-pagina);
+  --color-dialogo: var(--dialogo);
+  --color-ring: var(--ring);
+
+  --color-positivo: var(--positivo);
+  --color-positivo-texto: var(--positivo-texto);
+  --color-negativo: var(--negativo);
+  --color-negativo-texto: var(--negativo-texto);
+  --color-atencao: var(--atencao);
+  --color-atencao-texto: var(--atencao-texto);
+  --color-ambar: var(--ambar);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Raios: controles 10px, menus 14px, cards 20px, diálogos 24px */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-4xl: 32px;
+
+  /* Elevação: card, card em hover, flutuante (menus, pickers), modal */
+  --shadow-suave: var(--sombra-1);
+  --shadow-elevado: var(--sombra-2);
+  --shadow-flutuante: var(--sombra-3);
+  --shadow-modal: var(--sombra-4);
+
+  --ease-mola: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-@layer theme {
-  :root,
-  [data-theme="rizz"] {
-    color-scheme: light;
+/*
+ * Cinza neutro de verdade (R = G = B). Cards sem borda: separação pelo
+ * contraste com o fundo e por sombra mínima no claro; no escuro, superfícies
+ * mais claras a cada nível. O vinho só em ação principal, seleção, foco e links.
+ */
+:root {
+  --radius: 0.625rem;
 
-    --radius: 0.75rem;
-    --field-radius: 0.75rem;
+  --background: #f2f2f2;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --dialogo: #ffffff;
+  /* Vinho da marca (#70012A) */
+  --primary: #70012a;
+  --primary-hover: #5a0122;
+  --primary-foreground: #ffffff;
+  --primary-texto: #8a0a36;
+  --primary-suave: color-mix(in oklab, #70012a 9%, transparent);
+  --secondary: #f0f0f0;
+  --secondary-foreground: #171717;
+  --muted: #f0f0f0;
+  --muted-hover: #e8e8e8;
+  --muted-foreground: #646464;
+  --texto-terciario: #8f8f8f;
+  --rolagem: rgb(0 0 0 / 0.18);
+  --rolagem-forte: rgb(0 0 0 / 0.32);
+  --accent: #f0f0f0;
+  --accent-foreground: #171717;
+  --destructive: #dc2626;
+  --border: #e5e5e5;
+  --input: #d4d4d4;
+  --input-hover: #bbbbbb;
+  --controle-pagina: #e0e0e0;
+  --controle-pagina-texto: #5a5a5a;
+  --ring: #8a0a36;
 
-    --background: oklch(0.975 0.008 60);
-    --foreground: oklch(0.24 0.05 15);
+  --positivo: #16a34a;
+  --positivo-texto: #167c3a;
+  --negativo: #dc2626;
+  --negativo-texto: #c81e1e;
+  --atencao: #f59e0b;
+  --atencao-texto: #a14a08;
+  /* Âmbar da marca: selos de fidelidade e "últimos lugares" */
+  --ambar: #e8890c;
 
-    --surface: oklch(1 0 0);
-    --surface-foreground: var(--foreground);
-    --surface-secondary: oklch(0.965 0.012 60);
-    --surface-tertiary: oklch(0.945 0.016 60);
+  --chart-1: #70012a;
+  --chart-2: #e8890c;
+  --chart-3: #14a38b;
 
-    --overlay: oklch(1 0 0);
-    --overlay-foreground: var(--foreground);
+  /* Sidebar sempre escura, nos dois temas */
+  --sidebar: #111111;
+  --sidebar-foreground: #c7c7c7;
+  --sidebar-muted: #a3a3a3;
+  --sidebar-primary: #8a0a36;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(255 255 255 / 0.06);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.08);
+  --sidebar-ring: #d4567f;
 
-    --muted: oklch(0.5 0.03 20);
+  --sombra-1: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.05);
+  --sombra-2: 0 2px 4px rgb(0 0 0 / 0.04), 0 10px 24px -8px rgb(0 0 0 / 0.1);
+  --sombra-3: 0 0 0 1px rgb(0 0 0 / 0.05), 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 16px 32px -8px rgb(0 0 0 / 0.12);
+  --sombra-4: 0 0 0 1px rgb(0 0 0 / 0.05), 0 24px 64px -12px rgb(0 0 0 / 0.25);
+}
 
-    --default: oklch(0.94 0.014 55);
-    --default-foreground: var(--foreground);
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --card: #171717;
+  --card-foreground: #ededed;
+  --popover: #1f1f1f;
+  --popover-foreground: #ededed;
+  --dialogo: #1f1f1f;
+  --primary: #a3174a;
+  --primary-hover: #b8215a;
+  --primary-foreground: #ffffff;
+  /* No escuro, o vinho de fundo não passa no AA como texto: um rosé claro */
+  --primary-texto: #f08cad;
+  --primary-suave: color-mix(in oklab, #d4386d 18%, transparent);
+  --secondary: #232323;
+  --secondary-foreground: #ededed;
+  --muted: #232323;
+  --muted-hover: #2c2c2c;
+  --muted-foreground: #a1a1a1;
+  --texto-terciario: #737373;
+  --rolagem: rgb(255 255 255 / 0.16);
+  --rolagem-forte: rgb(255 255 255 / 0.3);
+  --accent: #262626;
+  --accent-foreground: #ededed;
+  --destructive: #dc2626;
+  --border: #262626;
+  --input: #3a3a3a;
+  --input-hover: #484848;
+  --controle-pagina: var(--muted);
+  --controle-pagina-texto: var(--muted-foreground);
+  --ring: #e06a92;
 
-    /* Vinho da marca (#70012A) */
-    --accent: oklch(0.36 0.14 10);
-    --accent-foreground: oklch(0.985 0.012 70);
+  --positivo: #22c55e;
+  --positivo-texto: #22c55e;
+  --negativo: #f87171;
+  --negativo-texto: #f87171;
+  --atencao: #fbbf24;
+  --atencao-texto: #fbbf24;
+  --ambar: #f29a2e;
 
-    --success: oklch(0.55 0.12 160);
-    --success-foreground: oklch(0.99 0 0);
+  --chart-1: #d4386d;
+  --chart-2: #f29a2e;
+  --chart-3: #149c84;
 
-    /* Âmbar da marca (#E8890C) */
-    --warning: oklch(0.72 0.16 65);
-    --warning-foreground: oklch(0.24 0.05 15);
+  --sidebar-primary: #a3174a;
 
-    --danger: oklch(0.55 0.2 25);
-    --danger-foreground: oklch(0.99 0 0);
-
-    --field-background: oklch(1 0 0);
-    --field-foreground: var(--foreground);
-    --field-placeholder: var(--muted);
-    --field-border: oklch(0.9 0.015 50);
-
-    --segment: oklch(1 0 0);
-    --segment-foreground: var(--foreground);
-
-    --border: oklch(0.91 0.014 50);
-    --separator: oklch(0.92 0.012 50);
-    --focus: var(--accent);
-    --link: var(--accent);
-
-    --surface-shadow:
-      0 1px 2px 0 rgb(43 7 16 / 0.04), 0 2px 8px -2px rgb(43 7 16 / 0.06);
-    --overlay-shadow:
-      0 8px 24px -4px rgb(43 7 16 / 0.14), 0 2px 6px 0 rgb(43 7 16 / 0.06);
-  }
+  --sombra-1: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 1px 2px rgb(0 0 0 / 0.4);
+  --sombra-2: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 10px 24px -8px rgb(0 0 0 / 0.6);
+  --sombra-3: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.06), 0 16px 32px -8px rgb(0 0 0 / 0.7);
+  --sombra-4: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.06), 0 24px 64px -12px rgb(0 0 0 / 0.8);
 }
 
 @layer base {
-  html,
-  body {
-    background: var(--background);
-    color: var(--foreground);
+  * {
+    @apply border-border outline-ring/50;
   }
-
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+  /* Preenchimento automático do navegador: o campo mantém fundo, texto e cantos */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill {
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: var(--foreground);
+    caret-color: var(--foreground);
+    box-shadow: none;
+    transition: background-color 2147483647s ease 0s !important;
   }
 }
 
-@layer utilities {
-  .titulo-display {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-  }
+/* Controle segmentado direto sobre o fundo da página: um cinza levemente mais escuro que ela */
+@utility sobre-a-pagina {
+  background-color: var(--controle-pagina);
+  --muted-foreground: var(--controle-pagina-texto);
+}
 
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+/* Rodapé fixo de painel lateral: o conteúdo que rola some num esmaecimento acima dele */
+@utility rodape-de-painel {
+  position: relative;
+  z-index: 1;
+  &::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 100%;
+    height: 2.5rem;
+    pointer-events: none;
+    background: linear-gradient(to top, var(--dialogo), transparent);
   }
+}
+
+@utility numeros {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 120ms !important;
+    transition-duration: 120ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Barra de rolagem fina e arredondada, nas cores do tema */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--rolagem);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--rolagem-forte);
+}
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rolagem) transparent;
+  }
+}
+
+/* Painéis laterais: a barra só aparece com o mouse em cima */
+[data-slot="sheet-content"] ::-webkit-scrollbar-thumb,
+.rolagem-invisivel::-webkit-scrollbar-thumb {
+  background-color: transparent;
+}
+[data-slot="sheet-content"] :hover::-webkit-scrollbar-thumb,
+.rolagem-invisivel:hover::-webkit-scrollbar-thumb {
+  background-color: var(--rolagem);
 }

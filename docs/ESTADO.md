@@ -4,6 +4,13 @@ Atualizado em 19/10/2026. Ao resolver um item, apague-o daqui (ou mova para "Fei
 
 ## Feito recentemente
 
+- **Nova UI do painel e da reserva** (branch `feat/nova-ui`, 23/10/2026; ainda não está na `main`).
+  - Painel: saiu o HeroUI; entrou o sistema visual do Ge System (cinza neutro, cards sem borda, sidebar escura flutuante e recolhível, barra inferior em pílula no celular, tema claro/escuro), com o vinho do Rizz no lugar do azul. Componentes base em `components/sistema/`, tokens em `app/(admin)/admin.css`.
+  - Reserva online: saiu do layout escuro do site para `app/(reserva)/`, com root layout próprio, branco. Fluxo em etapas (pessoas → dia → horário → dados → revisão), calendário e seletores próprios, resumo ao lado no computador. Com a reserva online pausada, o mesmo fluxo termina no WhatsApp (substitui o antigo formulário com `<select>` e `input date/time` nativos).
+  - Conferido: lint, typecheck, build e capturas locais (reserva completa até a revisão, sem enviar; login; telas do painel por uma rota temporária só de leitura, já apagada). **Não testado logado** no painel: salvar, excluir e mudar status pelas telas novas.
+  - O pop-up promocional não aparece mais na página de reservas (ela não usa mais o layout do site). A opção "Reservas" em "Onde aparece" continua no painel, sem efeito.
+  - O cartão de fidelidade do site (`components/fidelidade/CartaoFidelidade.tsx`) ainda usa `input type="date"` nativo; o site ficou fora desta mudança.
+
 - **Reservas online** (commit `38c48d6`, em produção desde 19/10/2026). Detalhes em [`reservas.md`](reservas.md).
   - Migração aplicada no banco (`npm run db:setup`).
   - Testado ponta a ponta pela API local: reservar, link pessoal, `.ics`, alterar, cancelar e as recusas (duplicada, grupo grande, data fora do limite, robô, link inválido). A reserva de teste foi apagada.

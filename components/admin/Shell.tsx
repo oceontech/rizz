@@ -1,21 +1,31 @@
 "use client";
 
-import { ArrowRightFromSquare, ArrowUpRightFromSquare, Bars, Ellipsis } from "@gravity-ui/icons";
-import { Avatar, Button, Drawer, Separator, Tooltip } from "@heroui/react";
+import { ExternalLink, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { motion } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import garfo from "@/assets/marca/garfo-branco.png";
 import Logo from "@/components/brand/Logo";
+import { MOLA, TransicaoPagina } from "@/components/sistema/movimento";
+import { BotaoTema } from "@/components/sistema/tema/botao-tema";
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/sistema/ui/drawer";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/sistema/ui/tooltip";
 import { sair } from "@/lib/admin/sessao-actions";
+import { cn } from "@/lib/utils";
 
-import { NAV, NAV_BARRA, ativo } from "./nav";
+import { COOKIE_SIDEBAR, NAV, NAV_BARRA, ativo } from "./nav";
 
 type Props = {
   usuario: { nome: string; email: string };
   pendentes: number;
+  recolhidaInicial: boolean;
   children: React.ReactNode;
 };
+
+const LARGURA = { aberta: 280, recolhida: 84 };
 
 function iniciais(nome: string) {
   return nome
@@ -26,125 +36,215 @@ function iniciais(nome: string) {
     .join("");
 }
 
-function ListaNav({ pendentes, onNavegar }: { pendentes: number; onNavegar?: () => void }) {
-  const pathname = usePathname();
+/** Dica ao lado do item quando a sidebar está recolhida. */
+function ComDica({ ativa, texto, children }: { ativa: boolean; texto: string; children: React.ReactElement }) {
+  if (!ativa) return children;
   return (
-    <nav aria-label="Seções do painel" className="flex flex-col gap-1">
-      {NAV.map(({ href, rotulo, Icone }) => {
-        const atual = ativo(pathname, href);
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavegar}
-            aria-current={atual ? "page" : undefined}
-            className={`group flex h-11 items-center gap-3 rounded-xl px-3 text-sm transition-colors ${
-              atual
-                ? "bg-accent text-accent-foreground shadow-sm"
-                : "text-foreground/75 hover:bg-default hover:text-foreground"
-            }`}
-          >
-            <Icone className="size-[18px] shrink-0" />
-            <span className="grow">{rotulo}</span>
-            {href === "/admin/reservas" && pendentes > 0 && (
-              <span
-                className={`min-w-6 rounded-full px-1.5 text-center text-xs font-medium leading-6 ${
-                  atual ? "bg-accent-foreground/20" : "bg-warning text-warning-foreground"
-                }`}
-              >
-                {pendentes}
-              </span>
-            )}
-          </Link>
-        );
-      })}
-    </nav>
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="right" sideOffset={12}>
+        {texto}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
-function Rodape({ usuario }: { usuario: Props["usuario"] }) {
+function ItemNav({
+  href,
+  rotulo,
+  Icone,
+  atual,
+  recolhida,
+  contexto,
+  contador,
+  aoNavegar,
+}: {
+  href: string;
+  rotulo: string;
+  Icone: (typeof NAV)[number]["Icone"];
+  atual: boolean;
+  recolhida: boolean;
+  contexto: string;
+  contador?: number;
+  aoNavegar?: () => void;
+}) {
   return (
-    <div className="flex items-center gap-3">
-      <Avatar size="sm" color="accent">
-        <Avatar.Fallback>{iniciais(usuario.nome)}</Avatar.Fallback>
-      </Avatar>
-      <div className="min-w-0 grow">
-        <p className="truncate text-sm font-medium">{usuario.nome}</p>
-        <p className="truncate text-xs text-muted">{usuario.email}</p>
+    <li>
+      <ComDica ativa={recolhida} texto={contador ? `${rotulo} · ${contador} a confirmar` : rotulo}>
+        <Link
+          href={href}
+          onClick={aoNavegar}
+          aria-current={atual ? "page" : undefined}
+          className={cn(
+            "relative flex h-11 items-center rounded-full text-[0.9rem] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+            recolhida ? "-mx-1 w-11 justify-center" : "gap-3 px-3",
+            atual
+              ? "text-sidebar-primary-foreground"
+              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          )}
+        >
+          {atual && (
+            <motion.span
+              layoutId={`item-ativo-${contexto}`}
+              className="absolute inset-0 rounded-full bg-sidebar-primary shadow-[0_6px_20px_-6px] shadow-sidebar-primary/70"
+              transition={MOLA}
+            />
+          )}
+          <Icone className="relative size-5 shrink-0" strokeWidth={1.75} aria-hidden />
+          {Boolean(contador) && recolhida && (
+            <span className="absolute top-2 right-2 size-2.5 rounded-full border-2 border-sidebar bg-ambar" aria-hidden />
+          )}
+          <span className={recolhida ? "sr-only" : "relative flex-1 truncate"}>{rotulo}</span>
+          {Boolean(contador) && !recolhida && (
+            <span className="numeros relative grid h-5 min-w-5 place-items-center rounded-full bg-ambar px-1.5 text-[0.7rem] font-bold text-[#2b0710]">
+              {contador}
+              <span className="sr-only"> a confirmar</span>
+            </span>
+          )}
+        </Link>
+      </ComDica>
+    </li>
+  );
+}
+
+function ConteudoSidebar({
+  usuario,
+  pendentes,
+  recolhida,
+  contexto,
+  aoNavegar,
+}: {
+  usuario: Props["usuario"];
+  pendentes: number;
+  recolhida: boolean;
+  contexto: string;
+  aoNavegar?: () => void;
+}) {
+  const pathname = usePathname();
+  const item = (n: (typeof NAV)[number]) => (
+    <ItemNav
+      key={n.href}
+      href={n.href}
+      rotulo={n.rotulo}
+      Icone={n.Icone}
+      atual={ativo(pathname, n.href)}
+      recolhida={recolhida}
+      contexto={contexto}
+      contador={n.href === "/admin/reservas" ? pendentes : undefined}
+      aoNavegar={aoNavegar}
+    />
+  );
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <nav aria-label="Seções do painel" className="-mx-3 min-h-0 flex-1 overflow-y-auto px-3 [scrollbar-width:none]">
+        <p
+          className={cn(
+            "mb-2 h-4 px-3 text-[0.68rem] font-semibold tracking-[0.08em] text-sidebar-muted uppercase transition-opacity",
+            recolhida && "opacity-0",
+          )}
+          aria-hidden
+        >
+          Restaurante
+        </p>
+        <ul className="flex flex-col gap-1">{NAV.filter((n) => n.grupo === "principal").map(item)}</ul>
+      </nav>
+
+      <div className="mt-2 flex shrink-0 flex-col gap-3 border-t border-sidebar-border pt-4 baixa:gap-2 baixa:pt-3">
+        <ul className="flex flex-col gap-1">
+          {NAV.filter((n) => n.grupo === "rodape").map(item)}
+          <li>
+            <ComDica ativa={recolhida} texto="Ver o site">
+              {/* <a> de propósito: o site é outro root layout */}
+              <a
+                href="/"
+                target="_blank"
+                rel="noopener"
+                className={cn(
+                  "flex h-11 items-center rounded-full text-[0.9rem] font-medium text-sidebar-foreground outline-none transition-colors hover:bg-sidebar-accent hover:text-white focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+                  recolhida ? "-mx-1 w-11 justify-center" : "gap-3 px-3",
+                )}
+              >
+                <ExternalLink className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />
+                <span className={recolhida ? "sr-only" : "flex-1"}>Ver o site</span>
+              </a>
+            </ComDica>
+          </li>
+        </ul>
+
+        <div
+          className={cn(
+            "flex items-center gap-2 rounded-2xl bg-white/5 p-2",
+            recolhida && "flex-col gap-3 bg-transparent p-0",
+          )}
+        >
+          <ComDica ativa={recolhida} texto={usuario.nome}>
+            <Link
+              href="/admin/configuracoes"
+              onClick={aoNavegar}
+              className={cn(
+                "flex min-w-0 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+                !recolhida && "flex-1 p-0.5",
+              )}
+            >
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sidebar-primary text-xs font-semibold text-white">
+                {iniciais(usuario.nome)}
+              </span>
+              {!recolhida && (
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-white">{usuario.nome}</span>
+                  <span className="block truncate text-xs text-sidebar-muted">{usuario.email}</span>
+                </span>
+              )}
+            </Link>
+          </ComDica>
+          <form action={sair} className="flex">
+            <ComDica ativa texto="Sair">
+              <button
+                type="submit"
+                aria-label="Sair"
+                className="grid size-9 shrink-0 place-items-center rounded-full text-sidebar-muted outline-none transition-colors hover:bg-sidebar-accent hover:text-white focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              >
+                <LogOut className="size-[18px]" strokeWidth={1.75} />
+              </button>
+            </ComDica>
+          </form>
+        </div>
       </div>
-      <form action={sair}>
-        <Tooltip delay={300}>
-          <Button type="submit" isIconOnly size="sm" variant="ghost" aria-label="Sair">
-            <ArrowRightFromSquare />
-          </Button>
-          <Tooltip.Content>Sair</Tooltip.Content>
-        </Tooltip>
-      </form>
     </div>
   );
 }
 
-export default function Shell({ usuario, pendentes, children }: Props) {
+function BotaoRecolher({ recolhida, aoClicar }: { recolhida: boolean; aoClicar: () => void }) {
+  const Icone = recolhida ? PanelLeftOpen : PanelLeftClose;
+  const rotulo = recolhida ? "Expandir menu" : "Recolher menu";
+  return (
+    <ComDica ativa texto={rotulo}>
+      <button
+        type="button"
+        onClick={aoClicar}
+        aria-label={rotulo}
+        className="grid size-9 place-items-center rounded-full text-sidebar-muted outline-none transition-colors hover:bg-sidebar-accent hover:text-white focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+      >
+        <Icone className="size-[18px]" strokeWidth={1.75} />
+      </button>
+    </ComDica>
+  );
+}
+
+/** Barra inferior em pílula (celular), com o restante das seções no "Mais". */
+function BarraCelular({ usuario, pendentes }: { usuario: Props["usuario"]; pendentes: number }) {
   const pathname = usePathname();
-  const [menuAberto, setMenuAberto] = useState(false);
-  const atualNav = NAV.find((n) => ativo(pathname, n.href));
+  const [mais, setMais] = useState(false);
+  const foraDaBarra = !NAV_BARRA.some((h) => ativo(pathname, h));
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[272px_1fr]">
-      {/* Sidebar — desktop */}
-      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-border bg-surface px-4 py-6 lg:flex">
-        <Link href="/admin" className="flex items-center gap-3 px-2">
-          <Logo variante="vinho" decorativo className="h-auto w-24" sizes="96px" />
-          <span className="rounded-full bg-default px-2 py-0.5 text-[0.625rem] font-medium uppercase tracking-[0.16em] text-muted">
-            Painel
-          </span>
-        </Link>
-
-        <div className="mt-8 grow overflow-y-auto">
-          <ListaNav pendentes={pendentes} />
-        </div>
-
-        <a
-          href="/"
-          target="_blank"
-          rel="noopener"
-          className="mb-4 flex h-10 items-center gap-2 rounded-xl px-3 text-sm text-muted hover:bg-default hover:text-foreground"
-        >
-          <ArrowUpRightFromSquare className="size-4" />
-          Ver o site
-        </a>
-        <Separator className="mb-4" />
-        <Rodape usuario={usuario} />
-      </aside>
-
-      <div className="flex min-w-0 flex-col">
-        {/* Barra superior — celular e tablet */}
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-surface/90 px-3 backdrop-blur lg:hidden">
-          <Button
-            isIconOnly
-            variant="ghost"
-            aria-label="Abrir menu"
-            onPress={() => setMenuAberto(true)}
-          >
-            <Bars />
-          </Button>
-          <p className="grow truncate text-center text-sm font-medium">
-            {atualNav?.rotulo ?? "Painel"}
-          </p>
-          <Logo variante="vinho" decorativo className="h-auto w-14" sizes="56px" />
-        </header>
-
-        <main className="mx-auto w-full max-w-[1280px] grow px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">
-          {children}
-        </main>
-      </div>
-
-      {/* Barra inferior — celular */}
+    <>
       <nav
         aria-label="Atalhos"
-        className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 backdrop-blur lg:hidden"
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 md:hidden"
       >
-        <ul className="grid grid-cols-5">
+        <ul className="mx-auto grid max-w-md grid-cols-5 rounded-full bg-sidebar p-1.5 shadow-modal">
           {NAV.filter((n) => NAV_BARRA.includes(n.href)).map(({ href, curto, Icone }) => {
             const atual = ativo(pathname, href);
             return (
@@ -152,14 +252,18 @@ export default function Shell({ usuario, pendentes, children }: Props) {
                 <Link
                   href={href}
                   aria-current={atual ? "page" : undefined}
-                  className={`relative flex h-16 flex-col items-center justify-center gap-1 text-[0.6875rem] ${
-                    atual ? "font-medium text-accent" : "text-muted"
-                  }`}
+                  className={cn(
+                    "relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-full text-[0.68rem] font-medium transition-colors",
+                    atual ? "text-white" : "text-sidebar-muted",
+                  )}
                 >
-                  <Icone className="size-5" />
-                  {curto}
+                  {atual && (
+                    <motion.span layoutId="barra-ativa" className="absolute inset-0 rounded-full bg-sidebar-primary" transition={MOLA} />
+                  )}
+                  <Icone className="relative size-5" strokeWidth={1.75} aria-hidden />
+                  <span className="relative">{curto}</span>
                   {href === "/admin/reservas" && pendentes > 0 && (
-                    <span className="absolute right-[22%] top-2 min-w-4 rounded-full bg-warning px-1 text-center text-[0.625rem] leading-4 text-warning-foreground">
+                    <span className="numeros absolute top-1.5 right-[18%] grid h-4 min-w-4 place-items-center rounded-full bg-ambar px-1 text-[0.6rem] font-bold text-[#2b0710]">
                       {pendentes}
                     </span>
                   )}
@@ -170,44 +274,106 @@ export default function Shell({ usuario, pendentes, children }: Props) {
           <li>
             <button
               type="button"
-              onClick={() => setMenuAberto(true)}
-              className="flex h-16 w-full flex-col items-center justify-center gap-1 text-[0.6875rem] text-muted"
+              onClick={() => setMais(true)}
+              className={cn(
+                "relative flex h-14 w-full flex-col items-center justify-center gap-0.5 rounded-full text-[0.68rem] font-medium",
+                foraDaBarra ? "bg-sidebar-primary text-white" : "text-sidebar-muted",
+              )}
             >
-              <Ellipsis className="size-5" />
+              <MoreHorizontal className="size-5" strokeWidth={1.75} aria-hidden />
               Mais
             </button>
           </li>
         </ul>
       </nav>
 
-      {/* Menu completo — celular */}
-      <Drawer>
-        <Drawer.Backdrop isOpen={menuAberto} onOpenChange={setMenuAberto}>
-          <Drawer.Content placement="left" className="w-[min(320px,88vw)]">
-            <Drawer.Dialog aria-label="Menu do painel" className="flex h-full flex-col">
-              <Drawer.CloseTrigger />
-              <Drawer.Header>
-                <Logo variante="vinho" decorativo className="h-auto w-24" sizes="96px" />
-              </Drawer.Header>
-              <Drawer.Body className="grow">
-                <ListaNav pendentes={pendentes} onNavegar={() => setMenuAberto(false)} />
-                <a
-                  href="/"
-                  target="_blank"
-                  rel="noopener"
-                  className="mt-4 flex h-11 items-center gap-2 rounded-xl px-3 text-sm text-muted hover:bg-default"
-                >
-                  <ArrowUpRightFromSquare className="size-4" />
-                  Ver o site
-                </a>
-              </Drawer.Body>
-              <Drawer.Footer className="block">
-                <Rodape usuario={usuario} />
-              </Drawer.Footer>
-            </Drawer.Dialog>
-          </Drawer.Content>
-        </Drawer.Backdrop>
+      <Drawer open={mais} onOpenChange={setMais}>
+        <DrawerContent className="bg-sidebar text-sidebar-foreground">
+          <DrawerTitle className="sr-only">Menu do painel</DrawerTitle>
+          <DrawerDescription className="sr-only">Todas as seções do painel</DrawerDescription>
+          <div className="flex max-h-[75dvh] flex-col px-4 pt-4 pb-6">
+            <ConteudoSidebar
+              usuario={usuario}
+              pendentes={pendentes}
+              recolhida={false}
+              contexto="gaveta"
+              aoNavegar={() => setMais(false)}
+            />
+          </div>
+        </DrawerContent>
       </Drawer>
+    </>
+  );
+}
+
+export default function Shell({ usuario, pendentes, recolhidaInicial, children }: Props) {
+  const pathname = usePathname();
+  const [recolhida, setRecolhida] = useState(recolhidaInicial);
+
+  function alternar() {
+    const nova = !recolhida;
+    setRecolhida(nova);
+    document.cookie = `${COOKIE_SIDEBAR}=${nova ? "recolhida" : "aberta"}; path=/admin; max-age=31536000; samesite=lax`;
+  }
+
+  return (
+    <div className="flex min-h-dvh flex-col md:flex-row">
+      {/* Sidebar escura e flutuante — desktop */}
+      <motion.aside
+        initial={false}
+        animate={{ width: LARGURA[recolhida ? "recolhida" : "aberta"] }}
+        transition={MOLA}
+        className="sticky top-0 hidden h-dvh shrink-0 p-3 md:block"
+      >
+        <div className="flex h-full flex-col overflow-hidden rounded-[28px] bg-sidebar px-3 py-5 text-sidebar-foreground baixa:py-4 dark:border dark:border-sidebar-border">
+          <div
+            className={cn(
+              "mb-7 flex h-10 shrink-0 items-center baixa:mb-4",
+              recolhida ? "flex-col gap-3" : "justify-between pr-1 pl-3",
+            )}
+          >
+            <Link
+              href="/admin"
+              aria-label="Rizz, visão geral"
+              className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            >
+              {recolhida ? (
+                <Image src={garfo} alt="" className="h-7 w-auto" sizes="40px" />
+              ) : (
+                <Logo variante="branca" decorativo className="h-auto w-[84px]" sizes="84px" />
+              )}
+            </Link>
+            {!recolhida && <BotaoRecolher recolhida={recolhida} aoClicar={alternar} />}
+          </div>
+          {recolhida && (
+            <div className="-mt-2 mb-5 flex justify-center">
+              <BotaoRecolher recolhida={recolhida} aoClicar={alternar} />
+            </div>
+          )}
+          <ConteudoSidebar usuario={usuario} pendentes={pendentes} recolhida={recolhida} contexto="desktop" />
+        </div>
+      </motion.aside>
+
+      {/* Topo — celular */}
+      <header className="sticky top-0 z-30 flex items-center justify-between bg-background/80 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur-xl md:hidden">
+        <Link href="/admin" aria-label="Rizz, visão geral" className="grid h-11 place-items-center">
+          <Logo variante="vinho" decorativo className="h-auto w-16 dark:hidden" sizes="64px" />
+          <Logo variante="branca" decorativo className="hidden h-auto w-16 dark:block" sizes="64px" />
+        </Link>
+        <BotaoTema />
+      </header>
+
+      <div className="relative flex min-w-0 flex-1 flex-col px-4 pb-32 md:px-8 md:pt-6 md:pb-12">
+        {/* Tema no canto, fora do fluxo; o primeiro cabeçalho da página deixa o espaço dele */}
+        <div className="absolute top-6 right-8 z-10 hidden md:block">
+          <BotaoTema className="bg-card shadow-suave hover:bg-accent" />
+        </div>
+        <main className="mx-auto mt-2 w-full max-w-[1240px] flex-1 md:mt-1 md:[&_header:first-of-type]:pr-14">
+          <TransicaoPagina key={pathname}>{children}</TransicaoPagina>
+        </main>
+      </div>
+
+      <BarraCelular usuario={usuario} pendentes={pendentes} />
     </div>
   );
 }

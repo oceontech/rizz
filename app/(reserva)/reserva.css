@@ -1,0 +1,131 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../shadcn-base.css";
+
+/* ───────────────────────────────────────────────────────────
+   Reserva online — página branca, limpa, no espírito da Apple.
+   A cor do Rizz (vinho) só nos destaques: seleção, ação principal
+   e foco. Usa os mesmos nomes de tokens do painel, então os
+   componentes de components/sistema funcionam aqui sem mudança.
+   ─────────────────────────────────────────────────────────── */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-cormorant), Georgia, serif;
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--foreground);
+  --color-dialogo: var(--card);
+  --color-primary: var(--primary);
+  --color-primary-foreground: #ffffff;
+  --color-primary-texto: var(--primary-texto);
+  --color-primary-suave: var(--primary-suave);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--superficie);
+  --color-secondary-foreground: var(--foreground);
+  --color-muted: var(--superficie);
+  --color-muted-hover: var(--superficie-hover);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-texto-terciario: var(--texto-terciario);
+  --color-accent: var(--superficie);
+  --color-accent-foreground: var(--foreground);
+  --color-superficie: var(--superficie);
+  --color-superficie-hover: var(--superficie-hover);
+  --color-destructive: #d70015;
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-hover: var(--input-hover);
+  --color-ring: var(--primary);
+  --color-positivo: #248a3d;
+  --color-positivo-texto: #1f7a36;
+  --color-negativo: #d70015;
+  --color-negativo-texto: #c00013;
+  --color-atencao: #c26b00;
+  --color-atencao-texto: #a35a00;
+  --color-ambar: #e8890c;
+
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 28px;
+
+  --shadow-suave: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px -4px rgb(0 0 0 / 0.06);
+  --shadow-elevado: 0 2px 6px rgb(0 0 0 / 0.04), 0 16px 40px -12px rgb(0 0 0 / 0.14);
+  --shadow-flutuante: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px -8px rgb(0 0 0 / 0.16);
+  --shadow-modal: 0 0 0 1px rgb(0 0 0 / 0.04), 0 32px 80px -16px rgb(0 0 0 / 0.3);
+
+  --ease-mola: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #1d1d1f;
+  --card: #ffffff;
+  --superficie: #f5f5f7;
+  --superficie-hover: #ebebef;
+  --muted-foreground: #6e6e73;
+  --texto-terciario: #a1a1a6;
+  --border: #e8e8ed;
+  --input: #d2d2d7;
+  --input-hover: #b8b8bf;
+  /* Vinho da marca (#70012A) */
+  --primary: #70012a;
+  --primary-hover: #5a0122;
+  --primary-texto: #8a0a36;
+  --primary-suave: color-mix(in oklab, #70012a 8%, transparent);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-primary/40;
+  }
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 18%, transparent);
+  }
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill {
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: var(--foreground);
+    caret-color: var(--foreground);
+    transition: background-color 2147483647s ease 0s !important;
+  }
+}
+
+@utility numeros {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility rodape-de-painel {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 120ms !important;
+    transition-duration: 120ms !important;
+    scroll-behavior: auto !important;
+  }
+}

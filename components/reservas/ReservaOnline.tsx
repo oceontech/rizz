@@ -1,25 +1,55 @@
 "use client";
 
+import {
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  CircleAlert,
+  Clock,
+  Loader2,
+  MapPin,
+  MessageCircle,
+  Sparkles,
+  UserRound,
+  Users,
+} from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import FormReservaWhatsApp from "@/components/reservas/FormReservaWhatsApp";
-import { Botao } from "@/components/ui/Botao";
-import { mascaraTelefone } from "@/lib/admin/formato";
-import { dataPorExtenso, diaDaSemana, NOME_TURNO, OCASIOES, type Turno } from "@/lib/reservas/regras";
-import { scrollToTarget } from "@/lib/scroll";
-import { whatsappLink } from "@/lib/site";
+import foto from "@/assets/img/salao-claraboia-vinho.webp";
+import CalendarioReserva from "@/components/reservas/CalendarioReserva";
+import { Campo } from "@/components/sistema/formulario/campo";
+import { InputTelefone } from "@/components/sistema/inputs/input-telefone";
+import { AreaTexto, InputTexto } from "@/components/sistema/inputs/input-texto";
+import { TrocaDeEtapa } from "@/components/sistema/movimento";
+import { diaDe, horarios as expediente } from "@/lib/hours";
+import {
+  dataPorExtenso,
+  deMinutos,
+  diaDaSemana,
+  NOME_TURNO,
+  OCASIOES,
+  paraMinutos,
+  rotuloOcasiao,
+  somarDias,
+  type Turno,
+} from "@/lib/reservas/regras";
+import { enderecoLinha, site, whatsappLink } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 type Agenda = { ativo: boolean; maxPessoas: number; hoje: string; ate: string; fechados: string[] };
 type HorarioSite = { hora: string; turno: Turno; livres: number; poucos: boolean };
-
-const campo =
-  "h-12 w-full border-b border-creme/20 bg-transparent text-[0.9375rem] text-creme placeholder:text-creme/30 focus:border-ambar focus:outline-none";
-
-const rotulo = "mb-2 block text-[0.625rem] uppercase tracking-[0.18em] text-creme/45";
+type Etapa = "pessoas" | "dia" | "horario" | "dados" | "revisao";
 
 const NOMES_DIA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+/** Classe dos campos grandes, no estilo dos formulários da Apple. */
+const CAIXA = "h-13 rounded-xl border-transparent bg-superficie text-[17px] hover:border-transparent md:h-13 md:text-[17px]";
+
+function hojeSP() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+}
 
 function buscarHorarios(dia: string, ignorar?: string) {
   const q = new URLSearchParams({ data: dia });
@@ -30,62 +60,189 @@ function buscarHorarios(dia: string, ignorar?: string) {
     .catch(() => [] as HorarioSite[]);
 }
 
-function diasEntre(de: string, ate: string) {
-  const lista: string[] = [];
-  const [a, m, d] = de.split("-").map(Number);
-  for (let i = 0; ; i++) {
-    const dia = new Date(Date.UTC(a, m - 1, d + i)).toISOString().slice(0, 10);
-    if (dia > ate) return lista;
-    lista.push(dia);
-  }
+/**
+ * Sem reserva online (pausada no painel ou banco fora do ar): os dias e
+ * horários saem do expediente, sem lotação, e o pedido vai para o WhatsApp.
+ */
+function agendaLocal(): Agenda {
+  const hoje = hojeSP();
+  const ate = somarDias(hoje, 60);
+  const fechados: string[] = [];
+  for (let d = hoje; d <= ate; d = somarDias(d, 1)) if (diaDe(diaDaSemana(d)).fechado) fechados.push(d);
+  return { ativo: false, maxPessoas: 12, hoje, ate, fechados };
 }
 
-/** Cabeçalho numerado de cada etapa, com o resumo do que já foi escolhido. */
-function Etapa({
-  id,
-  n,
-  titulo,
-  resumo,
-  children,
-}: {
-  id: string;
-  n: string;
-  titulo: string;
-  resumo?: string | null;
-  children: React.ReactNode;
-}) {
+function horariosLocais(dia: string): HorarioSite[] {
+  const d = diaDe(diaDaSemana(dia));
+  if (d.fechado) return [];
+  const lista: HorarioSite[] = [];
+  for (const turno of ["almoco", "jantar"] as const) {
+    const faixa = d[turno];
+    if (!faixa) continue;
+    for (let m = paraMinutos(faixa.inicio); m <= paraMinutos(faixa.fim) - 60; m += 30) {
+      lista.push({ hora: deMinutos(m), turno, livres: 99, poucos: false });
+    }
+  }
+  return lista;
+}
+
+function pluralPessoas(n: number) {
+  return `${n} ${n === 1 ? "pessoa" : "pessoas"}`;
+}
+
+function diaCurto(dia: string) {
+  const [a, m, d] = dia.split("-").map(Number);
+  return new Date(a, m - 1, d)
+    .toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" })
+    .replace(/\./g, "");
+}
+
+// ─── Peças da tela ─────────────────────────────────────────────
+
+function Titulo({ etapa, total, titulo, texto }: { etapa: number; total: number; titulo: string; texto?: string }) {
   return (
-    <section id={id} className="border-t border-creme/10 pt-8 first:border-0 first:pt-0">
-      <div className="mb-5 flex items-baseline justify-between gap-4">
-        <h2 className="flex items-baseline gap-3">
-          <span className="font-display text-sm italic text-ambar">{n}</span>
-          <span className="font-display text-2xl italic text-creme sm:text-[1.75rem]">{titulo}</span>
-        </h2>
-        {resumo && <span className="text-right text-xs text-creme/50">{resumo}</span>}
-      </div>
-      {children}
-    </section>
+    <div className="mb-7 sm:mb-8">
+      <p className="numeros text-[13px] font-semibold text-primary-texto">
+        Etapa {etapa} de {total}
+      </p>
+      <h1 className="mt-1.5 text-[1.75rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-[2.125rem]">
+        {titulo}
+      </h1>
+      {texto && <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground sm:text-[17px]">{texto}</p>}
+    </div>
   );
 }
 
-const chip =
-  "rounded-full border text-sm tabular-nums transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ambar disabled:cursor-not-allowed";
-const chipLivre = "border-creme/20 text-creme/85 hover:border-ambar hover:text-ambar";
-const chipAtivo = "border-ambar bg-ambar text-noite";
+function BotaoPrincipal({
+  children,
+  carregando,
+  className,
+  ...props
+}: React.ComponentProps<"button"> & { carregando?: boolean }) {
+  return (
+    <button
+      {...props}
+      disabled={carregando || props.disabled}
+      className={cn(
+        "flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-primary px-7 text-[17px] font-semibold text-white transition-[background-color,transform,opacity] duration-150 outline-none hover:bg-primary-hover focus-visible:ring-4 focus-visible:ring-primary/25 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 sm:w-auto sm:min-w-56",
+        className,
+      )}
+    >
+      {carregando && <Loader2 className="size-5 animate-spin" />}
+      {children}
+    </button>
+  );
+}
+
+/** Ação fixa no rodapé no celular; no computador, fica no fluxo. */
+function Rodape({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-white/85 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl sm:static sm:mt-10 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+      {children}
+    </div>
+  );
+}
+
+function Opcao({
+  ativo,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"button"> & { ativo: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={ativo}
+      {...props}
+      className={cn(
+        "relative flex items-center justify-center rounded-2xl text-[17px] font-medium transition-[background-color,color,box-shadow,transform] duration-150 outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:scale-[0.97] disabled:pointer-events-none",
+        ativo ? "bg-primary text-white shadow-[0_8px_24px_-10px] shadow-primary/70" : "bg-superficie hover:bg-superficie-hover",
+        className,
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Resumo do que já foi escolhido: cartão ao lado no computador. */
+function Resumo({
+  pessoas,
+  data,
+  hora,
+  nome,
+  aoIrPara,
+  liberadas,
+}: {
+  pessoas: number;
+  data: string | null;
+  hora: string | null;
+  nome: string;
+  aoIrPara: (e: Etapa) => void;
+  liberadas: Set<Etapa>;
+}) {
+  const linhas: { etapa: Etapa; Icone: typeof Users; rotulo: string; valor: string | null }[] = [
+    { etapa: "pessoas", Icone: Users, rotulo: "Pessoas", valor: pluralPessoas(pessoas) },
+    { etapa: "dia", Icone: CalendarDays, rotulo: "Dia", valor: data ? dataPorExtenso(data) : null },
+    { etapa: "horario", Icone: Clock, rotulo: "Horário", valor: hora },
+    { etapa: "dados", Icone: UserRound, rotulo: "Em nome de", valor: nome.trim() || null },
+  ];
+  return (
+    <div className="overflow-hidden rounded-3xl bg-white shadow-elevado ring-1 ring-black/[0.04]">
+      <div className="relative aspect-[16/10]">
+        <Image src={foto} alt="Salão do Rizz com a claraboia" fill sizes="360px" placeholder="blur" className="object-cover" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+          <p className="font-display text-2xl italic">{site.nome}</p>
+          <p className="mt-0.5 flex items-center gap-1 text-[13px] text-white/80">
+            <MapPin className="size-3.5" /> {site.endereco.cidade}/{site.endereco.uf}
+          </p>
+        </div>
+      </div>
+      <dl className="divide-y divide-border px-5">
+        {linhas.map(({ etapa, Icone, rotulo, valor }) => (
+          <div key={etapa} className="flex items-center gap-3 py-3.5">
+            <Icone className="size-[18px] shrink-0 text-muted-foreground" strokeWidth={1.75} />
+            <div className="min-w-0 grow">
+              <dt className="text-[12px] text-muted-foreground">{rotulo}</dt>
+              <dd className={cn("truncate text-[15px] first-letter:uppercase", valor ? "font-medium" : "text-texto-terciario")}>
+                {valor ?? "—"}
+              </dd>
+            </div>
+            {valor && liberadas.has(etapa) && (
+              <button
+                type="button"
+                onClick={() => aoIrPara(etapa)}
+                className="shrink-0 rounded-full px-2.5 py-1 text-[13px] font-medium text-primary-texto transition-colors hover:bg-primary-suave"
+              >
+                Alterar
+              </button>
+            )}
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+// ─── Fluxo ─────────────────────────────────────────────────────
 
 /**
- * Reserva em quatro passos: pessoas → dia → horário → dados. Cada escolha
- * revela a próxima e rola até ela, para o cliente nunca procurar o que fazer.
+ * Reserva em etapas: pessoas → dia → horário → dados → revisão. Uma pergunta
+ * por tela, com a escolha avançando sozinha; o resumo acompanha ao lado.
  *
  * Com `alterando`, o mesmo fluxo muda uma reserva existente (sem pedir os
- * dados de novo) e devolve o controle para a página do link pessoal.
+ * dados de novo) e devolve o controle para a página do link pessoal. Com as
+ * reservas online pausadas, o fluxo é o mesmo e termina no WhatsApp.
  */
 export default function ReservaOnline({
   alterando,
   onAlterada,
+  onCancelar,
 }: {
-  alterando?: { codigo: string; pessoas: number; data: string; hora: string };
+  alterando?: { codigo: string; pessoas: number; data: string; hora: string; nome: string };
   onAlterada?: () => void;
+  onCancelar?: () => void;
 }) {
   const router = useRouter();
   const [agenda, setAgenda] = useState<Agenda | null>(null);
@@ -96,64 +253,132 @@ export default function ReservaOnline({
   const [hora, setHora] = useState<string | null>(alterando?.hora ?? null);
   // Guardados com o dia a que se referem: trocar de dia já mostra o carregando.
   const [carregados, setCarregados] = useState<{ data: string; lista: HorarioSite[] } | null>(null);
-  const horarios = carregados && carregados.data === data ? carregados.lista : null;
 
-  const [nome, setNome] = useState("");
+  const [nome, setNome] = useState(alterando?.nome ?? "");
   const [telefone, setTelefone] = useState("");
   const [ocasiao, setOcasiao] = useState<string | null>(null);
   const [obs, setObs] = useState("");
   const [isca, setIsca] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [tocou, setTocou] = useState(false);
 
-  const trilho = useRef<HTMLDivElement>(null);
+  const [etapa, setEtapa] = useState<Etapa>("pessoas");
+  const [sentido, setSentido] = useState<1 | -1>(1);
 
   useEffect(() => {
     fetch("/api/reservas/disponibilidade")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then(setAgenda)
-      .catch(() => setFalhou(true));
+      .then((a: Agenda) => setAgenda(a.ativo ? a : agendaLocal()))
+      .catch(() => {
+        setFalhou(true);
+        setAgenda(agendaLocal());
+      });
   }, []);
 
+  const online = Boolean(agenda?.ativo) && !falhou;
+
   useEffect(() => {
-    if (!data) return;
+    if (!data || !online) return;
     let vivo = true;
     buscarHorarios(data, alterando?.codigo).then((lista) => vivo && setCarregados({ data, lista }));
     return () => {
       vivo = false;
     };
-  }, [data, alterando?.codigo]);
+  }, [data, online, alterando?.codigo]);
 
-  // Alterando: o dia já escolhido aparece no trilho, não escondido à direita.
-  useEffect(() => {
-    trilho.current
-      ?.querySelector<HTMLElement>('[aria-checked="true"]')
-      ?.scrollIntoView({ inline: "center", block: "nearest" });
-  }, [agenda]);
-
-  const dias = useMemo(() => (agenda ? diasEntre(agenda.hoje, agenda.ate) : []), [agenda]);
+  const horariosDoDia = !online
+    ? data
+      ? horariosLocais(data)
+      : null
+    : carregados && carregados.data === data
+      ? carregados.lista
+      : null;
   const fechados = useMemo(() => new Set(agenda?.fechados ?? []), [agenda]);
 
+  const etapas: Etapa[] = alterando ? ["pessoas", "dia", "horario", "revisao"] : ["pessoas", "dia", "horario", "dados", "revisao"];
+  const indice = etapas.indexOf(etapa);
+
   // Escolhido o horário, ele precisa continuar cabendo se o número de pessoas mudar.
-  const escolhido = horarios?.find((h) => h.hora === hora) ?? null;
+  const escolhido = horariosDoDia?.find((h) => h.hora === hora) ?? null;
   const horaValida = Boolean(escolhido && escolhido.livres >= pessoas);
 
-  if (falhou || (agenda && !agenda.ativo)) return <FormReservaWhatsApp />;
-  if (!agenda) return <div className="h-96 max-w-xl animate-pulse rounded-2xl bg-creme/[0.03]" aria-busy />;
+  const digitos = telefone.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  const nomeOk = nome.trim().length >= 2;
+  const telefoneOk = /^\d{10,11}$/.test(digitos);
 
-  const grupoGrande = pessoas > agenda.maxPessoas;
-  const linkGrupo = whatsappLink(
-    `Olá! Gostaria de reservar uma mesa para um grupo de mais de ${agenda.maxPessoas} pessoas no Rizz.`,
-  );
+  // Até onde o cliente já pode voltar pelo resumo.
+  const liberadas = new Set<Etapa>(etapas.slice(0, indice + 1));
+  if (data) liberadas.add("horario");
+  if (horaValida && !alterando) liberadas.add("dados");
 
-  function proxima(id: string) {
-    // Espera a etapa seguinte aparecer antes de medir onde ela está.
-    requestAnimationFrame(() => requestAnimationFrame(() => scrollToTarget(`#${id}`, 24)));
+  function ir(proxima: Etapa) {
+    setSentido(etapas.indexOf(proxima) >= indice ? 1 : -1);
+    setEtapa(proxima);
+    setErro(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function enviar(evento: React.FormEvent) {
-    evento.preventDefault();
+  function avancarDepois(proxima: Etapa) {
+    // Um respiro para o toque ser visto antes de a tela mudar.
+    setTimeout(() => ir(proxima), 220);
+  }
+
+  function voltar() {
+    if (indice === 0) return onCancelar?.();
+    ir(etapas[indice - 1]);
+  }
+
+  if (!agenda) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6" aria-busy>
+        <div className="max-w-xl">
+          <div className="h-4 w-24 animate-pulse rounded-full bg-superficie" />
+          <div className="mt-3 h-9 w-72 animate-pulse rounded-xl bg-superficie" />
+          <div className="mt-10 grid grid-cols-4 gap-3">
+            {Array.from({ length: 8 }, (_, i) => (
+              <div key={i} className="aspect-square animate-pulse rounded-2xl bg-superficie" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const max = agenda.maxPessoas;
+  const grupoGrande = pessoas > max;
+  const linkGrupo = whatsappLink(`Olá! Gostaria de reservar uma mesa para um grupo de mais de ${max} pessoas no Rizz.`);
+
+  const porTurno = (["almoco", "jantar"] as const)
+    .map((t) => ({ turno: t, lista: (horariosDoDia ?? []).filter((h) => h.turno === t) }))
+    .filter((g) => g.lista.length > 0);
+
+  const proximosDias = (() => {
+    const lista: string[] = [];
+    for (let d = agenda.hoje; d <= agenda.ate && lista.length < 4; d = somarDias(d, 1)) if (!fechados.has(d)) lista.push(d);
+    return lista;
+  })();
+
+  function mensagemWhats() {
+    return [
+      `Olá! Gostaria de reservar uma mesa no ${site.nome}.`,
+      `Nome: ${nome.trim()}`,
+      `Pessoas: ${pessoas}`,
+      data && `Dia: ${dataPorExtenso(data)}`,
+      hora && `Horário: ${hora}`,
+      ocasiao && `Ocasião: ${rotuloOcasiao(ocasiao)}`,
+      obs.trim() && `Observações: ${obs.trim()}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  async function confirmar() {
     if (!data || !hora) return;
+    if (!online) {
+      window.open(whatsappLink(mensagemWhats()), "_blank", "noopener");
+      return;
+    }
     setErro(null);
     setEnviando(true);
     try {
@@ -166,7 +391,7 @@ export default function ReservaOnline({
         : await fetch("/api/reservas", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ nome, telefone, pessoas, data, hora, ocasiao, obs, site: isca }),
+            body: JSON.stringify({ nome, telefone: digitos, pessoas, data, hora, ocasiao, obs, site: isca }),
           });
       const j = (await resposta.json()) as { ok: boolean; erro?: string; codigo?: string };
       if (!j.ok) {
@@ -187,275 +412,455 @@ export default function ReservaOnline({
     }
   }
 
-  const porTurno = (["almoco", "jantar"] as const)
-    .map((t) => ({ turno: t, lista: (horarios ?? []).filter((h) => h.turno === t) }))
-    .filter((g) => g.lista.length > 0);
+  const total = etapas.length;
+  const n = indice + 1;
 
   return (
-    <form onSubmit={enviar} className="flex max-w-xl flex-col gap-10">
-      <Etapa id="etapa-pessoas" n="01" titulo="Quantas pessoas?" resumo={`${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"}`}>
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Número de pessoas">
-          {Array.from({ length: agenda.maxPessoas }, (_, i) => i + 1).map((n) => (
-            <button
-              key={n}
-              type="button"
-              role="radio"
-              aria-checked={pessoas === n}
-              onClick={() => {
-                setPessoas(n);
-                if (!data) proxima("etapa-dia");
-              }}
-              className={`${chip} size-12 ${pessoas === n ? chipAtivo : chipLivre}`}
-            >
-              {n}
-            </button>
+    <div className={cn("mx-auto max-w-6xl px-4 pt-5 pb-36 sm:px-6 sm:pt-8 sm:pb-20", indice > 0 && "max-lg:pt-14")}>
+      {/* Progresso e voltar */}
+      <div className="mb-8 flex items-center gap-4 sm:mb-10">
+        <button
+          type="button"
+          onClick={voltar}
+          disabled={indice === 0 && !onCancelar}
+          className="-ml-2 flex h-10 items-center gap-0.5 rounded-full pr-3 pl-1.5 text-[15px] font-medium text-primary-texto transition-[background-color,opacity] outline-none hover:bg-primary-suave focus-visible:ring-3 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-0"
+        >
+          <ChevronLeft className="size-5" /> Voltar
+        </button>
+        <div className="flex grow gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={n} aria-label="Progresso da reserva">
+          {etapas.map((e, i) => (
+            <span key={e} className="h-1 grow overflow-hidden rounded-full bg-superficie">
+              <span
+                className="block h-full rounded-full bg-primary transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                style={{ width: i < n ? "100%" : "0%" }}
+              />
+            </span>
           ))}
-          <button
-            type="button"
-            role="radio"
-            aria-checked={grupoGrande}
-            onClick={() => setPessoas(agenda.maxPessoas + 1)}
-            className={`${chip} h-12 px-5 ${grupoGrande ? chipAtivo : chipLivre}`}
-          >
-            Mais de {agenda.maxPessoas}
-          </button>
         </div>
-      </Etapa>
+      </div>
 
-      {grupoGrande ? (
-        <div className="rounded-2xl border border-creme/10 p-6">
-          <p className="font-display text-xl italic text-creme">Grupos grandes merecem atenção especial.</p>
-          <p className="mt-2 text-sm leading-relaxed text-creme/60">
-            Para mais de {agenda.maxPessoas} pessoas, a equipe monta o espaço com você. Fale com a gente pelo
-            WhatsApp e combinamos tudo.
-          </p>
-          <a
-            href={linkGrupo}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 inline-flex h-11 items-center rounded-full bg-ambar px-6 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-noite transition-colors hover:bg-ouro-claro"
-          >
-            Falar no WhatsApp
-          </a>
-        </div>
-      ) : (
-        <>
-          <Etapa
-            id="etapa-dia"
-            n="02"
-            titulo="Qual dia?"
-            resumo={data ? dataPorExtenso(data) : null}
-          >
-            <div
-              ref={trilho}
-              data-lenis-prevent
-              className="-mx-[1.375rem] flex snap-x gap-2 overflow-x-auto px-[1.375rem] pb-3 [scrollbar-width:thin] sm:mx-0 sm:px-0"
-              role="radiogroup"
-              aria-label="Dia da reserva"
-            >
-              {dias.map((d, i) => {
-                const fechado = fechados.has(d);
-                const ativo = d === data;
-                const [, m, dd] = d.split("-").map(Number);
-                const rotuloDia = i === 0 ? "Hoje" : i === 1 ? "Amanhã" : NOMES_DIA[diaDaSemana(d)];
-                return (
-                  <button
-                    key={d}
-                    type="button"
-                    role="radio"
-                    aria-checked={ativo}
-                    aria-label={`${dataPorExtenso(d)}${fechado ? ", sem reservas" : ""}`}
-                    disabled={fechado}
-                    onClick={() => {
-                      setData(d);
-                      setHora(null);
-                      proxima("etapa-horario");
-                    }}
-                    className={`flex h-[4.75rem] w-[4.25rem] shrink-0 snap-start flex-col items-center justify-center rounded-2xl border transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ambar ${
-                      ativo
-                        ? chipAtivo
-                        : fechado
-                          ? "border-creme/5 text-creme/20"
-                          : "border-creme/15 text-creme/85 hover:border-ambar hover:text-ambar"
-                    }`}
-                  >
-                    <span className="text-[0.625rem] uppercase tracking-[0.14em]">{rotuloDia}</span>
-                    <span className="font-display text-2xl leading-none">{dd}</span>
-                    <span className="text-[0.625rem] uppercase tracking-[0.14em] opacity-70">
-                      {fechado ? "—" : MESES[m - 1]}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </Etapa>
+      {!online && (
+        <p className="mb-8 flex max-w-xl items-start gap-2.5 rounded-2xl bg-superficie px-4 py-3 text-[14px] leading-relaxed text-muted-foreground">
+          <MessageCircle className="mt-0.5 size-4 shrink-0 text-primary-texto" />
+          {falhou
+            ? "A reserva online está fora do ar agora. Monte seu pedido e envie pelo WhatsApp: a equipe confirma com você."
+            : "Monte seu pedido e envie pelo WhatsApp: a equipe confirma a mesa com você."}
+        </p>
+      )}
 
-          {data && (
-            <Etapa id="etapa-horario" n="03" titulo="Que horas?" resumo={horaValida ? hora : null}>
-              {horarios === null ? (
-                <div className="flex flex-wrap gap-2" aria-busy>
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <span key={i} className="h-11 w-[4.5rem] animate-pulse rounded-full bg-creme/5" />
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16">
+        <div className="min-w-0 max-w-xl">
+          <TrocaDeEtapa chave={etapa} sentido={sentido}>
+            {etapa === "pessoas" && (
+              <section>
+                <Titulo
+                  etapa={n}
+                  total={total}
+                  titulo={alterando ? "Para quantas pessoas?" : "Para quantas pessoas é a mesa?"}
+                  texto="Conte com você também."
+                />
+                <div className="grid grid-cols-4 gap-2.5 sm:gap-3" role="radiogroup" aria-label="Número de pessoas">
+                  {Array.from({ length: max }, (_, i) => i + 1).map((q) => (
+                    <Opcao
+                      key={q}
+                      role="radio"
+                      aria-checked={pessoas === q}
+                      ativo={pessoas === q}
+                      onClick={() => {
+                        setPessoas(q);
+                        avancarDepois("dia");
+                      }}
+                      className="aspect-square text-[22px] font-semibold"
+                    >
+                      <span className="numeros">{q}</span>
+                    </Opcao>
                   ))}
                 </div>
-              ) : porTurno.length === 0 ? (
-                <p className="text-sm leading-relaxed text-creme/60">
-                  Não há horários disponíveis neste dia. Escolha outra data ou{" "}
-                  <a href={whatsappLink("Olá! Gostaria de verificar disponibilidade de mesa no Rizz.")} target="_blank" rel="noopener noreferrer" className="text-ambar underline-offset-4 hover:underline">
-                    fale com a gente no WhatsApp
-                  </a>
-                  .
-                </p>
-              ) : (
-                <div className="flex flex-col gap-6">
-                  {porTurno.map(({ turno, lista }) => (
-                    <div key={turno}>
-                      <p className="eyebrow mb-3 text-creme/45">{NOME_TURNO[turno]}</p>
-                      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={NOME_TURNO[turno]}>
-                        {lista.map((h) => {
-                          const cabe = h.livres >= pessoas;
-                          const ativo = h.hora === hora && cabe;
-                          return (
-                            <button
-                              key={h.hora}
-                              type="button"
-                              role="radio"
-                              aria-checked={ativo}
-                              aria-label={`${h.hora}${cabe ? (h.poucos ? ", últimos lugares" : "") : ", lotado"}`}
-                              disabled={!cabe}
-                              onClick={() => {
-                                setHora(h.hora);
-                                setErro(null);
-                                if (!alterando && !nome) proxima("etapa-dados");
-                              }}
-                              className={`${chip} relative h-11 w-[4.5rem] ${
-                                ativo ? chipAtivo : cabe ? chipLivre : "border-creme/5 text-creme/20 line-through"
-                              }`}
-                            >
-                              {h.hora}
-                              {cabe && h.poucos && !ativo && (
-                                <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-ambar" aria-hidden />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                  {porTurno.some((g) => g.lista.some((h) => h.poucos && h.livres >= pessoas)) && (
-                    <p className="flex items-center gap-2 text-xs text-creme/45">
-                      <span className="size-2 rounded-full bg-ambar" aria-hidden /> últimos lugares
+                <Opcao
+                  role="radio"
+                  aria-checked={grupoGrande}
+                  ativo={grupoGrande}
+                  onClick={() => setPessoas(max + 1)}
+                  className="mt-3 h-14 w-full"
+                >
+                  Mais de {max} pessoas
+                </Opcao>
+
+                {grupoGrande ? (
+                  <div className="mt-6 rounded-3xl bg-superficie p-6">
+                    <p className="text-[19px] font-semibold tracking-tight">Grupos grandes merecem atenção especial.</p>
+                    <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                      Para mais de {max} pessoas, a equipe monta o espaço com você. Fale com a gente pelo WhatsApp e
+                      combinamos tudo.
                     </p>
-                  )}
-                </div>
-              )}
-            </Etapa>
-          )}
+                    <a
+                      href={linkGrupo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-[15px] font-semibold text-white transition-colors hover:bg-primary-hover"
+                    >
+                      <MessageCircle className="size-[18px]" /> Falar no WhatsApp
+                    </a>
+                  </div>
+                ) : (
+                  alterando && (
+                    <Rodape>
+                      <BotaoPrincipal onClick={() => ir("dia")}>Continuar</BotaoPrincipal>
+                    </Rodape>
+                  )
+                )}
+              </section>
+            )}
 
-          {horaValida && !alterando && (
-            <Etapa id="etapa-dados" n="04" titulo="Seus dados">
-              <div className="grid gap-7 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label htmlFor="nome" className={rotulo}>
-                    Nome
-                  </label>
-                  <input
-                    id="nome"
-                    required
-                    autoComplete="name"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    placeholder="Seu nome"
-                    className={campo}
+            {etapa === "dia" && (
+              <section>
+                <Titulo etapa={n} total={total} titulo="Qual dia?" texto={`Mesa para ${pluralPessoas(pessoas)}.`} />
+                <div className="-mx-4 mb-6 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
+                  {proximosDias.map((d, i) => (
+                    <Opcao
+                      key={d}
+                      ativo={data === d}
+                      onClick={() => {
+                        if (d !== data) setHora(null);
+                        setData(d);
+                        avancarDepois("horario");
+                      }}
+                      className="h-16 min-w-[5.25rem] shrink-0 flex-col gap-0 rounded-2xl px-4 text-[15px]"
+                    >
+                      <span className={cn("text-[12px] font-medium", data === d ? "text-white/80" : "text-muted-foreground")}>
+                        {d === agenda.hoje ? "Hoje" : d === somarDias(agenda.hoje, 1) ? "Amanhã" : NOMES_DIA[diaDaSemana(d)]}
+                      </span>
+                      <span className="numeros text-[17px] font-semibold">{diaCurto(d).replace(/^\S+\s/, "")}</span>
+                      {i === 0 && <span className="sr-only">primeiro dia disponível</span>}
+                    </Opcao>
+                  ))}
+                </div>
+                <div className="rounded-3xl bg-white p-4 shadow-suave ring-1 ring-black/[0.04] sm:p-6">
+                  <CalendarioReserva
+                    hoje={agenda.hoje}
+                    ate={agenda.ate}
+                    fechados={fechados}
+                    valor={data}
+                    aoEscolher={(d) => {
+                      if (d !== data) setHora(null);
+                      setData(d);
+                      avancarDepois("horario");
+                    }}
                   />
                 </div>
-                <div className="sm:col-span-2">
-                  <label htmlFor="telefone" className={rotulo}>
-                    WhatsApp
-                  </label>
-                  <input
-                    id="telefone"
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel-national"
-                    required
-                    value={telefone}
-                    onChange={(e) => setTelefone(mascaraTelefone(e.target.value))}
-                    placeholder="(19) 99999-9999"
-                    className={campo}
-                  />
-                  <p className="mt-2 text-xs text-creme/40">Para a equipe falar com você sobre a reserva.</p>
-                </div>
+                <p className="mt-4 text-[13px] text-muted-foreground">
+                  Dias apagados não têm reserva online.{" "}
+                  {expediente.some((d) => d.fechado) &&
+                    `Não abrimos ${expediente
+                      .filter((d) => d.fechado)
+                      .map((d) => d.nome.toLowerCase())
+                      .join(" e ")}.`}
+                </p>
+              </section>
+            )}
 
-                <div className="sm:col-span-2">
-                  <span className={rotulo}>
-                    É uma ocasião especial? <span className="normal-case tracking-normal text-creme/30">(opcional)</span>
-                  </span>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {OCASIOES.map((o) => (
-                      <button
-                        key={o.id}
-                        type="button"
-                        aria-pressed={ocasiao === o.id}
-                        onClick={() => setOcasiao(ocasiao === o.id ? null : o.id)}
-                        className={`${chip} h-10 px-4 ${ocasiao === o.id ? chipAtivo : chipLivre}`}
-                      >
-                        {o.rotulo}
-                      </button>
+            {etapa === "horario" && data && (
+              <section>
+                <Titulo
+                  etapa={n}
+                  total={total}
+                  titulo="Que horas?"
+                  texto={`${dataPorExtenso(data).replace(/^./, (c) => c.toUpperCase())} · ${pluralPessoas(pessoas)}.`}
+                />
+                {horariosDoDia === null ? (
+                  <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4" aria-busy>
+                    {Array.from({ length: 8 }, (_, i) => (
+                      <span key={i} className="h-14 animate-pulse rounded-2xl bg-superficie" />
                     ))}
                   </div>
-                </div>
+                ) : porTurno.length === 0 ? (
+                  <div className="rounded-3xl bg-superficie p-6">
+                    <p className="text-[17px] font-semibold">Não há horários livres neste dia.</p>
+                    <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground">
+                      Escolha outro dia ou{" "}
+                      <a
+                        href={whatsappLink("Olá! Gostaria de verificar disponibilidade de mesa no Rizz.")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-primary-texto underline-offset-4 hover:underline"
+                      >
+                        fale com a gente no WhatsApp
+                      </a>
+                      .
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => ir("dia")}
+                      className="mt-5 inline-flex h-11 items-center rounded-full bg-white px-5 text-[15px] font-semibold shadow-suave transition-colors hover:bg-superficie-hover"
+                    >
+                      Escolher outro dia
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-8">
+                    {porTurno.map(({ turno, lista }) => (
+                      <div key={turno}>
+                        <p className="mb-3 text-[13px] font-semibold text-muted-foreground">{NOME_TURNO[turno]}</p>
+                        <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4" role="radiogroup" aria-label={NOME_TURNO[turno]}>
+                          {lista.map((h) => {
+                            const cabe = h.livres >= pessoas;
+                            const ativo = h.hora === hora && cabe;
+                            return (
+                              <Opcao
+                                key={h.hora}
+                                role="radio"
+                                aria-checked={ativo}
+                                aria-label={`${h.hora}${cabe ? (h.poucos ? ", últimos lugares" : "") : ", lotado"}`}
+                                ativo={ativo}
+                                disabled={!cabe}
+                                onClick={() => {
+                                  setHora(h.hora);
+                                  setErro(null);
+                                  avancarDepois(alterando ? "revisao" : "dados");
+                                }}
+                                className={cn("h-14 flex-col gap-0", !cabe && "bg-transparent text-texto-terciario ring-1 ring-border ring-inset")}
+                              >
+                                <span className={cn("numeros text-[17px] font-semibold", !cabe && "line-through")}>{h.hora}</span>
+                                {cabe && h.poucos && (
+                                  <span className={cn("text-[11px] font-medium", ativo ? "text-white/80" : "text-ambar")}>últimos lugares</span>
+                                )}
+                                {!cabe && <span className="text-[11px]">lotado</span>}
+                              </Opcao>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
 
-                <div className="sm:col-span-2">
-                  <label htmlFor="obs" className={rotulo}>
-                    Observações <span className="normal-case tracking-normal text-creme/30">(opcional)</span>
-                  </label>
-                  <textarea
-                    id="obs"
-                    rows={2}
-                    maxLength={500}
-                    value={obs}
-                    onChange={(e) => setObs(e.target.value)}
-                    placeholder="Cadeirão, restrição alimentar, preferência de lugar…"
-                    className={`${campo} h-auto resize-y py-3`}
+            {etapa === "dados" && (
+              <section>
+                <Titulo
+                  etapa={n}
+                  total={total}
+                  titulo="Seus dados"
+                  texto={online ? "Para a equipe falar com você sobre a reserva." : "Vão na mensagem do WhatsApp."}
+                />
+                <div className="flex flex-col gap-5">
+                  <Campo id="nome" rotulo="Nome" erro={tocou && !nomeOk ? "Informe seu nome." : undefined}>
+                    <InputTexto
+                      autoComplete="name"
+                      autoCapitalize="words"
+                      enterKeyHint="next"
+                      value={nome}
+                      onChange={(e) => setNome(e.currentTarget.value)}
+                      placeholder="Seu nome"
+                      maxLength={120}
+                      classeCaixa={CAIXA}
+                    />
+                  </Campo>
+                  <Campo
+                    id="telefone"
+                    rotulo="WhatsApp"
+                    erro={tocou && !telefoneOk ? "Informe o WhatsApp com DDD." : undefined}
+                    ajuda="Usamos só para falar sobre a sua reserva."
+                  >
+                    <InputTelefone valor={telefone} aoMudar={(v) => setTelefone(v ?? "")} classeCaixa={CAIXA} enterKeyHint="done" />
+                  </Campo>
+
+                  <fieldset>
+                    <legend className="mb-2.5 text-sm font-medium">
+                      É uma ocasião especial? <span className="font-normal text-muted-foreground">(opcional)</span>
+                    </legend>
+                    <div className="flex flex-wrap gap-2">
+                      {OCASIOES.map((o) => (
+                        <Opcao
+                          key={o.id}
+                          ativo={ocasiao === o.id}
+                          onClick={() => setOcasiao(ocasiao === o.id ? null : o.id)}
+                          className="h-11 rounded-full px-4 text-[15px]"
+                        >
+                          {ocasiao === o.id && <Check className="mr-1.5 size-4" />}
+                          {o.rotulo}
+                        </Opcao>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <Campo id="obs" rotulo="Observações (opcional)">
+                    <AreaTexto
+                      rows={2}
+                      maxLength={500}
+                      value={obs}
+                      onChange={(e) => setObs(e.currentTarget.value)}
+                      placeholder="Cadeirão, restrição alimentar, preferência de lugar…"
+                      className="min-h-24 rounded-xl border-transparent bg-superficie px-4 py-3.5 text-[17px] hover:border-transparent md:text-[17px]"
+                    />
+                  </Campo>
+
+                  {/* Armadilha para robôs: fora da tela e fora da navegação por teclado. */}
+                  <input
+                    type="text"
+                    name="site"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden
+                    value={isca}
+                    onChange={(e) => setIsca(e.target.value)}
+                    className="absolute -left-[9999px] size-px opacity-0"
                   />
                 </div>
+                <Rodape>
+                  <BotaoPrincipal
+                    onClick={() => {
+                      setTocou(true);
+                      if (nomeOk && telefoneOk) ir("revisao");
+                    }}
+                  >
+                    Revisar reserva
+                  </BotaoPrincipal>
+                </Rodape>
+              </section>
+            )}
 
-                {/* Armadilha para robôs: fora da tela e fora da navegação por teclado. */}
-                <input
-                  type="text"
-                  name="site"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden
-                  value={isca}
-                  onChange={(e) => setIsca(e.target.value)}
-                  className="absolute -left-[9999px] size-px opacity-0"
+            {etapa === "revisao" && data && hora && (
+              <section>
+                <Titulo
+                  etapa={n}
+                  total={total}
+                  titulo={alterando ? "Confira a alteração" : "Tudo certo?"}
+                  texto={
+                    alterando
+                      ? "A reserva passa para o novo dia e horário."
+                      : online
+                        ? "Confira os detalhes antes de confirmar."
+                        : "Confira os detalhes e envie pelo WhatsApp."
+                  }
                 />
-              </div>
-            </Etapa>
-          )}
 
-          {horaValida && (
-            <div>
-              {erro && (
-                <p role="alert" className="mb-5 rounded-xl border border-ambar/30 bg-ambar/10 px-4 py-3 text-sm text-creme">
-                  {erro}
-                </p>
-              )}
-              <Botao type="submit" tamanho="lg" disabled={enviando} className="w-full sm:w-auto disabled:opacity-60">
-                {enviando ? "Reservando…" : alterando ? "Salvar alteração" : "Confirmar reserva"}
-              </Botao>
-              {!alterando && data && hora && (
-                <p className="mt-4 text-xs leading-relaxed text-creme/45">
-                  {pessoas} {pessoas === 1 ? "pessoa" : "pessoas"} · {dataPorExtenso(data)} às {hora}. Você recebe
-                  um link para alterar ou cancelar quando quiser.
-                </p>
-              )}
-            </div>
-          )}
-        </>
+                <div className="overflow-hidden rounded-3xl bg-superficie">
+                  <div className="flex items-center gap-4 p-5 sm:p-6">
+                    <div className="grid w-16 shrink-0 place-items-center rounded-2xl bg-white py-2 text-center shadow-suave">
+                      <span className="text-[11px] font-semibold text-primary-texto uppercase">
+                        {new Date(`${data}T12:00`).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}
+                      </span>
+                      <span className="numeros text-[26px] leading-tight font-semibold">{Number(data.slice(8, 10))}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[19px] leading-snug font-semibold tracking-tight first-letter:uppercase">
+                        {dataPorExtenso(data)}
+                      </p>
+                      <p className="numeros mt-0.5 text-[15px] text-muted-foreground">
+                        {hora} · {pluralPessoas(pessoas)}
+                      </p>
+                    </div>
+                  </div>
+                  <dl className="divide-y divide-black/[0.06] border-t border-black/[0.06] px-5 sm:px-6">
+                    {[
+                      { rotulo: "Pessoas", valor: pluralPessoas(pessoas), etapa: "pessoas" as Etapa },
+                      { rotulo: "Dia", valor: diaCurto(data), etapa: "dia" as Etapa },
+                      { rotulo: "Horário", valor: hora, etapa: "horario" as Etapa },
+                      ...(alterando
+                        ? []
+                        : [
+                            { rotulo: "Nome", valor: nome.trim(), etapa: "dados" as Etapa },
+                            { rotulo: "WhatsApp", valor: telefone ? `(${digitos.slice(0, 2)}) ${digitos.slice(2, -4)}-${digitos.slice(-4)}` : "", etapa: "dados" as Etapa },
+                            ...(ocasiao ? [{ rotulo: "Ocasião", valor: rotuloOcasiao(ocasiao) ?? "", etapa: "dados" as Etapa }] : []),
+                            ...(obs.trim() ? [{ rotulo: "Observações", valor: obs.trim(), etapa: "dados" as Etapa }] : []),
+                          ]),
+                    ].map((l) => (
+                      <div key={l.rotulo} className="flex items-center justify-between gap-4 py-3.5">
+                        <dt className="shrink-0 text-[15px] text-muted-foreground">{l.rotulo}</dt>
+                        <dd className="flex min-w-0 items-center gap-2">
+                          <span className="numeros truncate text-right text-[15px] font-medium first-letter:uppercase">{l.valor}</span>
+                          <button
+                            type="button"
+                            onClick={() => ir(l.etapa)}
+                            className="shrink-0 rounded-full px-2 py-1 text-[13px] font-medium text-primary-texto transition-colors hover:bg-primary-suave"
+                          >
+                            Alterar
+                          </button>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+
+                {online && !alterando && (
+                  <p className="mt-5 flex items-start gap-2.5 text-[13px] leading-relaxed text-muted-foreground">
+                    <Sparkles className="mt-0.5 size-4 shrink-0 text-primary-texto" />
+                    Você recebe um link para alterar ou cancelar quando quiser. Se for se atrasar, avise a gente: a
+                    mesa pode receber outra pessoa.
+                  </p>
+                )}
+
+                {erro && (
+                  <p role="alert" className="mt-5 flex items-start gap-2.5 rounded-2xl bg-negativo/8 px-4 py-3 text-[15px] text-negativo-texto">
+                    <CircleAlert className="mt-0.5 size-[18px] shrink-0" />
+                    {erro}
+                  </p>
+                )}
+
+                <Rodape>
+                  <BotaoPrincipal carregando={enviando} onClick={confirmar}>
+                    {enviando
+                      ? alterando
+                        ? "Salvando…"
+                        : "Reservando…"
+                      : alterando
+                        ? "Salvar alteração"
+                        : online
+                          ? "Confirmar reserva"
+                          : (
+                            <>
+                              <MessageCircle className="size-5" /> Enviar pelo WhatsApp
+                            </>
+                          )}
+                  </BotaoPrincipal>
+                </Rodape>
+              </section>
+            )}
+          </TrocaDeEtapa>
+        </div>
+
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 flex flex-col gap-4">
+            <Resumo
+              pessoas={pessoas}
+              data={data}
+              hora={horaValida ? hora : null}
+              nome={alterando ? alterando.nome : nome}
+              liberadas={liberadas}
+              aoIrPara={(e) => !alterando || e !== "dados" ? ir(e) : undefined}
+            />
+            <p className="px-2 text-[13px] leading-relaxed text-muted-foreground">
+              {enderecoLinha}
+              <br />
+              <a href={`tel:${site.telefoneLink}`} className="font-medium text-primary-texto hover:underline">
+                {site.telefone}
+              </a>
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      {/* Resumo compacto no celular */}
+      {indice > 0 && (
+        <div className="fixed inset-x-0 top-14 z-20 border-b border-border/70 bg-white/85 backdrop-blur-xl sm:top-16 lg:hidden">
+          <p className="numeros mx-auto flex max-w-6xl items-center gap-1.5 overflow-x-auto px-4 py-2 text-[13px] whitespace-nowrap text-muted-foreground [scrollbar-width:none] sm:px-6">
+            <Users className="size-3.5 shrink-0" /> {pluralPessoas(pessoas)}
+            {data && (
+              <>
+                <span className="text-texto-terciario">·</span>
+                <span className="first-letter:uppercase">{diaCurto(data)}</span>
+              </>
+            )}
+            {horaValida && hora && (
+              <>
+                <span className="text-texto-terciario">·</span> {hora}
+              </>
+            )}
+          </p>
+        </div>
       )}
-    </form>
+    </div>
   );
 }

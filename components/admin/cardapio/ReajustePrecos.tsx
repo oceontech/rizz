@@ -1,10 +1,11 @@
 "use client";
 
-import { Percent } from "@gravity-ui/icons";
-import { Alert, Button, Modal } from "@heroui/react";
+import { ArrowRight, Percent } from "lucide-react";
 import { useState } from "react";
 
-import { avisar, CampoNumero, CampoSelect } from "@/components/admin/campos";
+import { avisar, BotaoSalvar, CampoNumero, CampoOpcoes, CampoSelect } from "@/components/admin/campos";
+import { Janela } from "@/components/admin/ui";
+import { Button } from "@/components/sistema/ui/button";
 import { reajustarPrecos } from "@/lib/admin/cardapio-actions";
 import { brl } from "@/lib/admin/formato";
 import type { CategoriaCardapio } from "@/lib/dados";
@@ -19,7 +20,9 @@ export default function ReajustePrecos({
   onFechar: () => void;
 }) {
   const [categoria, setCategoria] = useState("todas");
-  const [percentual, setPercentual] = useState<number | null>(5);
+  const [sentido, setSentido] = useState<"subir" | "baixar">("subir");
+  const [valor, setValor] = useState<number | null>(5);
+  const percentual = valor ? (sentido === "subir" ? valor : -valor) : null;
   const [salvando, setSalvando] = useState(false);
 
   const afetados = categorias
@@ -38,60 +41,58 @@ export default function ReajustePrecos({
   }
 
   return (
-    <Modal>
-      <Modal.Backdrop isOpen={aberto} onOpenChange={(v) => !v && onFechar()}>
-        <Modal.Container size="sm">
-          <Modal.Dialog>
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Icon className="bg-accent/10 text-accent">
-                <Percent className="size-5" />
-              </Modal.Icon>
-              <Modal.Heading>Reajustar preços</Modal.Heading>
-            </Modal.Header>
-            <Modal.Body className="flex flex-col gap-4">
-              <CampoSelect
-                label="Aplicar em"
-                value={categoria}
-                onChange={setCategoria}
-                opcoes={[{ id: "todas", rotulo: "Todo o cardápio" }, ...categorias.map((c) => ({ id: c.id, rotulo: c.nome }))]}
-              />
-              <CampoNumero
-                label="Percentual"
-                value={percentual}
-                onChange={setPercentual}
-                min={-50}
-                max={50}
-                passo={1}
-                formato={{ style: "unit", unit: "percent", maximumFractionDigits: 1, signDisplay: "exceptZero" }}
-                descricao="Valores arredondados para o real inteiro, como no cardápio impresso."
-              />
-              {percentual !== null && percentual !== 0 && percentual !== undefined && (
-                <Alert status="accent">
-                  <Alert.Indicator />
-                  <Alert.Content>
-                    <Alert.Title>{afetados.length} pratos serão reajustados</Alert.Title>
-                    {exemplo && exemplo.preco !== null && (
-                      <Alert.Description>
-                        Ex.: {exemplo.nome} — {brl.format(exemplo.preco)} →{" "}
-                        {brl.format(Math.round(exemplo.preco * fator))}
-                      </Alert.Description>
-                    )}
-                  </Alert.Content>
-                </Alert>
-              )}
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="tertiary" onPress={onFechar} isDisabled={salvando}>
-                Cancelar
-              </Button>
-              <Button onPress={aplicar} isPending={salvando} isDisabled={!percentual}>
-                Aplicar reajuste
-              </Button>
-            </Modal.Footer>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+    <Janela
+      aberta={aberto}
+      aoFechar={onFechar}
+      icone={Percent}
+      titulo="Reajustar preços"
+      descricao="Valores arredondados para o real inteiro, como no cardápio impresso."
+      rodape={
+        <>
+          <Button variant="secondary" className="rounded-full" onClick={onFechar} disabled={salvando}>
+            Cancelar
+          </Button>
+          <BotaoSalvar pendente={salvando} onClick={aplicar} disabled={!percentual}>
+            Aplicar reajuste
+          </BotaoSalvar>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <CampoSelect
+          label="Aplicar em"
+          value={categoria}
+          onChange={setCategoria}
+          opcoes={[{ id: "todas", rotulo: "Todo o cardápio" }, ...categorias.map((c) => ({ id: c.id, rotulo: c.nome }))]}
+        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <CampoOpcoes
+            label="Sentido"
+            value={sentido}
+            onChange={setSentido}
+            opcoes={[
+              { id: "subir", rotulo: "Aumentar" },
+              { id: "baixar", rotulo: "Reduzir" },
+            ]}
+          />
+          <CampoNumero label="Percentual" unidade="%" value={valor} onChange={setValor} min={1} max={50} />
+        </div>
+        {percentual !== null && percentual !== 0 && (
+          <div className="rounded-2xl bg-primary-suave p-4">
+            <p className="text-sm font-semibold text-primary-texto">
+              {afetados.length} {afetados.length === 1 ? "prato será reajustado" : "pratos serão reajustados"}
+            </p>
+            {exemplo && exemplo.preco !== null && (
+              <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[13px] text-muted-foreground">
+                {exemplo.nome}:
+                <span className="numeros">{brl.format(exemplo.preco)}</span>
+                <ArrowRight className="size-3.5" />
+                <span className="numeros font-semibold text-foreground">{brl.format(Math.round(exemplo.preco * fator))}</span>
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </Janela>
   );
 }

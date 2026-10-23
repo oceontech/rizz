@@ -1,25 +1,23 @@
 "use client";
 
-import { TrashBin } from "@gravity-ui/icons";
-import { Button, Card } from "@heroui/react";
+import { CalendarOff, Clock, Globe, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 
-import { avisar, CampoData, CampoNumero, CampoSelect, CampoSwitch, CampoTexto } from "@/components/admin/campos";
+import {
+  avisar,
+  BotaoSalvar,
+  CampoData,
+  CampoNumero,
+  CampoOpcoes,
+  CampoSelect,
+  CampoSwitch,
+  CampoTexto,
+} from "@/components/admin/campos";
+import { Secao, Selo } from "@/components/admin/ui";
+import { Button } from "@/components/sistema/ui/button";
 import { formatarData } from "@/lib/admin/formato";
 import { criarBloqueio, excluirBloqueio, salvarConfigReservas } from "@/lib/admin/reservas-actions";
 import { NOME_TURNO, type Bloqueio, type ReservasConfig, type Turno } from "@/lib/reservas/regras";
-
-function Secao({ titulo, descricao, children }: { titulo: string; descricao: string; children: React.ReactNode }) {
-  return (
-    <Card className="gap-5 p-5 sm:p-6">
-      <div>
-        <h2 className="text-base font-medium">{titulo}</h2>
-        <p className="mt-1 text-sm text-muted">{descricao}</p>
-      </div>
-      {children}
-    </Card>
-  );
-}
 
 const ANTECEDENCIAS = [
   { id: "0", rotulo: "Sem antecedência" },
@@ -40,6 +38,7 @@ function Regras({ config }: { config: ReservasConfig }) {
   const [c, setC] = useState(config);
   const [salvando, setSalvando] = useState(false);
   const mudar = <K extends keyof ReservasConfig>(k: K, v: ReservasConfig[K]) => setC((x) => ({ ...x, [k]: v }));
+  const alterado = JSON.stringify(c) !== JSON.stringify(config);
 
   async function salvar() {
     setSalvando(true);
@@ -49,7 +48,11 @@ function Regras({ config }: { config: ReservasConfig }) {
 
   return (
     <>
-      <Secao titulo="Reservas pelo site" descricao="Desligado, o site volta a montar o pedido no WhatsApp da equipe.">
+      <Secao
+        icone={Globe}
+        titulo="Reservas pelo site"
+        descricao="Desligado, o site volta a montar o pedido no WhatsApp da equipe."
+      >
         <CampoSwitch
           label="Aceitar reservas pelo site"
           descricao="O cliente escolhe dia e horário entre os livres."
@@ -65,6 +68,7 @@ function Regras({ config }: { config: ReservasConfig }) {
       </Secao>
 
       <Secao
+        icone={Users}
         titulo="Lotação"
         descricao="Quantas pessoas cabem no salão ao mesmo tempo. Cada reserva ocupa lugares pela permanência média."
       >
@@ -72,7 +76,8 @@ function Regras({ config }: { config: ReservasConfig }) {
           <CampoNumero label="Lugares no almoço" value={c.lotacaoAlmoco} onChange={(v) => mudar("lotacaoAlmoco", v ?? 0)} min={0} />
           <CampoNumero label="Lugares no jantar" value={c.lotacaoJantar} onChange={(v) => mudar("lotacaoJantar", v ?? 0)} min={0} />
           <CampoNumero
-            label="Permanência média (min)"
+            label="Permanência média"
+            unidade="min"
             value={c.permanencia}
             onChange={(v) => mudar("permanencia", v ?? 105)}
             min={30}
@@ -91,7 +96,7 @@ function Regras({ config }: { config: ReservasConfig }) {
         </div>
       </Secao>
 
-      <Secao titulo="Horários oferecidos" descricao="Os horários seguem o expediente de cada dia da semana.">
+      <Secao icone={Clock} titulo="Horários oferecidos" descricao="Os horários seguem o expediente de cada dia da semana.">
         <div className="grid gap-4 sm:grid-cols-2">
           <CampoSelect
             label="Intervalo entre horários"
@@ -100,7 +105,8 @@ function Regras({ config }: { config: ReservasConfig }) {
             opcoes={INTERVALOS}
           />
           <CampoNumero
-            label="Último horário antes do fechamento (min)"
+            label="Último horário antes do fechamento"
+            unidade="min"
             value={c.ultimoAntesDoFim}
             onChange={(v) => mudar("ultimoAntesDoFim", v ?? 60)}
             min={0}
@@ -116,6 +122,7 @@ function Regras({ config }: { config: ReservasConfig }) {
           />
           <CampoNumero
             label="Aceitar até quantos dias à frente"
+            unidade="dias"
             value={c.diasAFrente}
             onChange={(v) => mudar("diasAFrente", v ?? 60)}
             min={1}
@@ -124,10 +131,10 @@ function Regras({ config }: { config: ReservasConfig }) {
         </div>
       </Secao>
 
-      <div className="flex justify-end">
-        <Button onPress={salvar} isPending={salvando}>
-          Salvar regras
-        </Button>
+      <div className="sticky bottom-28 z-10 flex justify-end md:bottom-6">
+        <BotaoSalvar pendente={salvando} onClick={salvar} disabled={!alterado} size="lg" className="shadow-flutuante">
+          {alterado ? "Salvar regras" : "Regras salvas"}
+        </BotaoSalvar>
       </div>
     </>
   );
@@ -163,77 +170,86 @@ function Bloqueios({ bloqueios, hoje }: { bloqueios: Bloqueio[]; hoje: string })
 
   return (
     <Secao
+      icone={CalendarOff}
       titulo="Feriados, eventos e bloqueios"
       descricao="Feche um dia ou turno para reservas pelo site, ou reduza a lotação (ex.: salão parcialmente reservado)."
     >
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         <CampoData label="Data" value={data} onChange={setData} minimo={hoje} />
-        <CampoSelect
+        <CampoOpcoes
           label="Turno"
           value={turno}
-          onChange={(v) => setTurno(v as "dia" | Turno)}
+          onChange={setTurno}
           opcoes={[
             { id: "dia", rotulo: "Dia inteiro" },
             { id: "almoco", rotulo: "Almoço" },
             { id: "jantar", rotulo: "Jantar" },
           ]}
         />
-        <CampoSelect
+        <CampoOpcoes
           label="O que fazer"
           value={tipo}
-          onChange={(v) => setTipo(v as "fechar" | "reduzir")}
+          onChange={setTipo}
           opcoes={[
-            { id: "fechar", rotulo: "Fechar para reservas" },
+            { id: "fechar", rotulo: "Fechar" },
             { id: "reduzir", rotulo: "Reduzir lotação" },
           ]}
         />
         {tipo === "reduzir" ? (
           <CampoNumero label="Lugares disponíveis" value={lotacao} onChange={setLotacao} min={0} />
         ) : (
-          <div className="hidden lg:block" />
+          <div className="hidden sm:block" />
         )}
         <CampoTexto
           label="Motivo (só a equipe vê)"
           value={motivo}
           onChange={setMotivo}
           placeholder="Ex.: Feriado, evento fechado"
-          className="sm:col-span-2 lg:col-span-3"
+          className="sm:col-span-2"
         />
-        <div className="flex items-end">
-          <Button onPress={adicionar} isPending={salvando} isDisabled={!data} className="w-full">
-            Adicionar bloqueio
-          </Button>
-        </div>
       </div>
+      <BotaoSalvar pendente={salvando} onClick={adicionar} disabled={!data} className="self-start">
+        Adicionar bloqueio
+      </BotaoSalvar>
 
       {proximos.length > 0 ? (
-        <ul className="divide-y divide-separator rounded-2xl border border-border">
+        <ul className="-mx-2 flex flex-col">
           {proximos.map((b) => (
-            <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium first-letter:uppercase">
-                  {formatarData(b.data, { weekday: "short", day: "2-digit", month: "short" })} ·{" "}
-                  {b.turno ? NOME_TURNO[b.turno] : "Dia inteiro"}
-                </p>
-                <p className="text-xs text-muted">
-                  {b.lotacao === null ? "Fechado para reservas" : `Lotação reduzida para ${b.lotacao} lugares`}
-                  {b.motivo ? ` · ${b.motivo}` : ""}
-                </p>
+            <li key={b.id} className="flex items-center justify-between gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-muted">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="grid w-11 shrink-0 place-items-center rounded-xl bg-muted py-1 text-center">
+                  <span className="text-[0.6rem] font-medium text-muted-foreground uppercase">
+                    {formatarData(b.data, { month: "short" }).replace(".", "")}
+                  </span>
+                  <span className="numeros text-base leading-none font-semibold">{b.data.slice(8, 10)}</span>
+                </span>
+                <div className="min-w-0">
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    <span className="first-letter:uppercase">{formatarData(b.data, { weekday: "long" })}</span>
+                    <Selo tom={b.lotacao === null ? "negativo" : "atencao"}>
+                      {b.turno ? NOME_TURNO[b.turno] : "Dia inteiro"}
+                    </Selo>
+                  </p>
+                  <p className="truncate text-[13px] text-muted-foreground">
+                    {b.lotacao === null ? "Fechado para reservas" : `Lotação reduzida para ${b.lotacao} lugares`}
+                    {b.motivo ? ` · ${b.motivo}` : ""}
+                  </p>
+                </div>
               </div>
               <Button
-                isIconOnly
-                size="sm"
-                variant="ghost"
+                size="icon-sm"
+                variant="ghost-destructive"
+                className="rounded-full"
                 aria-label="Remover bloqueio"
-                onPress={async () => avisar(await excluirBloqueio(b.id), "Bloqueio removido")}
+                onClick={async () => avisar(await excluirBloqueio(b.id), "Bloqueio removido")}
               >
-                <TrashBin />
+                <Trash2 />
               </Button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted">Nenhum bloqueio programado.</p>
+        <p className="rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground">Nenhum bloqueio programado.</p>
       )}
     </Secao>
   );
@@ -249,8 +265,10 @@ export default function AjustesReservas({
   hoje: string;
 }) {
   return (
-    <div className="flex max-w-3xl flex-col gap-4">
-      <Regras config={config} />
+    <div className="grid items-start gap-4 xl:grid-cols-2">
+      <div className="flex flex-col gap-4">
+        <Regras config={config} />
+      </div>
       <Bloqueios bloqueios={bloqueios} hoje={hoje} />
     </div>
   );

@@ -1,21 +1,24 @@
 "use client";
 
-import { Book } from "@gravity-ui/icons";
-import { Button, Checkbox, CheckboxGroup, Description, Label, Modal, Separator } from "@heroui/react";
+import { BookOpen, Check } from "lucide-react";
 import { useState } from "react";
 
 import {
   avisar,
-  CampoNumero,
+  BotaoSalvar,
+  CampoMoeda,
   CampoSelect,
   CampoSwitch,
   CampoTexto,
-  FORMATO_BRL,
   UploadImagem,
 } from "@/components/admin/campos";
+import { PainelLateral, useUltimo } from "@/components/admin/ui";
+import { Button } from "@/components/sistema/ui/button";
+import { Checkbox } from "@/components/sistema/ui/checkbox";
 import { BADGES, type Badge } from "@/data/menu";
 import { salvarItem } from "@/lib/admin/cardapio-actions";
 import type { CategoriaCardapio, ItemCardapio } from "@/lib/dados";
+import { cn } from "@/lib/utils";
 
 type Props = {
   aberto: boolean;
@@ -25,7 +28,7 @@ type Props = {
   onFechar: () => void;
 };
 
-function Formulario({ item, categoriaInicial, categorias, onFechar }: Omit<Props, "aberto">) {
+function Formulario({ aberto, item, categoriaInicial, categorias, onFechar }: Props) {
   const [nome, setNome] = useState(item?.nome ?? "");
   const [descricao, setDescricao] = useState(item?.descricao ?? "");
   const [categoriaId, setCategoriaId] = useState(item?.categoriaId ?? categoriaInicial ?? categorias[0]?.id ?? "");
@@ -67,15 +70,26 @@ function Formulario({ item, categoriaInicial, categorias, onFechar }: Omit<Props
   }
 
   return (
-    <>
-      <Modal.Header>
-        <Modal.Icon className="bg-accent/10 text-accent">
-          <Book className="size-5" />
-        </Modal.Icon>
-        <Modal.Heading>{item ? "Editar prato" : "Novo prato"}</Modal.Heading>
-      </Modal.Header>
-      <Modal.Body className="flex flex-col gap-5">
-        <div className="grid gap-5 md:grid-cols-[1fr_220px]">
+    <PainelLateral
+      aberto={aberto}
+      aoFechar={onFechar}
+      icone={BookOpen}
+      titulo={item ? "Editar prato" : "Novo prato"}
+      descricao={item?.nome ?? "Aparece no cardápio do site assim que salvar"}
+      largura="data-[side=right]:sm:max-w-xl"
+      rodape={
+        <>
+          <Button variant="secondary" className="rounded-full" onClick={onFechar} disabled={salvando}>
+            Cancelar
+          </Button>
+          <BotaoSalvar className="flex-1" pendente={salvando} onClick={salvar}>
+            {item ? "Salvar alterações" : "Adicionar prato"}
+          </BotaoSalvar>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-5">
+        <div className="grid gap-4 sm:grid-cols-[1fr_168px]">
           <div className="flex flex-col gap-4">
             <CampoTexto label="Nome do prato" value={nome} onChange={setNome} obrigatorio autoFocus maxLength={120} />
             <CampoTexto
@@ -90,7 +104,7 @@ function Formulario({ item, categoriaInicial, categorias, onFechar }: Omit<Props
             />
           </div>
           <UploadImagem
-            label="Foto (opcional)"
+            label="Foto"
             value={fotoUrl}
             onChange={setFotoUrl}
             pasta="pratos"
@@ -115,51 +129,43 @@ function Formulario({ item, categoriaInicial, categorias, onFechar }: Omit<Props
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <CampoNumero
-            label="Preço"
-            value={semPreco ? null : preco}
-            onChange={setPreco}
-            min={0}
-            passo={1}
-            formato={FORMATO_BRL}
-            desabilitado={semPreco}
-          />
-          <div className="flex items-end pb-2">
-            <Checkbox isSelected={semPreco} onChange={setSemPreco}>
-              <Checkbox.Content>
-                <Checkbox.Control>
-                  <Checkbox.Indicator />
-                </Checkbox.Control>
-                Sem preço (sob consulta)
-              </Checkbox.Content>
-            </Checkbox>
-          </div>
+        <div className="flex flex-col gap-2">
+          <CampoMoeda label="Preço" value={semPreco ? null : preco} onChange={setPreco} desabilitado={semPreco} />
+          <label className="flex w-fit cursor-pointer items-center gap-2.5 text-sm">
+            <Checkbox checked={semPreco} onCheckedChange={(v) => setSemPreco(v === true)} />
+            Sem preço (sob consulta)
+          </label>
         </div>
 
-        <CheckboxGroup value={badges} onChange={(v) => setBadges(v as Badge[])}>
-          <Label>Selos</Label>
-          <Description>Aparecem no cardápio e servem de filtro para o cliente.</Description>
-          <div className="mt-1 grid gap-2 sm:grid-cols-3">
-            {(Object.keys(BADGES) as Badge[]).map((b) => (
-              <Checkbox key={b} value={b} className="rounded-xl border border-border px-3 py-2.5">
-                <Checkbox.Content>
-                  <Checkbox.Control>
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-sm font-medium">Selos</legend>
+          <p className="-mt-1 text-[0.8rem] text-muted-foreground">Aparecem no cardápio e servem de filtro para o cliente.</p>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(BADGES) as Badge[]).map((b) => {
+              const marcado = badges.includes(b);
+              return (
+                <button
+                  key={b}
+                  type="button"
+                  aria-pressed={marcado}
+                  onClick={() => setBadges(marcado ? badges.filter((x) => x !== b) : [...badges, b])}
+                  className={cn(
+                    "flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors duration-150 outline-none focus-visible:ring-3 focus-visible:ring-primary-suave",
+                    marcado ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted-hover",
+                  )}
+                >
+                  {marcado && <Check className="size-3.5" />}
                   {BADGES[b].rotulo}
-                </Checkbox.Content>
-              </Checkbox>
-            ))}
+                </button>
+              );
+            })}
           </div>
-        </CheckboxGroup>
+        </fieldset>
 
-        <Separator />
-
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 rounded-2xl bg-muted/70 p-4">
           <CampoSwitch
             label="Disponível hoje"
-            descricao="Desligue quando acabar — o prato aparece como esgotado no site."
+            descricao="Desligue quando acabar: o prato aparece como esgotado no site."
             value={disponivel}
             onChange={setDisponivel}
           />
@@ -171,32 +177,33 @@ function Formulario({ item, categoriaInicial, categorias, onFechar }: Omit<Props
           />
           <CampoSwitch label="Selo VPJ" descricao="Carne com origem certificada VPJ." value={vpj} onChange={setVpj} />
         </div>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="tertiary" onPress={onFechar} isDisabled={salvando}>
-          Cancelar
-        </Button>
-        <Button onPress={salvar} isPending={salvando}>
-          {item ? "Salvar alterações" : "Adicionar prato"}
-        </Button>
-      </Modal.Footer>
-    </>
+      </div>
+    </PainelLateral>
   );
 }
 
-export default function EditorItem({ aberto, onFechar, ...resto }: Props) {
+export default function EditorItem({
+  editando,
+  categoriaInicial,
+  categorias,
+  onFechar,
+}: {
+  editando: ItemCardapio | "novo" | null;
+  categoriaInicial: string | null;
+  categorias: CategoriaCardapio[];
+  onFechar: () => void;
+}) {
+  const atual = useUltimo(editando);
+  if (!atual) return null;
+  const item = atual === "novo" ? null : atual;
   return (
-    <Modal>
-      <Modal.Backdrop isOpen={aberto} onOpenChange={(v) => !v && onFechar()}>
-        <Modal.Container size="lg" scroll="inside" placement="auto">
-          <Modal.Dialog>
-            <Modal.CloseTrigger />
-            {aberto && (
-              <Formulario key={resto.item?.id ?? `novo-${resto.categoriaInicial}`} onFechar={onFechar} {...resto} />
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+    <Formulario
+      key={item?.id ?? `novo-${categoriaInicial}`}
+      aberto={editando !== null}
+      item={item}
+      categoriaInicial={categoriaInicial}
+      categorias={categorias}
+      onFechar={onFechar}
+    />
   );
 }

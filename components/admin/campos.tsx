@@ -1,39 +1,64 @@
 "use client";
 
 /**
- * Kit de campos do painel — tudo HeroUI, nada nativo à vista.
- * Cada wrapper recebe/devolve valores simples (string, number, "AAAA-MM-DD",
- * "HH:MM") e esconde a conversão para os tipos do React Aria.
+ * Kit de campos do painel, sobre o sistema de componentes (components/sistema).
+ * Nenhum controle nativo à vista: datas, horas, listas e números usam os
+ * pickers e smart inputs próprios. Cada wrapper recebe e devolve valores
+ * simples (string, number, "AAAA-MM-DD", "HH:MM").
  */
 
-import { Picture, TrashBin, ArrowUpFromSquare } from "@gravity-ui/icons";
+import { addDays, endOfMonth, format, parse, startOfMonth } from "date-fns";
+import { CalendarRange, ImagePlus, Loader2, Minus, Plus, Trash2, Upload } from "lucide-react";
+import Image from "next/image";
+import { useId, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
+
+import { Campo } from "@/components/sistema/formulario/campo";
+import { BotaoInterno } from "@/components/sistema/inputs/caixa";
+import { InputData, InputHora } from "@/components/sistema/inputs/input-data";
+import { InputMoeda } from "@/components/sistema/inputs/input-moeda";
+import { InputInteiro } from "@/components/sistema/inputs/input-numero";
+import { InputTelefone } from "@/components/sistema/inputs/input-telefone";
+import { AreaTexto, InputTexto } from "@/components/sistema/inputs/input-texto";
+import { InputEmail, InputUrl } from "@/components/sistema/inputs/input-web";
+import { ControleSegmentado } from "@/components/sistema/pickers/controle-segmentado";
+import { GatilhoCampo } from "@/components/sistema/pickers/gatilho-campo";
+import { PainelAdaptavel } from "@/components/sistema/pickers/painel-adaptavel";
+import { Seletor } from "@/components/sistema/pickers/seletor";
+import { ConteudoIntervalo } from "@/components/sistema/pickers/seletor-intervalo";
 import {
   AlertDialog,
-  Button,
-  Calendar,
-  DateField,
-  DatePicker,
-  DateRangePicker,
-  Description,
-  FieldError,
-  Input,
-  Label,
-  ListBox,
-  NumberField,
-  RangeCalendar,
-  Select,
-  Spinner,
-  Switch,
-  TextArea,
-  TextField,
-  TimeField,
-  toast,
-} from "@heroui/react";
-import { parseDate, parseTime } from "@internationalized/date";
-import Image from "next/image";
-import { useRef, useState } from "react";
-
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/sistema/ui/alert-dialog";
+import { Button } from "@/components/sistema/ui/button";
+import { Switch } from "@/components/sistema/ui/switch";
 import { enviarImagem } from "@/lib/admin/cardapio-actions";
+import { cn } from "@/lib/utils";
+
+type Comum = {
+  label: string;
+  descricao?: string;
+  className?: string;
+  /** Mostra o rótulo só para leitores de tela (filtros soltos na página) */
+  ocultarLabel?: boolean;
+};
+
+/** Rótulo + controle + ajuda, ligados por id. */
+function Moldura({ label, descricao, className, ocultarLabel, children }: Comum & { children: ReactNode }) {
+  const id = useId();
+  if (ocultarLabel) return <div className={cn("min-w-0", className)}>{children}</div>;
+  return (
+    <Campo id={id} rotulo={label} ajuda={descricao} className={className}>
+      {children}
+    </Campo>
+  );
+}
 
 // ─── Texto ─────────────────────────────────────────────────────
 
@@ -50,45 +75,52 @@ export function CampoTexto({
   maxLength,
   className,
   autoFocus,
-}: {
-  label: string;
+}: Comum & {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  descricao?: string;
   obrigatorio?: boolean;
   multilinha?: boolean;
   linhas?: number;
-  tipo?: "text" | "email" | "tel" | "url";
+  tipo?: "text" | "email" | "url";
   maxLength?: number;
-  className?: string;
   autoFocus?: boolean;
 }) {
+  const comuns = { placeholder, required: obrigatorio, autoFocus, maxLength };
   return (
-    <TextField
-      value={value}
-      onChange={onChange}
-      isRequired={obrigatorio}
-      type={tipo}
-      maxLength={maxLength}
-      fullWidth
-      className={className}
-      autoFocus={autoFocus}
-    >
-      <Label>{label}</Label>
+    <Moldura label={label} descricao={descricao} className={className}>
       {multilinha ? (
-        <TextArea placeholder={placeholder} rows={linhas} className="w-full resize-y" />
+        <AreaTexto {...comuns} rows={linhas} value={value} onChange={(e) => onChange(e.currentTarget.value)} />
+      ) : tipo === "email" ? (
+        <InputEmail {...comuns} valor={value} aoMudar={(v) => onChange(v ?? "")} />
+      ) : tipo === "url" ? (
+        <InputUrl {...comuns} valor={value} aoMudar={(v) => onChange(v ?? "")} />
       ) : (
-        <Input placeholder={placeholder} className="w-full" />
+        <InputTexto {...comuns} value={value} onChange={(e) => onChange(e.currentTarget.value)} />
       )}
-      {descricao && <Description>{descricao}</Description>}
-      <FieldError />
-    </TextField>
+    </Moldura>
   );
 }
 
-// ─── Número ────────────────────────────────────────────────────
+/** WhatsApp com "+55" fixo; devolve só os dígitos (com o 55, que o servidor normaliza). */
+export function CampoTelefone({
+  label,
+  value,
+  onChange,
+  descricao,
+  className,
+  autoFocus,
+}: Comum & { value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
+  return (
+    <Moldura label={label} descricao={descricao} className={className}>
+      <InputTelefone valor={value} aoMudar={(v) => onChange(v ?? "")} autoFocus={autoFocus} />
+    </Moldura>
+  );
+}
 
+// ─── Números ───────────────────────────────────────────────────
+
+/** Inteiro com botões de − e + (pessoas, lugares, minutos). */
 export function CampoNumero({
   label,
   value,
@@ -96,48 +128,63 @@ export function CampoNumero({
   min,
   max,
   passo = 1,
-  formato,
+  unidade,
   descricao,
   desabilitado,
   className,
-}: {
-  label: string;
+}: Comum & {
   value: number | null;
   onChange: (v: number | null) => void;
   min?: number;
   max?: number;
   passo?: number;
-  formato?: Intl.NumberFormatOptions;
-  descricao?: string;
+  /** Texto fixo à direita (ex.: "min", "%") */
+  unidade?: string;
   desabilitado?: boolean;
-  className?: string;
 }) {
+  const limitar = (n: number) => Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n));
+  const passar = (sinal: 1 | -1) => onChange(limitar((value ?? min ?? 0) + sinal * passo));
+
   return (
-    <NumberField
-      value={value ?? Number.NaN}
-      onChange={(v) => onChange(Number.isNaN(v) ? null : v)}
-      minValue={min}
-      maxValue={max}
-      step={passo}
-      formatOptions={formato}
-      isDisabled={desabilitado}
-      fullWidth
-      className={className}
-    >
-      <Label>{label}</Label>
-      <NumberField.Group>
-        <NumberField.DecrementButton />
-        <NumberField.Input className="w-full min-w-0" />
-        <NumberField.IncrementButton />
-      </NumberField.Group>
-      {descricao && <Description>{descricao}</Description>}
-    </NumberField>
+    <Moldura label={label} descricao={descricao} className={className}>
+      <InputInteiro
+        valor={value}
+        aoMudar={(v) => onChange(v === null ? null : v)}
+        onBlur={() => value !== null && value !== limitar(value) && onChange(limitar(value))}
+        disabled={desabilitado}
+        sufixo={unidade}
+        acao={
+          <span className="flex items-center gap-0.5">
+            <BotaoInterno aria-label="Diminuir" disabled={desabilitado || (min !== undefined && (value ?? 0) <= min)} onClick={() => passar(-1)}>
+              <Minus />
+            </BotaoInterno>
+            <BotaoInterno aria-label="Aumentar" disabled={desabilitado || (max !== undefined && (value ?? 0) >= max)} onClick={() => passar(1)}>
+              <Plus />
+            </BotaoInterno>
+          </span>
+        }
+      />
+    </Moldura>
   );
 }
 
-export const FORMATO_BRL: Intl.NumberFormatOptions = { style: "currency", currency: "BRL" };
+/** Valor em R$, com digitação da direita para a esquerda. */
+export function CampoMoeda({
+  label,
+  value,
+  onChange,
+  descricao,
+  desabilitado,
+  className,
+}: Comum & { value: number | null; onChange: (v: number | null) => void; desabilitado?: boolean }) {
+  return (
+    <Moldura label={label} descricao={descricao} className={className}>
+      <InputMoeda valor={value} aoMudar={onChange} disabled={desabilitado} />
+    </Moldura>
+  );
+}
 
-// ─── Select ────────────────────────────────────────────────────
+// ─── Seleção ───────────────────────────────────────────────────
 
 export type Opcao = { id: string; rotulo: string; descricao?: string };
 
@@ -150,113 +197,97 @@ export function CampoSelect({
   descricao,
   className,
   ocultarLabel,
-}: {
-  label: string;
+  variante = "campo",
+}: Comum & {
   value: string | null;
   onChange: (v: string) => void;
   opcoes: Opcao[];
   placeholder?: string;
-  descricao?: string;
-  className?: string;
-  ocultarLabel?: boolean;
+  variante?: "campo" | "pilula" | "pilula-clara";
 }) {
   return (
-    <Select
-      value={value}
-      onChange={(k) => k !== null && onChange(String(k))}
-      placeholder={placeholder}
-      className={className ?? "w-full"}
-      aria-label={ocultarLabel ? label : undefined}
-    >
-      {!ocultarLabel && <Label>{label}</Label>}
-      <Select.Trigger>
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      {descricao && <Description>{descricao}</Description>}
-      <Select.Popover>
-        <ListBox>
-          {opcoes.map((o) => (
-            <ListBox.Item key={o.id} id={o.id} textValue={o.rotulo}>
-              {o.descricao ? (
-                <div className="flex flex-col">
-                  <Label>{o.rotulo}</Label>
-                  <Description>{o.descricao}</Description>
-                </div>
-              ) : (
-                o.rotulo
-              )}
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
+    <Moldura label={label} descricao={descricao} className={className} ocultarLabel={ocultarLabel}>
+      <Seletor
+        aria-label={ocultarLabel ? label : undefined}
+        valor={value ?? undefined}
+        aoMudar={onChange}
+        placeholder={placeholder}
+        variante={variante}
+        opcoes={opcoes.map((o) => ({ valor: o.id, rotulo: o.rotulo, descricao: o.descricao }))}
+      />
+    </Moldura>
   );
 }
 
-// ─── Switch ────────────────────────────────────────────────────
+/** Poucas opções lado a lado (turno, tipo de bloqueio): controle segmentado na largura do campo. */
+export function CampoOpcoes<T extends string>({
+  label,
+  value,
+  onChange,
+  opcoes,
+  descricao,
+  className,
+}: Comum & { value: T; onChange: (v: T) => void; opcoes: { id: T; rotulo: string }[] }) {
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
+      <span className="text-sm font-medium">{label}</span>
+      <ControleSegmentado
+        rotulo={label}
+        valor={value}
+        aoMudar={onChange}
+        opcoes={opcoes.map((o) => ({ valor: o.id, rotulo: o.rotulo }))}
+        className="flex w-full [&>button]:flex-1"
+      />
+      {descricao && <p className="text-[0.8rem] leading-snug text-muted-foreground">{descricao}</p>}
+    </div>
+  );
+}
 
+/** Liga/desliga com o texto clicável ao lado. */
 export function CampoSwitch({
   label,
   descricao,
   value,
   onChange,
-  tamanho = "md",
+  className,
 }: {
   label: string;
   descricao?: string;
   value: boolean;
   onChange: (v: boolean) => void;
-  tamanho?: "sm" | "md" | "lg";
+  className?: string;
 }) {
+  const id = useId();
   return (
-    <Switch isSelected={value} onChange={onChange} size={tamanho} className="w-full">
-      <Switch.Content className="flex w-full items-start justify-between gap-4">
-        <span className="flex min-w-0 flex-col">
-          <span className="text-sm font-medium">{label}</span>
-          {descricao && <span className="text-xs text-muted">{descricao}</span>}
-        </span>
-        <Switch.Control className="mt-0.5 shrink-0">
-          <Switch.Thumb />
-        </Switch.Control>
-      </Switch.Content>
-    </Switch>
+    <div className={cn("flex items-start justify-between gap-4", className)}>
+      <label htmlFor={id} className="flex min-w-0 cursor-pointer flex-col gap-0.5">
+        <span className="text-sm font-medium">{label}</span>
+        {descricao && <span className="text-[0.8rem] leading-snug text-muted-foreground">{descricao}</span>}
+      </label>
+      <Switch id={id} checked={value} onCheckedChange={onChange} className="mt-0.5" />
+    </div>
   );
 }
 
 // ─── Data, período e hora ──────────────────────────────────────
 
-function paraData(v: string | null) {
-  try {
-    return v ? parseDate(v) : null;
-  } catch {
-    return null;
-  }
-}
+const ISO_DATA = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_HORA = /^\d{2}:\d{2}$/;
 
-function Calendario({ rotulo }: { rotulo: string }) {
-  return (
-    <Calendar aria-label={rotulo}>
-      <Calendar.Header>
-        <Calendar.YearPickerTrigger>
-          <Calendar.YearPickerTriggerHeading />
-          <Calendar.YearPickerTriggerIndicator />
-        </Calendar.YearPickerTrigger>
-        <Calendar.NavButton slot="previous" />
-        <Calendar.NavButton slot="next" />
-      </Calendar.Header>
-      <Calendar.Grid>
-        <Calendar.GridHeader>{(dia) => <Calendar.HeaderCell>{dia}</Calendar.HeaderCell>}</Calendar.GridHeader>
-        <Calendar.GridBody>{(data) => <Calendar.Cell date={data} />}</Calendar.GridBody>
-      </Calendar.Grid>
-      <Calendar.YearPickerGrid>
-        <Calendar.YearPickerGridBody>
-          {({ year }) => <Calendar.YearPickerCell year={year} />}
-        </Calendar.YearPickerGridBody>
-      </Calendar.YearPickerGrid>
-    </Calendar>
-  );
+/**
+ * Guarda o que está sendo digitado e só avisa quem está fora quando o valor
+ * fica completo (ou vazio). Mudança vinda de fora (ex.: reset) vale na hora.
+ */
+function useBruto(value: string | null, completo: RegExp, onChange: (v: string | null) => void) {
+  const [bruto, setBruto] = useState<string | null>(value);
+  const atual = bruto === null || completo.test(bruto) ? value : bruto;
+  return [
+    atual,
+    (v: string | null) => {
+      setBruto(v);
+      if (v === null || completo.test(v)) onChange(v);
+    },
+  ] as const;
 }
 
 export function CampoData({
@@ -265,103 +296,17 @@ export function CampoData({
   onChange,
   descricao,
   minimo,
-  obrigatorio,
   className,
-  ocultarLabel,
-}: {
-  label: string;
+}: Comum & {
   value: string | null;
   onChange: (v: string | null) => void;
-  descricao?: string;
   minimo?: string;
-  obrigatorio?: boolean;
-  className?: string;
-  ocultarLabel?: boolean;
 }) {
+  const [atual, mudar] = useBruto(value, ISO_DATA, onChange);
   return (
-    <DatePicker
-      value={paraData(value)}
-      onChange={(d) => onChange(d ? d.toString() : null)}
-      minValue={paraData(minimo ?? null) ?? undefined}
-      isRequired={obrigatorio}
-      className={className ?? "w-full"}
-    >
-      <Label className={ocultarLabel ? "sr-only" : undefined}>{label}</Label>
-      <DateField.Group fullWidth>
-        <DateField.Input>{(s) => <DateField.Segment segment={s} />}</DateField.Input>
-        <DateField.Suffix>
-          <DatePicker.Trigger>
-            <DatePicker.TriggerIndicator />
-          </DatePicker.Trigger>
-        </DateField.Suffix>
-      </DateField.Group>
-      {descricao && <Description>{descricao}</Description>}
-      <DatePicker.Popover>
-        <Calendario rotulo={label} />
-      </DatePicker.Popover>
-    </DatePicker>
-  );
-}
-
-export function CampoPeriodo({
-  label,
-  inicio,
-  fim,
-  onChange,
-  descricao,
-  className,
-}: {
-  label: string;
-  inicio: string | null;
-  fim: string | null;
-  onChange: (inicio: string | null, fim: string | null) => void;
-  descricao?: string;
-  className?: string;
-}) {
-  const a = paraData(inicio);
-  const b = paraData(fim);
-  return (
-    <DateRangePicker
-      value={a && b ? { start: a, end: b } : null}
-      onChange={(r) => onChange(r ? r.start.toString() : null, r ? r.end.toString() : null)}
-      className={className ?? "w-full"}
-    >
-      <Label>{label}</Label>
-      <DateField.Group fullWidth>
-        <DateField.Input slot="start">{(s) => <DateField.Segment segment={s} />}</DateField.Input>
-        <DateRangePicker.RangeSeparator />
-        <DateField.Input slot="end">{(s) => <DateField.Segment segment={s} />}</DateField.Input>
-        <DateField.Suffix>
-          <DateRangePicker.Trigger>
-            <DateRangePicker.TriggerIndicator />
-          </DateRangePicker.Trigger>
-        </DateField.Suffix>
-      </DateField.Group>
-      {descricao && <Description>{descricao}</Description>}
-      <DateRangePicker.Popover>
-        <RangeCalendar aria-label={label}>
-          <RangeCalendar.Header>
-            <RangeCalendar.YearPickerTrigger>
-              <RangeCalendar.YearPickerTriggerHeading />
-              <RangeCalendar.YearPickerTriggerIndicator />
-            </RangeCalendar.YearPickerTrigger>
-            <RangeCalendar.NavButton slot="previous" />
-            <RangeCalendar.NavButton slot="next" />
-          </RangeCalendar.Header>
-          <RangeCalendar.Grid>
-            <RangeCalendar.GridHeader>
-              {(dia) => <RangeCalendar.HeaderCell>{dia}</RangeCalendar.HeaderCell>}
-            </RangeCalendar.GridHeader>
-            <RangeCalendar.GridBody>{(d) => <RangeCalendar.Cell date={d} />}</RangeCalendar.GridBody>
-          </RangeCalendar.Grid>
-          <RangeCalendar.YearPickerGrid>
-            <RangeCalendar.YearPickerGridBody>
-              {({ year }) => <RangeCalendar.YearPickerCell year={year} />}
-            </RangeCalendar.YearPickerGridBody>
-          </RangeCalendar.YearPickerGrid>
-        </RangeCalendar>
-      </DateRangePicker.Popover>
-    </DateRangePicker>
+    <Moldura label={label} descricao={descricao} className={className}>
+      <InputData valor={atual} aoMudar={mudar} minimo={minimo} />
+    </Moldura>
   );
 }
 
@@ -370,36 +315,89 @@ export function CampoHora({
   value,
   onChange,
   descricao,
-  obrigatorio,
+  passoMinutos = 15,
   className,
-}: {
-  label: string;
+}: Comum & {
   value: string | null;
   onChange: (v: string | null) => void;
-  descricao?: string;
-  obrigatorio?: boolean;
-  className?: string;
+  passoMinutos?: number;
 }) {
-  let t = null;
-  try {
-    t = value ? parseTime(value) : null;
-  } catch {
-    t = null;
-  }
+  const [atual, mudar] = useBruto(value, ISO_HORA, onChange);
   return (
-    <TimeField
-      value={t}
-      onChange={(v) => onChange(v ? v.toString().slice(0, 5) : null)}
-      hourCycle={24}
-      isRequired={obrigatorio}
-      className={className ?? "w-full"}
+    <Moldura label={label} descricao={descricao} className={className}>
+      <InputHora valor={atual} aoMudar={mudar} passoMinutos={passoMinutos} />
+    </Moldura>
+  );
+}
+
+const ISO = "yyyy-MM-dd";
+const lerData = (iso: string) => parse(iso, ISO, new Date());
+
+/** Período de exibição (promoções): atalhos para frente e calendário duplo. */
+export function CampoPeriodo({
+  label,
+  inicio,
+  fim,
+  onChange,
+  descricao,
+  className,
+}: Comum & {
+  inicio: string | null;
+  fim: string | null;
+  onChange: (inicio: string | null, fim: string | null) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const id = useId();
+  const hoje = new Date();
+  const valor = inicio && fim ? { de: lerData(inicio), ate: lerData(fim) } : undefined;
+  const texto = valor
+    ? `${format(valor.de, "dd/MM/yyyy")} → ${format(valor.ate, "dd/MM/yyyy")}`
+    : null;
+
+  return (
+    <Campo
+      id={id}
+      rotulo={label}
+      ajuda={descricao}
+      className={className}
+      extra={
+        valor ? (
+          <button
+            type="button"
+            onClick={() => onChange(null, null)}
+            className="text-[0.8rem] font-medium text-primary-texto hover:underline"
+          >
+            Sem período
+          </button>
+        ) : null
+      }
     >
-      <Label>{label}</Label>
-      <TimeField.Group fullWidth>
-        <TimeField.Input>{(s) => <TimeField.Segment segment={s} />}</TimeField.Input>
-      </TimeField.Group>
-      {descricao && <Description>{descricao}</Description>}
-    </TimeField>
+      <PainelAdaptavel
+        aberto={aberto}
+        aoMudar={setAberto}
+        titulo={label}
+        gatilho={<GatilhoCampo id={id} icone={CalendarRange} valor={texto} placeholder="Sempre (sem período)" />}
+      >
+        <ConteudoIntervalo
+          valor={valor}
+          atalhos={[
+            { atalho: "hoje", rotulo: "Só hoje", intervalo: { de: hoje, ate: hoje } },
+            { atalho: "7d", rotulo: "Próximos 7 dias", intervalo: { de: hoje, ate: addDays(hoje, 6) } },
+            { atalho: "15d", rotulo: "Próximos 15 dias", intervalo: { de: hoje, ate: addDays(hoje, 14) } },
+            { atalho: "mes", rotulo: "Até o fim do mês", intervalo: { de: hoje, ate: endOfMonth(hoje) } },
+            {
+              atalho: "proximo",
+              rotulo: "Mês que vem",
+              intervalo: { de: startOfMonth(addDays(endOfMonth(hoje), 1)), ate: endOfMonth(addDays(endOfMonth(hoje), 1)) },
+            },
+          ]}
+          aoEscolher={(r) => {
+            onChange(format(r.de, ISO), format(r.ate, ISO));
+            setAberto(false);
+          }}
+        />
+      </PainelAdaptavel>
+    </Campo>
   );
 }
 
@@ -436,14 +434,17 @@ export function UploadImagem({
       onChange(r.dados);
       toast.success("Imagem enviada");
     } else if (!r.ok) {
-      toast.danger(r.erro);
+      toast.error(r.erro);
     }
   }
 
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm font-medium">{label}</span>
-      <div
+      <button
+        type="button"
+        onClick={() => entrada.current?.click()}
+        disabled={enviando}
         onDragOver={(e) => {
           e.preventDefault();
           setArrastando(true);
@@ -454,35 +455,47 @@ export function UploadImagem({
           setArrastando(false);
           void enviar(e.dataTransfer.files[0]);
         }}
-        className={`relative overflow-hidden rounded-2xl border border-dashed transition-colors ${proporcao} ${
-          arrastando ? "border-accent bg-accent/5" : "border-border bg-surface-secondary"
-        }`}
+        aria-label={value ? "Trocar foto" : "Enviar foto"}
+        className={cn(
+          "group relative overflow-hidden rounded-2xl outline-none transition-[background-color,box-shadow] duration-150 focus-visible:ring-3 focus-visible:ring-primary-suave",
+          proporcao,
+          arrastando ? "bg-primary-suave ring-2 ring-primary/40" : "bg-muted hover:bg-muted-hover",
+        )}
       >
         {value ? (
-          <Image src={value} alt="" fill sizes="480px" className="object-cover" />
+          <>
+            <Image src={value} alt="" fill sizes="480px" className="object-cover" />
+            <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 bg-linear-to-t from-black/60 to-transparent pt-8 pb-3 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+              <Upload className="size-3.5" /> Trocar foto
+            </span>
+          </>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-muted">
-            <Picture className="size-7" />
-            <p className="text-xs">Arraste uma foto ou use o botão abaixo</p>
-          </div>
+          <span className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-muted-foreground">
+            <span className="grid size-11 place-items-center rounded-xl bg-card shadow-suave">
+              <ImagePlus className="size-5 text-primary-texto" strokeWidth={1.75} />
+            </span>
+            <span className="text-xs">Arraste uma foto ou toque para enviar</span>
+          </span>
         )}
         {enviando && (
-          <div className="absolute inset-0 grid place-items-center bg-surface/70">
-            <Spinner />
-          </div>
+          <span className="absolute inset-0 grid place-items-center bg-card/70 backdrop-blur-xs">
+            <Loader2 className="size-5 animate-spin text-primary-texto" />
+          </span>
         )}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant="secondary" onPress={() => entrada.current?.click()} isDisabled={enviando}>
-          <ArrowUpFromSquare /> {value ? "Trocar foto" : "Enviar foto"}
+      </button>
+      {value && (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost-destructive"
+          onClick={() => onChange(null)}
+          disabled={enviando}
+          className="self-start rounded-full"
+        >
+          <Trash2 /> Remover foto
         </Button>
-        {value && (
-          <Button size="sm" variant="ghost" onPress={() => onChange(null)} isDisabled={enviando}>
-            <TrashBin /> Remover
-          </Button>
-        )}
-      </div>
-      {descricao && <p className="text-xs text-muted">{descricao}</p>}
+      )}
+      {descricao && <p className="text-[0.8rem] text-muted-foreground">{descricao}</p>}
       <input
         ref={entrada}
         type="file"
@@ -512,50 +525,63 @@ export function Confirmar({
   aberto: boolean;
   onFechar: () => void;
   titulo: string;
-  texto: React.ReactNode;
+  texto: ReactNode;
   rotuloAcao?: string;
   onConfirmar: () => Promise<void> | void;
 }) {
   const [pendente, setPendente] = useState(false);
   return (
-    <AlertDialog>
-      <AlertDialog.Backdrop isOpen={aberto} onOpenChange={(v) => !v && onFechar()}>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog className="sm:max-w-[420px]">
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>{titulo}</AlertDialog.Heading>
-            </AlertDialog.Header>
-            <AlertDialog.Body>
-              <div className="text-sm text-muted">{texto}</div>
-            </AlertDialog.Body>
-            <AlertDialog.Footer>
-              <Button variant="tertiary" onPress={onFechar} isDisabled={pendente}>
-                Cancelar
-              </Button>
-              <Button
-                variant="danger"
-                isPending={pendente}
-                onPress={async () => {
-                  setPendente(true);
-                  await onConfirmar();
-                  setPendente(false);
-                  onFechar();
-                }}
-              >
-                {rotuloAcao}
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
+    <AlertDialog open={aberto} onOpenChange={(v) => !v && !pendente && onFechar()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogMedia className="rounded-xl bg-negativo/10 text-negativo-texto">
+            <Trash2 />
+          </AlertDialogMedia>
+          <AlertDialogTitle className="text-[17px] font-semibold">{titulo}</AlertDialogTitle>
+          <AlertDialogDescription>{texto}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="rounded-full" disabled={pendente}>
+            Cancelar
+          </AlertDialogCancel>
+          <Button
+            variant="destructive"
+            className="rounded-full"
+            disabled={pendente}
+            onClick={async () => {
+              setPendente(true);
+              await onConfirmar();
+              setPendente(false);
+              onFechar();
+            }}
+          >
+            {pendente && <Loader2 className="animate-spin" />}
+            {rotuloAcao}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
     </AlertDialog>
   );
 }
 
-/** Mostra o resultado de uma action num toast; devolve se deu certo. */
+/** Botão com estado de "salvando" (rodapés de janela e painel). */
+export function BotaoSalvar({
+  pendente,
+  children,
+  className,
+  ...props
+}: React.ComponentProps<typeof Button> & { pendente?: boolean }) {
+  return (
+    <Button {...props} disabled={pendente || props.disabled} className={cn("rounded-full", className)}>
+      {pendente && <Loader2 className="animate-spin" />}
+      {children}
+    </Button>
+  );
+}
+
+/** Mostra o resultado de uma action num aviso; devolve se deu certo. */
 export function avisar(r: { ok: boolean; erro?: string }, sucesso: string) {
   if (r.ok) toast.success(sucesso);
-  else toast.danger(r.erro ?? "Algo deu errado.");
+  else toast.error(r.erro ?? "Algo deu errado.");
   return r.ok;
 }
