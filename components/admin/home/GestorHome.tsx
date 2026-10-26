@@ -1,20 +1,19 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Film, ImageIcon, LayoutGrid, Plus, Star, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Film, ImageIcon, LayoutGrid, Plus, Repeat, Star, X } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
 import { fotoDoItem } from "@/components/admin/cardapio/GestorCardapio";
 import { avisar, BarraSalvar, CampoTexto } from "@/components/admin/campos";
 import { BotaoLink, Cabecalho, Secao, Selo } from "@/components/admin/ui";
-import { Combobox } from "@/components/sistema/pickers/combobox";
 import { Button } from "@/components/sistema/ui/button";
 import { salvarHome } from "@/lib/admin/home-actions";
 import { brl } from "@/lib/admin/formato";
-import type { CategoriaCardapio, HomeConfig, ItemCardapio } from "@/lib/dados";
+import type { CategoriaCardapio, HomeConfig } from "@/lib/dados";
 import { cn } from "@/lib/utils";
 
-type Prato = ItemCardapio & { categoriaNome: string };
+import EscolhaPrato, { type Prato } from "./EscolhaPrato";
 
 /** Prato com vídeo próprio de abertura na home (components/home/IntroCamarao). */
 const PRATO_DO_VIDEO = "camarao-empanado";
@@ -33,13 +32,13 @@ function Miniatura({ prato, className }: { prato: Prato; className?: string }) {
   );
 }
 
-function opcaoDoPrato(p: Prato, desabilitada = false) {
-  return {
-    valor: p.id,
-    rotulo: p.nome,
-    descricao: `${p.categoriaNome}${fotoDoItem(p) ? "" : " · sem foto"}${p.visivel ? "" : " · oculto no site"}`,
-    desabilitada,
-  };
+/**
+ * Título curto a partir do nome do prato: "Camarão Rosa Empanado com Risoto…"
+ * vira "Camarão Rosa Empanado". O nome completo continua no cardápio.
+ */
+function tituloCurto(nome: string) {
+  const [antes] = nome.split(/\s+(?:com|ao|à|na|no|e)\s+/i);
+  return antes && antes.length >= 6 ? antes : nome;
 }
 
 export default function GestorHome({ categorias, config }: { categorias: CategoriaCardapio[]; config: HomeConfig }) {
@@ -56,11 +55,34 @@ export default function GestorHome({ categorias, config }: { categorias: Categor
   };
   const [c, setC] = useState(limpo);
   const [salvando, setSalvando] = useState(false);
+  const [escolhendo, setEscolhendo] = useState<"mais-pedido" | "selecao" | null>(null);
   const alterado = JSON.stringify(c) !== JSON.stringify(limpo);
 
   const maisPedido = porId.get(c.maisPedido.itemId);
   const mudarMaisPedido = (k: keyof HomeConfig["maisPedido"], v: string) =>
     setC((x) => ({ ...x, maisPedido: { ...x.maisPedido, [k]: v } }));
+
+  /** Trocar o prato traz título e texto dele: a chamada (o "porquê" do destaque) fica. */
+  function escolherMaisPedido(id: string) {
+    const p = porId.get(id);
+    if (!p || id === c.maisPedido.itemId) return;
+    setC((x) => ({
+      ...x,
+      maisPedido: {
+        ...x.maisPedido,
+        itemId: id,
+        titulo: tituloCurto(p.nome),
+        texto: `${p.nome}${p.descricao ? `. ${p.descricao}` : ""}.`.replace(/\.\.$/, "."),
+      },
+    }));
+  }
+
+  function alternarDestaque(id: string) {
+    setC((x) => ({
+      ...x,
+      destaques: x.destaques.includes(id) ? x.destaques.filter((d) => d !== id) : [...x.destaques, id],
+    }));
+  }
 
   function moverDestaque(i: number, d: -1 | 1) {
     setC((x) => {
@@ -94,14 +116,28 @@ export default function GestorHome({ categorias, config }: { categorias: Categor
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">Prato</span>
-                <Combobox
-                  opcoes={pratos.map((p) => opcaoDoPrato(p))}
-                  valor={c.maisPedido.itemId}
-                  aoMudar={(id) => mudarMaisPedido("itemId", id)}
-                  titulo="Prato mais pedido"
-                  textoBusca="Buscar prato…"
-                  placeholder="Escolha um prato"
-                />
+                <button
+                  type="button"
+                  onClick={() => setEscolhendo("mais-pedido")}
+                  className="group flex items-center gap-3 rounded-2xl bg-muted/60 p-2 pr-4 text-left transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40"
+                >
+                  {maisPedido ? (
+                    <>
+                      <Miniatura prato={maisPedido} className="size-14" />
+                      <span className="min-w-0 grow">
+                        <span className="block truncate text-sm font-medium">{maisPedido.nome}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {maisPedido.categoriaNome} · {maisPedido.preco === null ? "sob consulta" : brl.format(maisPedido.preco)}
+                        </span>
+                      </span>
+                    </>
+                  ) : (
+                    <span className="grow px-2 py-3 text-sm text-muted-foreground">Nenhum prato escolhido</span>
+                  )}
+                  <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-[13px] font-medium shadow-suave">
+                    <Repeat className="size-3.5" /> Trocar prato
+                  </span>
+                </button>
                 {maisPedido && maisPedido.id !== PRATO_DO_VIDEO && (
                   <p className="flex items-start gap-1.5 text-[0.8rem] leading-snug text-muted-foreground">
                     <Film className="mt-0.5 size-3.5 shrink-0" />
@@ -167,18 +203,9 @@ export default function GestorHome({ categorias, config }: { categorias: Categor
           titulo="Seleção do cardápio"
           descricao="A galeria que corre de lado. Na ordem abaixo; de 3 a 12 pratos. Os que têm foto ficam melhores."
           acoes={
-            <Combobox
-              opcoes={pratos.map((p) => opcaoDoPrato(p, c.destaques.includes(p.id)))}
-              valor={undefined}
-              aoMudar={(id) => setC((x) => ({ ...x, destaques: [...x.destaques, id] }))}
-              titulo="Adicionar à seleção"
-              textoBusca="Buscar prato…"
-              gatilho={() => (
-                <Button size="sm" className="rounded-full" disabled={c.destaques.length >= MAX_DESTAQUES}>
-                  <Plus /> Adicionar
-                </Button>
-              )}
-            />
+            <Button size="sm" className="rounded-full" onClick={() => setEscolhendo("selecao")}>
+              <Plus /> Escolher pratos
+            </Button>
           }
         >
           {c.destaques.length === 0 ? (
@@ -234,6 +261,27 @@ export default function GestorHome({ categorias, config }: { categorias: Categor
           )}
         </Secao>
       </div>
+
+      <EscolhaPrato
+        aberta={escolhendo === "mais-pedido"}
+        aoFechar={() => setEscolhendo(null)}
+        titulo="Prato mais pedido"
+        descricao="Toque no prato. Título e texto se ajustam a ele; dá para editar depois."
+        pratos={pratos}
+        marcados={[c.maisPedido.itemId]}
+        aoAlternar={escolherMaisPedido}
+      />
+      <EscolhaPrato
+        aberta={escolhendo === "selecao"}
+        aoFechar={() => setEscolhendo(null)}
+        titulo="Seleção do cardápio"
+        descricao="Toque para pôr ou tirar da seleção. Os novos entram no fim da lista."
+        pratos={pratos}
+        marcados={c.destaques}
+        aoAlternar={alternarDestaque}
+        varios
+        limite={MAX_DESTAQUES}
+      />
 
       <BarraSalvar alterado={alterado} salvando={salvando} aoSalvar={salvar} aoDescartar={() => setC(limpo)} rotulo="Publicar na home" />
     </>

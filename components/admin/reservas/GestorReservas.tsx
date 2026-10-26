@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 
 import { avisar, Confirmar } from "@/components/admin/campos";
 import { Cabecalho, Selo, useUltimo } from "@/components/admin/ui";
+import { SeloWhatsapp } from "@/components/admin/whatsapp/conexao";
 import { EstadoVazio } from "@/components/sistema/estados/estado-vazio";
 import { InputBusca } from "@/components/sistema/inputs/input-texto";
 import { Calendario } from "@/components/sistema/pickers/calendario";
@@ -287,6 +288,7 @@ export default function GestorReservas({
         }
         acoes={
           <>
+            <SeloWhatsapp />
             <Button
               variant="secondary"
               className="rounded-full bg-card shadow-suave hover:bg-accent"
