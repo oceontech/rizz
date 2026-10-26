@@ -304,7 +304,8 @@
   --muted-foreground: var(--controle-pagina-texto);
 }
 
-/* Rodapé fixo de painel lateral: o conteúdo que rola some num esmaecimento acima dele */
+/* Rodapé fixo de janela e painel lateral: o conteúdo que rola some num esmaecimento
+   acima dele, só enquanto ainda há o que rolar (data-mais, posto pelo RodapeRolagem) */
 @utility rodape-de-painel {
   position: relative;
   z-index: 1;
@@ -316,6 +317,11 @@
     height: 2.5rem;
     pointer-events: none;
     background: linear-gradient(to top, var(--dialogo), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  &[data-mais]::before {
+    opacity: 1;
   }
 }
 
