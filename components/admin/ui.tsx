@@ -3,7 +3,7 @@
 import { MoreHorizontal, type LucideIcon } from "lucide-react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { NumeroAnimado } from "@/components/sistema/movimento";
 import { Button, buttonVariants } from "@/components/sistema/ui/button";
@@ -189,6 +189,37 @@ export function BotaoLink({
  * Janela central, para formulários curtos (até uns 4 campos). Cabeçalho e
  * rodapé fixos; só o meio rola, então os botões nunca somem em tela baixa.
  */
+/**
+ * Rodapé fixo abaixo de uma área que rola (o elemento logo antes dele). O
+ * esmaecimento acima só aparece quando ainda há conteúdo para baixo: sem
+ * rolagem, ele parecia esconder algo que não existe.
+ */
+function RodapeRolagem({ className, children }: { className?: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [mais, setMais] = useState(false);
+
+  useEffect(() => {
+    const rolagem = ref.current?.previousElementSibling;
+    if (!(rolagem instanceof HTMLElement)) return;
+    const medir = () => setMais(rolagem.scrollHeight - rolagem.scrollTop - rolagem.clientHeight > 1);
+    // O ResizeObserver já mede na primeira observação e de novo quando o conteúdo muda de tamanho.
+    const tamanho = new ResizeObserver(medir);
+    tamanho.observe(rolagem);
+    for (const filho of rolagem.children) tamanho.observe(filho);
+    rolagem.addEventListener("scroll", medir, { passive: true });
+    return () => {
+      tamanho.disconnect();
+      rolagem.removeEventListener("scroll", medir);
+    };
+  }, []);
+
+  return (
+    <div ref={ref} data-mais={mais || undefined} className={cn("rodape-de-painel", className)}>
+      {children}
+    </div>
+  );
+}
+
 export function Janela({
   aberta,
   aoFechar,
@@ -220,9 +251,9 @@ export function Janela({
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6">{children}</div>
         {rodape && (
-          <div className="rodape-de-painel flex shrink-0 flex-col-reverse gap-2 rounded-b-3xl bg-dialogo px-6 py-4 sm:flex-row sm:justify-end">
+          <RodapeRolagem className="flex shrink-0 flex-col-reverse gap-2 rounded-b-3xl bg-dialogo px-6 py-4 sm:flex-row sm:justify-end">
             {rodape}
-          </div>
+          </RodapeRolagem>
         )}
       </DialogContent>
     </Dialog>
@@ -267,9 +298,9 @@ export function PainelLateral({
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 pt-1 pb-8">{children}</div>
         {rodape && (
-          <div className="rodape-de-painel flex shrink-0 items-center gap-2 bg-dialogo px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <RodapeRolagem className="flex shrink-0 items-center gap-2 bg-dialogo px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             {rodape}
-          </div>
+          </RodapeRolagem>
         )}
       </SheetContent>
     </Sheet>
