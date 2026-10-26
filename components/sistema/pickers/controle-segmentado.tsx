@@ -62,13 +62,13 @@ export function ControleSegmentado<T extends string>({
             className={cn(
               "relative min-w-0 rounded-full font-medium whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               tamanho === "padrao" ? "h-9 px-4 text-sm" : "h-7 px-3 text-xs",
-              ativo ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              ativo ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {ativo && (
               <motion.span
                 layoutId={`segmento-${id}`}
-                className="absolute inset-0 rounded-full bg-primary shadow-sm"
+                className="absolute inset-0 rounded-full bg-card shadow-suave dark:bg-input"
                 transition={{ type: "spring", stiffness: 500, damping: 38 }}
               />
             )}

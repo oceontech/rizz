@@ -2,7 +2,8 @@
 
 import { MoreHorizontal, type LucideIcon } from "lucide-react";
 import NextLink from "next/link";
-import { Fragment, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import { Fragment, useRef, useState, type ReactNode } from "react";
 
 import { NumeroAnimado } from "@/components/sistema/movimento";
 import { Button, buttonVariants } from "@/components/sistema/ui/button";
@@ -24,7 +25,9 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/sistema/ui/sheet";
 import { cn } from "@/lib/utils";
 
-/** Cabeçalho padrão das páginas do painel. */
+import { areaDe } from "./nav";
+
+/** Cabeçalho padrão das páginas do painel, com o ícone da área na cor dela. */
 export function Cabecalho({
   titulo,
   descricao,
@@ -34,11 +37,16 @@ export function Cabecalho({
   descricao?: string;
   acoes?: ReactNode;
 }) {
+  const pathname = usePathname();
+  const area = areaDe(pathname);
   return (
     <header className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
-      <div className="min-w-0">
-        <h1 className="text-2xl leading-8 font-semibold tracking-tight text-balance">{titulo}</h1>
-        {descricao && <p className="mt-1.5 max-w-2xl text-sm text-pretty text-muted-foreground">{descricao}</p>}
+      <div className="flex min-w-0 items-start gap-3.5">
+        {area && <SeloIcone icone={area.Icone} className="mt-0.5 size-10 rounded-[14px] max-sm:hidden" />}
+        <div className="min-w-0">
+          <h1 className="text-2xl leading-8 font-semibold tracking-tight text-balance">{titulo}</h1>
+          {descricao && <p className="mt-1.5 max-w-2xl text-sm text-pretty text-muted-foreground">{descricao}</p>}
+        </div>
       </div>
       {acoes && <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:justify-end">{acoes}</div>}
     </header>
@@ -48,10 +56,13 @@ export function Cabecalho({
 // Classes completas: o Tailwind só gera as que aparecem escritas no código.
 const TONS = {
   neutro: "bg-muted text-muted-foreground",
-  marca: "bg-primary-suave text-primary-texto",
+  marca: "bg-marca-suave text-marca-texto",
   positivo: "bg-positivo/12 text-positivo-texto",
   negativo: "bg-negativo/10 text-negativo-texto",
   atencao: "bg-atencao/14 text-atencao-texto",
+  info: "bg-info/10 text-info-texto",
+  /** Cor da área do painel em que a página está (data-secao no Shell). */
+  secao: "bg-secao/12 text-secao-texto",
 } as const;
 
 export type Tom = keyof typeof TONS;
@@ -83,7 +94,7 @@ export function Selo({
 }
 
 /** Quadrado arredondado com o ícone, à esquerda de títulos de bloco. */
-export function SeloIcone({ icone: Icone, tom = "marca", className }: { icone: LucideIcon; tom?: Tom; className?: string }) {
+export function SeloIcone({ icone: Icone, tom = "secao", className }: { icone: LucideIcon; tom?: Tom; className?: string }) {
   return (
     <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", TONS[tom], className)}>
       <Icone className="size-[18px]" strokeWidth={1.75} aria-hidden />
@@ -275,7 +286,13 @@ export type AcaoMenu = {
   separar?: boolean;
 };
 
-/** Botão "…" com o menu de ações de um item. */
+/**
+ * Botão "…" com o menu de ações de um item.
+ *
+ * Não modal, e a ação só roda depois que o menu fecha: várias ações abrem um
+ * Sheet ou Dialog, e dois modais do Radix trocando de lugar deixavam o
+ * `pointer-events: none` preso no body (o painel parava de aceitar cliques).
+ */
 export function MenuAcoes({
   rotulo,
   acoes,
@@ -285,14 +302,26 @@ export function MenuAcoes({
   acoes: (AcaoMenu | null | false)[];
   aoEscolher: (id: string) => void;
 }) {
+  const escolhida = useRef<string | null>(null);
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon-sm" className="rounded-full" aria-label={rotulo}>
           <MoreHorizontal />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-60">
+      <DropdownMenuContent
+        align="end"
+        className="w-60"
+        onCloseAutoFocus={(e) => {
+          const id = escolhida.current;
+          if (id === null) return;
+          escolhida.current = null;
+          // O foco vai para o que a ação abrir, não de volta ao botão "…".
+          e.preventDefault();
+          aoEscolher(id);
+        }}
+      >
         {acoes.filter(Boolean).map((a) => {
           const { id, rotulo: texto, icone: Icone, perigo, desabilitada, separar } = a as AcaoMenu;
           return (
@@ -301,7 +330,9 @@ export function MenuAcoes({
               <DropdownMenuItem
                 variant={perigo ? "destructive" : "default"}
                 disabled={desabilitada}
-                onSelect={() => aoEscolher(id)}
+                onSelect={() => {
+                  escolhida.current = id;
+                }}
                 className="min-h-10 gap-2.5 px-2.5 md:min-h-9"
               >
                 <Icone strokeWidth={1.75} />

@@ -9,6 +9,7 @@
 
 import { addDays, endOfMonth, format, parse, startOfMonth } from "date-fns";
 import { CalendarRange, ImagePlus, Loader2, Minus, Plus, Trash2, Upload } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useId, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -576,6 +577,65 @@ export function BotaoSalvar({
       {pendente && <Loader2 className="animate-spin" />}
       {children}
     </Button>
+  );
+}
+
+/**
+ * Barra de "alterações não salvas" para páginas de ajustes. Só existe quando
+ * há o que salvar: um botão flutuante fixo cobria o conteúdo da página mesmo
+ * sem nada pendente. Fica acima da barra inferior no celular.
+ */
+export function BarraSalvar({
+  alterado,
+  salvando,
+  aoSalvar,
+  aoDescartar,
+  rotulo = "Salvar alterações",
+}: {
+  alterado: boolean;
+  salvando: boolean;
+  aoSalvar: () => void;
+  aoDescartar?: () => void;
+  rotulo?: string;
+}) {
+  return (
+    <AnimatePresence>
+      {alterado && (
+        <motion.div
+          key="barra-salvar"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 16 }}
+          transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
+          className="sticky bottom-28 z-20 mt-6 lg:bottom-6"
+        >
+          <div className="mx-auto flex max-w-2xl items-center gap-3 rounded-full bg-foreground py-2 pr-2 pl-5 text-background shadow-modal">
+            <span className="size-2 shrink-0 rounded-full bg-atencao" aria-hidden />
+            <p className="grow text-sm font-medium">Alterações não salvas</p>
+            {aoDescartar && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full text-background/70 hover:bg-background/10 hover:text-background"
+                onClick={aoDescartar}
+                disabled={salvando}
+              >
+                Descartar
+              </Button>
+            )}
+            <Button
+              size="sm"
+              className="rounded-full bg-background text-foreground hover:bg-background/90"
+              onClick={aoSalvar}
+              disabled={salvando}
+            >
+              {salvando && <Loader2 className="animate-spin" />}
+              {rotulo}
+            </Button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

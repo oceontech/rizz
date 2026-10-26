@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ExternalLink, Lock, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/sistema/ui
 import { sair } from "@/lib/admin/sessao-actions";
 import { cn } from "@/lib/utils";
 
-import { COOKIE_SIDEBAR, NAV, NAV_BARRA, ativo } from "./nav";
+import { COOKIE_SIDEBAR, NAV, NAV_BARRA, areaDe, ativo, type Secao } from "./nav";
 
 type Props = {
   usuario: { nome: string; email: string };
@@ -26,6 +26,11 @@ type Props = {
 };
 
 const LARGURA = { aberta: 280, recolhida: 84 };
+
+const GRUPOS = [
+  ["restaurante", "Restaurante"],
+  ["site", "Site"],
+] as const;
 
 function iniciais(nome: string) {
   return nome
@@ -53,6 +58,8 @@ function ItemNav({
   href,
   rotulo,
   Icone,
+  secao,
+  emBreve,
   atual,
   recolhida,
   contexto,
@@ -62,21 +69,51 @@ function ItemNav({
   href: string;
   rotulo: string;
   Icone: (typeof NAV)[number]["Icone"];
+  secao: Secao;
+  emBreve?: boolean;
   atual: boolean;
   recolhida: boolean;
   contexto: string;
   contador?: number;
   aoNavegar?: () => void;
 }) {
+  if (emBreve) {
+    return (
+      <li data-secao={secao}>
+        <ComDica ativa={recolhida} texto={`${rotulo} · em breve`}>
+          <span
+            aria-disabled
+            className={cn(
+              "flex h-11 cursor-not-allowed items-center rounded-full text-[0.9rem] font-medium text-sidebar-foreground/45 select-none",
+              recolhida ? "-mx-1 w-11 justify-center" : "gap-3 px-3",
+            )}
+          >
+            <Icone className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />
+            <span className={recolhida ? "sr-only" : "flex-1 truncate"}>
+              {rotulo}
+              {recolhida && " (em breve)"}
+            </span>
+            {!recolhida && (
+              <span className="flex h-5 items-center gap-1 rounded-full bg-white/8 px-2 text-[0.65rem] font-semibold tracking-wide text-sidebar-muted uppercase">
+                <Lock className="size-2.5" strokeWidth={2.5} aria-hidden />
+                Em breve
+              </span>
+            )}
+          </span>
+        </ComDica>
+      </li>
+    );
+  }
+
   return (
-    <li>
+    <li data-secao={secao}>
       <ComDica ativa={recolhida} texto={contador ? `${rotulo} · ${contador} a confirmar` : rotulo}>
         <Link
           href={href}
           onClick={aoNavegar}
           aria-current={atual ? "page" : undefined}
           className={cn(
-            "relative flex h-11 items-center rounded-full text-[0.9rem] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+            "group/item relative flex h-11 items-center rounded-full text-[0.9rem] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-sidebar-ring",
             recolhida ? "-mx-1 w-11 justify-center" : "gap-3 px-3",
             atual
               ? "text-sidebar-primary-foreground"
@@ -86,11 +123,19 @@ function ItemNav({
           {atual && (
             <motion.span
               layoutId={`item-ativo-${contexto}`}
-              className="absolute inset-0 rounded-full bg-sidebar-primary shadow-[0_6px_20px_-6px] shadow-sidebar-primary/70"
+              className="absolute inset-0 rounded-full bg-sidebar-primary ring-1 ring-white/6 ring-inset"
               transition={MOLA}
             />
           )}
-          <Icone className="relative size-5 shrink-0" strokeWidth={1.75} aria-hidden />
+          {/* O ícone leva a cor da área: aceso no item atual, discreto no hover */}
+          <Icone
+            className={cn(
+              "relative size-5 shrink-0 transition-colors",
+              atual ? "text-secao-sidebar" : "group-hover/item:text-secao-sidebar",
+            )}
+            strokeWidth={1.75}
+            aria-hidden
+          />
           {Boolean(contador) && recolhida && (
             <span className="absolute top-2 right-2 size-2.5 rounded-full border-2 border-sidebar bg-ambar" aria-hidden />
           )}
@@ -127,6 +172,8 @@ function ConteudoSidebar({
       href={n.href}
       rotulo={n.rotulo}
       Icone={n.Icone}
+      secao={n.secao}
+      emBreve={n.emBreve}
       atual={ativo(pathname, n.href)}
       recolhida={recolhida}
       contexto={contexto}
@@ -138,16 +185,20 @@ function ConteudoSidebar({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <nav aria-label="Seções do painel" className="-mx-3 min-h-0 flex-1 overflow-y-auto px-3 [scrollbar-width:none]">
-        <p
-          className={cn(
-            "mb-2 h-4 px-3 text-[0.68rem] font-semibold tracking-[0.08em] text-sidebar-muted uppercase transition-opacity",
-            recolhida && "opacity-0",
-          )}
-          aria-hidden
-        >
-          Restaurante
-        </p>
-        <ul className="flex flex-col gap-1">{NAV.filter((n) => n.grupo === "principal").map(item)}</ul>
+        {GRUPOS.map(([grupo, titulo], i) => (
+          <div key={grupo} className={cn(i > 0 && "mt-5 baixa:mt-3")}>
+            <p
+              className={cn(
+                "mb-2 h-4 px-3 text-[0.68rem] font-semibold tracking-[0.08em] text-sidebar-muted uppercase transition-opacity",
+                recolhida && "opacity-0",
+              )}
+              aria-hidden
+            >
+              {titulo}
+            </p>
+            <ul className="flex flex-col gap-1">{NAV.filter((n) => n.grupo === grupo).map(item)}</ul>
+          </div>
+        ))}
       </nav>
 
       <div className="mt-2 flex shrink-0 flex-col gap-3 border-t border-sidebar-border pt-4 baixa:gap-2 baixa:pt-3">
@@ -187,7 +238,7 @@ function ConteudoSidebar({
                 !recolhida && "flex-1 p-0.5",
               )}
             >
-              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sidebar-primary text-xs font-semibold text-white">
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-marca text-xs font-semibold text-white">
                 {iniciais(usuario.nome)}
               </span>
               {!recolhida && (
@@ -245,10 +296,10 @@ function BarraCelular({ usuario, pendentes }: { usuario: Props["usuario"]; pende
         className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-5 rounded-full bg-sidebar p-1.5 shadow-modal">
-          {NAV.filter((n) => NAV_BARRA.includes(n.href)).map(({ href, curto, Icone }) => {
+          {NAV.filter((n) => NAV_BARRA.includes(n.href)).map(({ href, curto, Icone, secao }) => {
             const atual = ativo(pathname, href);
             return (
-              <li key={href}>
+              <li key={href} data-secao={secao}>
                 <Link
                   href={href}
                   aria-current={atual ? "page" : undefined}
@@ -260,7 +311,7 @@ function BarraCelular({ usuario, pendentes }: { usuario: Props["usuario"]; pende
                   {atual && (
                     <motion.span layoutId="barra-ativa" className="absolute inset-0 rounded-full bg-sidebar-primary" transition={MOLA} />
                   )}
-                  <Icone className="relative size-5" strokeWidth={1.75} aria-hidden />
+                  <Icone className={cn("relative size-5", atual && "text-secao-sidebar")} strokeWidth={1.75} aria-hidden />
                   <span className="relative">{curto}</span>
                   {href === "/admin/reservas" && pendentes > 0 && (
                     <span className="numeros absolute top-1.5 right-[18%] grid h-4 min-w-4 place-items-center rounded-full bg-ambar px-1 text-[0.6rem] font-bold text-[#2b0710]">
@@ -277,7 +328,7 @@ function BarraCelular({ usuario, pendentes }: { usuario: Props["usuario"]; pende
               onClick={() => setMais(true)}
               className={cn(
                 "relative flex h-14 w-full flex-col items-center justify-center gap-0.5 rounded-full text-[0.68rem] font-medium",
-                foraDaBarra ? "bg-sidebar-primary text-white" : "text-sidebar-muted",
+                foraDaBarra ? "bg-sidebar-primary text-white ring-1 ring-white/6 ring-inset" : "text-sidebar-muted",
               )}
             >
               <MoreHorizontal className="size-5" strokeWidth={1.75} aria-hidden />
@@ -308,6 +359,7 @@ function BarraCelular({ usuario, pendentes }: { usuario: Props["usuario"]; pende
 
 export default function Shell({ usuario, pendentes, recolhidaInicial, children }: Props) {
   const pathname = usePathname();
+  const area = areaDe(pathname);
   const [recolhida, setRecolhida] = useState(recolhidaInicial);
 
   function alternar() {
@@ -368,7 +420,10 @@ export default function Shell({ usuario, pendentes, recolhidaInicial, children }
         <div className="absolute top-6 right-8 z-10 hidden lg:block">
           <BotaoTema className="bg-card shadow-suave hover:bg-accent" />
         </div>
-        <main className="mx-auto mt-2 w-full max-w-[1240px] flex-1 lg:mt-1 lg:[&_header:first-of-type]:pr-14">
+        <main
+          data-secao={area?.secao}
+          className="mx-auto mt-2 w-full max-w-[1240px] flex-1 lg:mt-1 lg:[&_header:first-of-type]:pr-14"
+        >
           <TransicaoPagina key={pathname}>{children}</TransicaoPagina>
         </main>
       </div>

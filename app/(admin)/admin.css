@@ -4,8 +4,9 @@
 
 /* ───────────────────────────────────────────────────────────
    Painel Rizz — sistema visual do Ge System (cinza neutro, cards
-   sem borda, sidebar escura flutuante), com o vinho da marca no
-   lugar do azul. Só é carregado nas rotas /admin (root layout
+   sem borda, sidebar escura flutuante). Ação principal em grafite;
+   o vinho da marca só em pontos de identidade; cada área do painel
+   tem uma cor própria (--secao) para orientar. Só é carregado nas rotas /admin (root layout
    próprio), então nada daqui vaza para o site público.
    ─────────────────────────────────────────────────────────── */
 
@@ -54,6 +55,14 @@
   --color-atencao: var(--atencao);
   --color-atencao-texto: var(--atencao-texto);
   --color-ambar: var(--ambar);
+  --color-info: var(--info);
+  --color-info-texto: var(--info-texto);
+  --color-marca: var(--marca);
+  --color-marca-texto: var(--marca-texto);
+  --color-marca-suave: var(--marca-suave);
+  --color-secao: var(--secao);
+  --color-secao-texto: var(--secao-texto);
+  --color-secao-sidebar: var(--secao-sidebar);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -91,7 +100,9 @@
 /*
  * Cinza neutro de verdade (R = G = B). Cards sem borda: separação pelo
  * contraste com o fundo e por sombra mínima no claro; no escuro, superfícies
- * mais claras a cada nível. O vinho só em ação principal, seleção, foco e links.
+ * mais claras a cada nível. Ação e seleção em grafite; cor só quando informa:
+ * situação (positivo, atenção, negativo, info), área do painel (--secao) e a
+ * marca (--marca, vinho) em poucos pontos.
  */
 :root {
   --radius: 0.625rem;
@@ -103,12 +114,16 @@
   --popover: #ffffff;
   --popover-foreground: #171717;
   --dialogo: #ffffff;
-  /* Vinho da marca (#70012A) */
-  --primary: #70012a;
-  --primary-hover: #5a0122;
+  /* Ação principal e seleção: grafite */
+  --primary: #1c1c1c;
+  --primary-hover: #333333;
   --primary-foreground: #ffffff;
-  --primary-texto: #8a0a36;
-  --primary-suave: color-mix(in oklab, #70012a 9%, transparent);
+  --primary-texto: #1c1c1c;
+  --primary-suave: color-mix(in oklab, #1c1c1c 8%, transparent);
+  /* Vinho da marca (#70012A): logo, avatar, destaques de identidade */
+  --marca: #70012a;
+  --marca-texto: #8a0a36;
+  --marca-suave: color-mix(in oklab, #70012a 9%, transparent);
   --secondary: #f0f0f0;
   --secondary-foreground: #171717;
   --muted: #f0f0f0;
@@ -125,7 +140,7 @@
   --input-hover: #bbbbbb;
   --controle-pagina: #e0e0e0;
   --controle-pagina-texto: #5a5a5a;
-  --ring: #8a0a36;
+  --ring: #2563eb;
 
   --positivo: #16a34a;
   --positivo-texto: #167c3a;
@@ -135,6 +150,8 @@
   --atencao-texto: #a14a08;
   /* Âmbar da marca: selos de fidelidade e "últimos lugares" */
   --ambar: #e8890c;
+  --info: #2563eb;
+  --info-texto: #1d4ed8;
 
   --chart-1: #70012a;
   --chart-2: #e8890c;
@@ -144,12 +161,17 @@
   --sidebar: #111111;
   --sidebar-foreground: #c7c7c7;
   --sidebar-muted: #a3a3a3;
-  --sidebar-primary: #8a0a36;
+  --sidebar-primary: rgb(255 255 255 / 0.1);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: rgb(255 255 255 / 0.06);
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgb(255 255 255 / 0.08);
-  --sidebar-ring: #d4567f;
+  --sidebar-ring: #60a5fa;
+
+  /* Área atual (Shell põe data-secao no <main>); fora de uma área, neutro */
+  --secao: #525252;
+  --secao-texto: #404040;
+  --secao-sidebar: #d4d4d4;
 
   --sombra-1: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.05);
   --sombra-2: 0 2px 4px rgb(0 0 0 / 0.04), 0 10px 24px -8px rgb(0 0 0 / 0.1);
@@ -165,12 +187,15 @@
   --popover: #1f1f1f;
   --popover-foreground: #ededed;
   --dialogo: #1f1f1f;
-  --primary: #a3174a;
-  --primary-hover: #b8215a;
-  --primary-foreground: #ffffff;
+  --primary: #ededed;
+  --primary-hover: #ffffff;
+  --primary-foreground: #0a0a0a;
+  --primary-texto: #ededed;
+  --primary-suave: color-mix(in oklab, #ededed 12%, transparent);
+  --marca: #a3174a;
   /* No escuro, o vinho de fundo não passa no AA como texto: um rosé claro */
-  --primary-texto: #f08cad;
-  --primary-suave: color-mix(in oklab, #d4386d 18%, transparent);
+  --marca-texto: #f08cad;
+  --marca-suave: color-mix(in oklab, #d4386d 18%, transparent);
   --secondary: #232323;
   --secondary-foreground: #ededed;
   --muted: #232323;
@@ -187,7 +212,7 @@
   --input-hover: #484848;
   --controle-pagina: var(--muted);
   --controle-pagina-texto: var(--muted-foreground);
-  --ring: #e06a92;
+  --ring: #60a5fa;
 
   --positivo: #22c55e;
   --positivo-texto: #22c55e;
@@ -196,18 +221,48 @@
   --atencao: #fbbf24;
   --atencao-texto: #fbbf24;
   --ambar: #f29a2e;
+  --info: #60a5fa;
+  --info-texto: #93c5fd;
 
   --chart-1: #d4386d;
   --chart-2: #f29a2e;
   --chart-3: #149c84;
 
-  --sidebar-primary: #a3174a;
+  --secao: #a3a3a3;
+  --secao-texto: #d4d4d4;
 
   --sombra-1: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 1px 2px rgb(0 0 0 / 0.4);
   --sombra-2: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 10px 24px -8px rgb(0 0 0 / 0.6);
   --sombra-3: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.06), 0 16px 32px -8px rgb(0 0 0 / 0.7);
   --sombra-4: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.06), 0 24px 64px -12px rgb(0 0 0 / 0.8);
 }
+
+/*
+ * Uma cor por área do painel. O Shell marca o <main> com data-secao; os
+ * ícones de bloco (SeloIcone), o cabeçalho e o item da sidebar usam --secao.
+ * --secao-sidebar é a versão clara, para o fundo sempre escuro da sidebar.
+ */
+[data-secao="inicio"] { --secao: #525252; --secao-texto: #404040; --secao-sidebar: #e5e5e5; }
+[data-secao="reservas"] { --secao: #2563eb; --secao-texto: #1d4ed8; --secao-sidebar: #93c5fd; }
+[data-secao="cardapio"] { --secao: #ea580c; --secao-texto: #c2410c; --secao-sidebar: #fdba74; }
+[data-secao="executivo"] { --secao: #7c3aed; --secao-texto: #6d28d9; --secao-sidebar: #c4b5fd; }
+[data-secao="selos"] { --secao: #ca8a04; --secao-texto: #a16207; --secao-sidebar: #fde047; }
+[data-secao="home"] { --secao: #0d9488; --secao-texto: #0f766e; --secao-sidebar: #5eead4; }
+[data-secao="promocoes"] { --secao: #db2777; --secao-texto: #be185d; --secao-sidebar: #f9a8d4; }
+[data-secao="fidelidade"] { --secao: #d97706; --secao-texto: #b45309; --secao-sidebar: #fcd34d; }
+[data-secao="whatsapp"] { --secao: #16a34a; --secao-texto: #15803d; --secao-sidebar: #86efac; }
+[data-secao="configuracoes"] { --secao: #525252; --secao-texto: #404040; --secao-sidebar: #d4d4d4; }
+
+.dark [data-secao="inicio"], .dark[data-secao="inicio"] { --secao: #a3a3a3; --secao-texto: #e5e5e5; }
+.dark [data-secao="reservas"], .dark[data-secao="reservas"] { --secao: #3b82f6; --secao-texto: #93c5fd; }
+.dark [data-secao="cardapio"], .dark[data-secao="cardapio"] { --secao: #f97316; --secao-texto: #fdba74; }
+.dark [data-secao="executivo"], .dark[data-secao="executivo"] { --secao: #8b5cf6; --secao-texto: #c4b5fd; }
+.dark [data-secao="selos"], .dark[data-secao="selos"] { --secao: #eab308; --secao-texto: #fde047; }
+.dark [data-secao="home"], .dark[data-secao="home"] { --secao: #14b8a6; --secao-texto: #5eead4; }
+.dark [data-secao="promocoes"], .dark[data-secao="promocoes"] { --secao: #ec4899; --secao-texto: #f9a8d4; }
+.dark [data-secao="fidelidade"], .dark[data-secao="fidelidade"] { --secao: #f59e0b; --secao-texto: #fcd34d; }
+.dark [data-secao="whatsapp"], .dark[data-secao="whatsapp"] { --secao: #22c55e; --secao-texto: #86efac; }
+.dark [data-secao="configuracoes"], .dark[data-secao="configuracoes"] { --secao: #a3a3a3; --secao-texto: #d4d4d4; }
 
 @layer base {
   * {
@@ -226,7 +281,7 @@
     cursor: pointer;
   }
   ::selection {
-    background: color-mix(in oklab, var(--primary) 22%, transparent);
+    background: color-mix(in oklab, var(--info) 24%, transparent);
   }
   /* Preenchimento automático do navegador: o campo mantém fundo, texto e cantos */
   input:-webkit-autofill,
