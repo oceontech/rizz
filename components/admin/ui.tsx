@@ -173,7 +173,7 @@ export function BotaoLink({
   children,
 }: {
   href: string;
-  variant?: "default" | "secondary" | "ghost";
+  variant?: "default" | "secondary" | "ghost" | "marca";
   size?: "default" | "sm" | "lg";
   className?: string;
   children: ReactNode;

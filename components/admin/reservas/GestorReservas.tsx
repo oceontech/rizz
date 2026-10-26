@@ -296,7 +296,7 @@ export default function GestorReservas({
             >
               <IconeLink /> Copiar link
             </Button>
-            <Button className="rounded-full" onClick={() => setEditando({ nova: hoje })}>
+            <Button variant="marca" className="rounded-full" onClick={() => setEditando({ nova: hoje })}>
               <Plus /> Nova reserva
             </Button>
           </>

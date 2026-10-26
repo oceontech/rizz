@@ -106,11 +106,11 @@ export default function Dashboard({ nome, resumo }: { nome: string; resumo: Resu
         <div>
           <p className="text-sm text-muted-foreground first-letter:uppercase">{hojeExtenso}</p>
           <h1 className="mt-1 text-2xl leading-8 font-semibold tracking-tight md:text-[1.75rem] md:leading-9">
-            {saudacao()}, {primeiroNome}
+            {saudacao()}, <span className="text-marca-texto">{primeiroNome}</span>
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <BotaoLink href="/admin/reservas?nova=1">
+          <BotaoLink href="/admin/reservas?nova=1" variant="marca">
             <CalendarPlus /> Nova reserva
           </BotaoLink>
         </div>

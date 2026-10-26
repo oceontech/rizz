@@ -282,7 +282,7 @@
     cursor: pointer;
   }
   ::selection {
-    background: color-mix(in oklab, var(--info) 24%, transparent);
+    background: color-mix(in oklab, var(--marca) 22%, transparent);
   }
   /* Preenchimento automático do navegador: o campo mantém fundo, texto e cantos */
   input:-webkit-autofill,
