@@ -12,6 +12,7 @@ import {
   CampoTexto,
   Confirmar,
 } from "@/components/admin/campos";
+import { EscolhaSelos, SeloEtiqueta } from "@/components/admin/selos/compartilhado";
 import { Cabecalho, Janela, MenuAcoes, Secao, Selo, useUltimo } from "@/components/admin/ui";
 import { ItemEscalonado, ListaEscalonada } from "@/components/sistema/movimento";
 import { Button } from "@/components/sistema/ui/button";
@@ -26,6 +27,7 @@ import {
 } from "@/lib/admin/executivo-actions";
 import { brl } from "@/lib/admin/formato";
 import type { ExecutivoDados, ItemExecutivoDB, SecaoExecutivo } from "@/lib/dados";
+import type { SeloDef } from "@/lib/selos";
 import { cn } from "@/lib/utils";
 
 const SECOES: { id: SecaoExecutivo; titulo: string; curto: string }[] = [
@@ -93,17 +95,19 @@ function FormItem({
   aberto,
   item,
   secaoInicial,
+  selos,
   onFechar,
 }: {
   aberto: boolean;
   item: ItemExecutivoDB | null;
   secaoInicial: SecaoExecutivo;
+  selos: SeloDef[];
   onFechar: () => void;
 }) {
   const [secao, setSecao] = useState<SecaoExecutivo>(item?.secao ?? secaoInicial);
   const [nome, setNome] = useState(item?.nome ?? "");
   const [preco, setPreco] = useState<number | null>(item?.preco ?? null);
-  const [selo, setSelo] = useState<"nenhum" | "vpj" | "duroc">(item?.selo ?? "nenhum");
+  const [selo, setSelo] = useState<string | null>(item?.selo ?? null);
   const [disponivel, setDisponivel] = useState(item?.disponivel ?? true);
   const [salvando, setSalvando] = useState(false);
 
@@ -114,7 +118,7 @@ function FormItem({
       secao,
       nome,
       preco: preco ?? 0,
-      selo: selo === "nenhum" ? null : selo,
+      selo,
       disponivel,
     });
     setSalvando(false);
@@ -147,17 +151,10 @@ function FormItem({
         />
         <CampoTexto label="Nome" value={nome} onChange={setNome} obrigatorio autoFocus maxLength={120} />
         <CampoMoeda label="Preço avulso" value={preco} onChange={setPreco} />
-        <CampoOpcoes
-          label="Selo de origem"
-          value={selo}
-          onChange={setSelo}
-          descricao="VPJ: carne bovina e frango certificados. Duroc: suíno Duroc."
-          opcoes={[
-            { id: "nenhum", rotulo: "Nenhum" },
-            { id: "vpj", rotulo: "VPJ" },
-            { id: "duroc", rotulo: "Duroc Pork" },
-          ]}
-        />
+        <div className="@container flex flex-col gap-1.5">
+          <span className="text-sm font-medium">Selo (opcional)</span>
+          <EscolhaSelos unico selos={selos} marcados={selo ? [selo] : []} aoMudar={(ids) => setSelo(ids[0] ?? null)} />
+        </div>
         <CampoSwitch label="Disponível" value={disponivel} onChange={setDisponivel} />
       </div>
     </Janela>
@@ -166,12 +163,14 @@ function FormItem({
 
 function LinhaItem({
   item,
+  selo,
   primeiro,
   ultimo,
   onEditar,
   onExcluir,
 }: {
   item: ItemExecutivoDB;
+  selo: SeloDef | undefined;
   primeiro: boolean;
   ultimo: boolean;
   onEditar: () => void;
@@ -188,7 +187,7 @@ function LinhaItem({
         </p>
         <div className="mt-1 flex items-center gap-2">
           <span className="numeros text-[13px] text-muted-foreground">{brl.format(item.preco)}</span>
-          {item.selo && <Selo>{item.selo === "vpj" ? "VPJ" : "Duroc"}</Selo>}
+          {selo && <SeloEtiqueta selo={selo} />}
           {!disponivel && <Selo tom="negativo">Esgotado</Selo>}
         </div>
       </button>
@@ -224,7 +223,7 @@ function LinhaItem({
   );
 }
 
-export default function GestorExecutivo({ dados }: { dados: ExecutivoDados }) {
+export default function GestorExecutivo({ dados, selos }: { dados: ExecutivoDados; selos: SeloDef[] }) {
   const [editando, setEditando] = useState<{ item: ItemExecutivoDB | null; secao: SecaoExecutivo } | null>(null);
   const atual = useUltimo(editando);
   const [excluindo, setExcluindo] = useState<ItemExecutivoDB | null>(null);
@@ -265,6 +264,7 @@ export default function GestorExecutivo({ dados }: { dados: ExecutivoDados }) {
                         <LinhaItem
                           key={`${item.id}-${item.disponivel}`}
                           item={item}
+                          selo={selos.find((x) => x.id === item.selo)}
                           primeiro={i === 0}
                           ultimo={i === itens.length - 1}
                           onEditar={() => setEditando({ item, secao: item.secao })}
@@ -289,6 +289,7 @@ export default function GestorExecutivo({ dados }: { dados: ExecutivoDados }) {
           aberto={editando !== null}
           item={atual.item}
           secaoInicial={atual.secao}
+          selos={selos}
           onFechar={() => setEditando(null)}
         />
       )}

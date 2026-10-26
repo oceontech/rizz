@@ -19,8 +19,8 @@ import EditorPromocao from "./EditorPromocao";
 
 export function situacao(p: Promocao, hoje: string): { rotulo: string; tom: Tom } {
   if (!p.ativo) return { rotulo: "Desativada", tom: "neutro" };
-  if (p.inicio && p.inicio > hoje) return { rotulo: "Agendada", tom: "marca" };
-  if (p.fim && p.fim < hoje) return { rotulo: "Encerrada", tom: "negativo" };
+  if (p.inicio && p.inicio > hoje) return { rotulo: "Agendada", tom: "info" };
+  if (p.fim && p.fim < hoje) return { rotulo: "Encerrada", tom: "neutro" };
   return { rotulo: "No ar", tom: "positivo" };
 }
 

@@ -24,6 +24,7 @@ import { toast } from "sonner";
 
 import {
   avisar,
+  BarraSalvar,
   BotaoSalvar,
   CampoOpcoes,
   CampoSelect,
@@ -563,7 +564,7 @@ function Modelos({
         <div>
           <p className="mb-1.5 text-sm font-medium">Prévia</p>
           <div className="rounded-2xl bg-[#e9e2d8] p-4 dark:bg-[#0b141a]">
-            <div className="ml-auto max-w-[92%] rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 text-[14px] leading-snug whitespace-pre-wrap text-[#111b21] shadow-sm dark:bg-[#005c4b] dark:text-[#e9edef]">
+            <div className="ml-auto max-w-[92%] min-w-0 rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 text-[14px] leading-snug whitespace-pre-wrap [overflow-wrap:anywhere] text-[#111b21] shadow-sm dark:bg-[#005c4b] dark:text-[#e9edef]">
               {montarMensagem(texto, EXEMPLO) || "…"}
             </div>
           </div>
@@ -683,11 +684,7 @@ export default function PainelWhatsapp({
         </div>
       </div>
 
-      <div className="sticky bottom-28 z-10 mt-4 flex justify-end md:bottom-6">
-        <BotaoSalvar pendente={salvando} onClick={salvar} disabled={!alterado} size="lg" className="shadow-flutuante">
-          {alterado ? "Salvar mensagens" : "Mensagens salvas"}
-        </BotaoSalvar>
-      </div>
+      <BarraSalvar alterado={alterado} salvando={salvando} aoSalvar={salvar} aoDescartar={() => setC(config)} rotulo="Salvar mensagens" />
     </>
   );
 }

@@ -8,10 +8,10 @@ import { gsap, useGSAP } from "@/lib/gsap";
 import Filete from "@/components/motion/Filete";
 import RevealScrub from "@/components/motion/RevealScrub";
 import { BotaoLink } from "@/components/ui/Botao";
-import { ListaSelos, SeloOrigem } from "@/components/ui/Selos";
+import { ListaSelos } from "@/components/ui/Selos";
 import Preco from "@/components/ui/Preco";
-import { destaquesHome } from "@/data/menu";
-import { img } from "@/lib/images";
+import type { PratoDaHome } from "@/lib/dados";
+import { fotoDoPrato } from "@/lib/images";
 
 /**
  * Galeria que anda de lado.
@@ -20,7 +20,7 @@ import { img } from "@/lib/images";
  * o gesto vira travelling de câmera. No mobile isso seria sequestrar o scroll
  * num aparelho onde arrastar de lado já é natural, então lá é snap nativo.
  */
-export default function Destaques() {
+export default function Destaques({ pratos }: { pratos: PratoDaHome[] }) {
   const raiz = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -125,22 +125,25 @@ export default function Destaques() {
           data-trilho
           className="no-scrollbar relative mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 md:mt-10 md:gap-7 md:overflow-visible md:px-12"
         >
-          {destaquesHome.map((item, i) => (
+          {pratos.map((item, i) => {
+            const foto = fotoDoPrato(item);
+            return (
             <li
               key={item.id}
               className="w-[76vw] shrink-0 snap-start sm:w-[21rem] md:w-[19rem]"
             >
               <Link
-                href="/cardapio"
+                href={`/cardapio#${item.categoriaSlug}`}
                 className="group block focus-visible:outline-none"
               >
                 <div className="relative aspect-[3/4] overflow-hidden md:aspect-auto md:h-[42svh]">
-                  {item.img && (
+                  {foto && (
                     <Image
                       data-card-foto
-                      src={img(item.img)}
+                      src={foto}
                       alt={`${item.nome}${item.descricao ? `. ${item.descricao}` : ""}`}
-                      placeholder="blur"
+                      placeholder={typeof foto === "string" ? "empty" : "blur"}
+                      fill={typeof foto === "string"}
                       sizes="(min-width: 860px) 19rem, 76vw"
                       className="size-full object-cover transition-[filter] duration-700 ease-[var(--ease-rizz)] group-hover:brightness-110"
                     />
@@ -161,14 +164,11 @@ export default function Destaques() {
                         {item.descricao}
                       </p>
                     )}
-                    {(item.badges?.length || item.vpj) && (
+                    {item.badges?.length ? (
                       <div className="mt-3 flex flex-wrap items-center gap-1.5">
                         <ListaSelos badges={item.badges} tom="escuro" />
-                        {item.vpj && (
-                          <SeloOrigem className="border-ouro/50 text-ouro" />
-                        )}
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
                   <Preco
@@ -178,7 +178,8 @@ export default function Destaques() {
                 </div>
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </div>
     </div>

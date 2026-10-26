@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import {
   avisar,
+  BarraSalvar,
   BotaoSalvar,
   CampoData,
   CampoNumero,
@@ -16,7 +17,6 @@ import {
 import { Secao, Selo } from "@/components/admin/ui";
 import { Button } from "@/components/sistema/ui/button";
 import { formatarData } from "@/lib/admin/formato";
-import { cn } from "@/lib/utils";
 import { criarBloqueio, excluirBloqueio, salvarConfigReservas } from "@/lib/admin/reservas-actions";
 import { NOME_TURNO, type Bloqueio, type ReservasConfig, type Turno } from "@/lib/reservas/regras";
 
@@ -134,12 +134,7 @@ function Regras({ config }: { config: ReservasConfig }) {
         </div>
       </Secao>
 
-      {/* Só flutua sobre o conteúdo quando há o que salvar */}
-      <div className={cn("flex justify-end", alterado && "sticky bottom-28 z-10 lg:bottom-6")}>
-        <BotaoSalvar pendente={salvando} onClick={salvar} disabled={!alterado} size="lg" className="shadow-flutuante">
-          {alterado ? "Salvar regras" : "Regras salvas"}
-        </BotaoSalvar>
-      </div>
+      <BarraSalvar alterado={alterado} salvando={salvando} aoSalvar={salvar} aoDescartar={() => setC(config)} rotulo="Salvar regras" />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import type { ImgKey } from "@/lib/images";
 
-export type Badge = "vegetariano" | "rizz" | "tartufato";
+/** Id de um selo cadastrado (tabela `selos`; padrões em `lib/selos.ts`). */
+export type Badge = string;
 
 export type MenuItem = {
   id: string;
@@ -9,6 +10,7 @@ export type MenuItem = {
   /** null = sem preço na peça impressa (aparece como "sob consulta"). */
   preco: number | null;
   badges?: Badge[];
+  /** Legado da peça: o selo VPJ. O site o trata como o selo "vpj" (ver `comSeloVpj`). */
   vpj?: boolean;
   img?: ImgKey;
   /** Subdivisão dentro da categoria (usado em Bebidas). */
@@ -24,15 +26,6 @@ export type Categoria = {
   slug: string;
   descricao?: string;
   itens: MenuItem[];
-};
-
-export const BADGES: Record<
-  Badge,
-  { sigla: string; rotulo: string; descricao: string }
-> = {
-  vegetariano: { sigla: "V", rotulo: "Vegetariano", descricao: "Opção Vegetariana" },
-  rizz: { sigla: "R", rotulo: "Criação Rizz", descricao: "Criação Rizz" },
-  tartufato: { sigla: "T", rotulo: "Tartufato", descricao: "Tartufato" },
 };
 
 /**
@@ -190,36 +183,30 @@ export const cardapio: Categoria[] = [
   },
 ];
 
-/** Prato-assinatura: o mais pedido da casa, com dobra própria na home. */
-export const pratoAssinatura = {
-  ...cardapio
-    .find((c) => c.id === "peixes")!
-    .itens.find((i) => i.id === "camarao-empanado")!,
-  categoria: "Peixes e Frutos do Mar",
-  chamada: "O mais pedido da casa",
-  texto:
-    "Camarão rosa empanado, servido com risoto de alho-poró e creme de Catupiry.",
+/**
+ * Página inicial: o mais pedido da casa e a seleção do cardápio. São os
+ * padrões; o painel (Página inicial) pode trocar os pratos e os textos.
+ */
+export const HOME_PADRAO = {
+  maisPedido: {
+    itemId: "camarao-empanado",
+    chamada: "O mais pedido da casa",
+    titulo: "Camarão rosa empanado",
+    texto: "Camarão rosa empanado, servido com risoto de alho-poró e creme de Catupiry.",
+  },
+  destaques: [
+    "ancho-acafrao",
+    "cordeiro-hortela",
+    "risoto-alho-negro-brie",
+    "camarao-pesto",
+    "ancho-talharim",
+    "file-syrah",
+    "file-milanesa",
+  ],
 };
 
-/** Seleção da home: só itens com foto própria. */
-export const destaquesHome: MenuItem[] = [
-  "ancho-acafrao",
-  "cordeiro-hortela",
-  "risoto-alho-negro-brie",
-  "camarao-pesto",
-  "ancho-talharim",
-  "file-syrah",
-  "file-milanesa",
-].map((id) => {
-  const categoria = cardapio.find((c) => c.itens.some((i) => i.id === id))!;
-  const item = categoria.itens.find((i) => i.id === id)!;
-  return categoria.id === "risotos"
-    ? { ...item, nome: `Risoto de ${item.nome}` }
-    : item;
-});
-
-export const todosOsItens = cardapio.flatMap((c) => c.itens);
-
-export function itensPorBadge(badge: Badge) {
-  return todosOsItens.filter((i) => i.badges?.includes(badge));
+/** O VPJ da peça vira o selo "vpj", como os outros. */
+export function comSeloVpj<T extends Pick<MenuItem, "badges" | "vpj">>(item: T): T {
+  if (!item.vpj || item.badges?.includes("vpj")) return item;
+  return { ...item, badges: [...(item.badges ?? []), "vpj"] };
 }

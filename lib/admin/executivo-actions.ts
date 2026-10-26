@@ -37,7 +37,7 @@ const esquemaItem = z.object({
   secao: z.enum(["entradas", "pratos", "sobremesas"]),
   nome: z.string().trim().min(2, "Informe o nome."),
   preco: z.number().min(0).max(10000),
-  selo: z.enum(["vpj", "duroc"]).nullable(),
+  selo: z.string().trim().min(1).max(40).nullable(),
   disponivel: z.boolean(),
 });
 

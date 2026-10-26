@@ -13,7 +13,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Site do restaurante Rizz Cucina & Vino (Espírito Santo do Pinhal/SP), cliente da Oceon. Tem duas partes:
 
 - **Site público:** home com cenas de scroll, cardápio, carta de vinhos, avaliações, fidelidade, **reservas online** e privacidade.
-- **Painel `/admin`:** cardápio, menu executivo, reservas, promoções/pop-up, fidelidade e configurações.
+- **Painel `/admin`:** cardápio, menu executivo, selos, reservas, página inicial do site, promoções/pop-up, WhatsApp e configurações. A fidelidade está trancada ("Em breve").
 
 O estado atual e o que falta fazer estão em [`docs/ESTADO.md`](docs/ESTADO.md). **Leia esse arquivo antes de começar.**
 
@@ -65,8 +65,8 @@ Os nomes estão em `.env.example`; os valores ficam no `.env.local` e na Vercel.
 | `AUTH_SECRET` | assina o cookie do painel | ok |
 | `GOOGLE_PLACES_API_KEY`, `GOOGLE_PLACE_ID` | avaliações do Google | **não configuradas**: o site usa o retrato fixo em `data/reviews.ts` |
 | `RESEND_API_KEY` | envio de e-mails (Resend) | **em configuração** (ver `docs/ESTADO.md`) |
-| `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCIA` | WhatsApp pela Evolution API (VPS, `https://evo.rizz.genext.group`) | no `.env.local`; **falta na Vercel** (ver `docs/whatsapp.md`) |
-| `CRON_SECRET` | protege a rota dos lembretes (`/api/whatsapp/lembretes`) | **a configurar** |
+| `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCIA` | WhatsApp pela Evolution API (VPS, `https://evo.rizz.genext.group`) | ok |
+| `CRON_SECRET` | protege a rota dos lembretes (`/api/whatsapp/lembretes`); o mesmo valor está no cron da VPS | ok |
 | `SITE_URL` | base dos links nas mensagens (opcional) | opcional |
 
 ## Estrutura
@@ -85,6 +85,7 @@ lib/
   auth.ts            sessão do painel; `exigirSessao()` é a checagem que vale
   admin/             Server Actions do painel (`*-actions.ts`, sempre via `protegida()`)
   reservas/          regras de lotação (`regras.ts`, puras) e consultas (`servidor.ts`)
+  selos.ts           selos do cardápio: tipos, formatos, símbolos e os padrões (desenho em components/ui/SeloSvg.tsx)
 data/                cardápio, executivo e avaliações estáticos (fallback e seed)
 scripts/             schema.sql e db-setup.ts
 proxy.ts             redireciona /admin para o login sem sessão (checagem otimista)
@@ -92,7 +93,9 @@ docs/                ESTADO.md (estado e pendências), reservas.md, COPY-RIZZ.md
 ENTREGA.md, PLANO.md histórico da v2 do site (decisões de design e animação); não é o estado atual
 ```
 
-Convenções do código: nomes em português (`salvarReserva`, `lerConfig`), comentários curtos explicando o porquê, Server Actions do painel sempre embrulhadas em `protegida()` (que checa a sessão e revalida o cache), e configurações em JSON na tabela `configuracoes` (chaves `aviso`, `fidelidade`, `reservas`), lidas com `lerConfig(chave, PADRAO)`.
+Convenções do código: nomes em português (`salvarReserva`, `lerConfig`), comentários curtos explicando o porquê, Server Actions do painel sempre embrulhadas em `protegida()` (que checa a sessão e revalida o cache), e configurações em JSON na tabela `configuracoes` (chaves `aviso`, `fidelidade`, `reservas`, `whatsapp`, `home`), lidas com `lerConfig(chave, PADRAO)`.
+
+Cores do painel: ação em grafite (`primary`), vinho só em pontos de marca (`marca`), e cada área com a sua cor (`secao`, definida por `data-secao` no Shell a partir de `components/admin/nav.ts`). Situação com tons de significado (`Selo tom="positivo|atencao|negativo|info"`). Ações em menus "…" passam por `MenuAcoes` (não modal; ver o comentário lá antes de mudar).
 
 ## Contas e CLIs
 

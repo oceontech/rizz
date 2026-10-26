@@ -10,8 +10,8 @@ import SeloRotativo from "@/components/brand/SeloRotativo";
 import { BotaoLink } from "@/components/ui/Botao";
 import { ListaSelos } from "@/components/ui/Selos";
 import Preco from "@/components/ui/Preco";
-import { pratoAssinatura } from "@/data/menu";
-import { img } from "@/lib/images";
+import type { HomeDoSite } from "@/lib/dados";
+import { fotoDoPrato } from "@/lib/images";
 
 /**
  * A dobra do prato mais pedido.
@@ -21,8 +21,15 @@ import { img } from "@/lib/images";
  * corre em parallax dentro dele. É o único bloco do site com esse tratamento
  * — é o que o faz ler como destaque de verdade.
  */
-export default function PratoAssinatura({ entradaPeloVideo = false }: { entradaPeloVideo?: boolean }) {
+export default function PratoAssinatura({
+  prato,
+  entradaPeloVideo = false,
+}: {
+  prato: NonNullable<HomeDoSite["maisPedido"]>;
+  entradaPeloVideo?: boolean;
+}) {
   const raiz = useRef<HTMLDivElement>(null);
+  const foto = fotoDoPrato(prato);
 
   useGSAP(
     () => {
@@ -108,15 +115,20 @@ export default function PratoAssinatura({ entradaPeloVideo = false }: { entradaP
               data-janela
               className="relative aspect-[4/5] overflow-hidden will-change-[clip-path]"
             >
-              <Image
-                data-foto
-                src={img("camarao-rizz")}
-                alt="Camarão rosa empanado e dourado sobre risoto de alho-poró com creme de catupiry, servido em prato azul"
-                placeholder="blur"
-                sizes="(min-width: 860px) 46vw, 92vw"
-                className="size-full object-cover will-change-transform"
-                priority
-              />
+              {foto ? (
+                <Image
+                  data-foto
+                  src={foto}
+                  alt={`${prato.titulo}. ${prato.texto}`}
+                  placeholder={typeof foto === "string" ? "empty" : "blur"}
+                  fill={typeof foto === "string"}
+                  sizes="(min-width: 860px) 46vw, 92vw"
+                  className="size-full object-cover will-change-transform"
+                  priority
+                />
+              ) : (
+                <div data-foto className="size-full bg-creme" />
+              )}
             </div>
 
             <SeloRotativo
@@ -126,13 +138,13 @@ export default function PratoAssinatura({ entradaPeloVideo = false }: { entradaP
           </div>
 
           <div data-entrada-prato>
-            <p className="eyebrow text-vinho">{pratoAssinatura.chamada}</p>
+            <p className="eyebrow text-vinho">{prato.chamada}</p>
 
             {entradaPeloVideo ? (
-              <h2 className="mt-6 text-titulo text-tinta">Camarão rosa empanado</h2>
+              <h2 className="mt-6 text-titulo text-tinta">{prato.titulo}</h2>
             ) : (
               <RevealScrub className="mt-6 text-titulo text-tinta">
-                Camarão rosa empanado
+                {prato.titulo}
               </RevealScrub>
             )}
 
@@ -143,19 +155,19 @@ export default function PratoAssinatura({ entradaPeloVideo = false }: { entradaP
             )}
 
             <p className="mt-6 max-w-prose leading-relaxed text-tinta/75">
-              {pratoAssinatura.texto}
+              {prato.texto}
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
               <Preco
-                valor={pratoAssinatura.preco}
+                valor={prato.preco}
                 className="text-5xl leading-none text-tinta md:text-6xl"
               />
-              <ListaSelos badges={pratoAssinatura.badges} />
+              <ListaSelos badges={prato.badges} />
             </div>
 
             <div className="mt-10">
-              <BotaoLink href="/cardapio#peixes-e-frutos-do-mar" tamanho="lg">
+              <BotaoLink href={`/cardapio#${prato.categoriaSlug}`} tamanho="lg">
                 Ver no cardápio
               </BotaoLink>
             </div>

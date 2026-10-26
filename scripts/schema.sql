@@ -58,11 +58,34 @@ create table if not exists executivo_itens (
   secao      text not null check (secao in ('entradas','pratos','sobremesas')),
   nome       text not null,
   preco      numeric(10,2) not null default 0,
-  selo       text check (selo in ('vpj','duroc')),
+  selo       text,
   img        text,
   disponivel boolean not null default true,
   ordem      int not null default 0
 );
+
+-- O executivo aceita qualquer selo cadastrado (antes: só vpj/duroc).
+alter table executivo_itens drop constraint if exists executivo_itens_selo_check;
+
+-- Selos -------------------------------------------------------
+-- Vegetariano, Criação Rizz, VPJ…: cadastrados no painel (Selos). Os pratos
+-- guardam só o id, em itens.badges e executivo_itens.selo.
+
+create table if not exists selos (
+  id        text primary key,
+  nome      text not null,
+  descricao text,
+  forma     text not null default 'circulo',
+  simbolo   text not null default 'letra',
+  letra     text,
+  cor       text not null default '#70012a',
+  ordem     int  not null default 0,
+  ativo     boolean not null default true,
+  criado_em timestamptz not null default now()
+);
+
+-- VPJ virou um selo como os outros. A coluna itens.vpj fica por compatibilidade:
+-- o código lê vpj = true como o selo "vpj" e, ao salvar, grava em badges.
 
 -- Reservas ----------------------------------------------------
 

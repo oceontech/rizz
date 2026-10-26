@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils";
 export const STATUS: Record<StatusReserva, { rotulo: string; tom: Tom }> = {
   pendente: { rotulo: "Pendente", tom: "atencao" },
   confirmada: { rotulo: "Confirmada", tom: "positivo" },
-  concluida: { rotulo: "Chegou", tom: "marca" },
+  concluida: { rotulo: "Chegou", tom: "info" },
   cancelada: { rotulo: "Cancelada", tom: "negativo" },
   nao_compareceu: { rotulo: "Não veio", tom: "negativo" },
 };

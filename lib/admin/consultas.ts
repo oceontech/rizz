@@ -158,3 +158,15 @@ export async function resumoPainel() {
 }
 
 export type ResumoPainel = Awaited<ReturnType<typeof resumoPainel>>;
+
+/** Quantos pratos (cardápio + executivo) usam cada selo. Conta o VPJ legado (itens.vpj). */
+export async function usoDosSelos(): Promise<Record<string, number>> {
+  const linhas = await sql`
+    select id, count(*)::int as n from (
+      select unnest(case when vpj and not ('vpj' = any(badges)) then badges || array['vpj'] else badges end) as id from itens
+      union all
+      select selo from executivo_itens where selo is not null
+    ) usos
+    group by id`;
+  return Object.fromEntries(linhas.map((l) => [String(l.id), Number(l.n)]));
+}

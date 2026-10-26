@@ -3,9 +3,17 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 
 import { executivo as executivoEstatico } from "@/data/executivo";
-import { cardapio as cardapioEstatico, type Badge, type Categoria } from "@/data/menu";
+import {
+  cardapio as cardapioEstatico,
+  comSeloVpj,
+  HOME_PADRAO,
+  type Badge,
+  type Categoria,
+  type MenuItem,
+} from "@/data/menu";
 import { bancoConfigurado, sql } from "@/lib/db";
 import type { ImgKey } from "@/lib/images";
+import { SELOS_PADRAO, type FormaSelo, type SeloDef, type SimboloSelo } from "@/lib/selos";
 
 /** Tags de cache: o painel invalida estas quando salva. */
 export const TAGS = {
@@ -13,6 +21,8 @@ export const TAGS = {
   executivo: "executivo",
   promocoes: "promocoes",
   config: "config",
+  selos: "selos",
+  home: "home",
 } as const;
 
 // ─── Tipos ────────────────────────────────────────────────────
@@ -23,8 +33,8 @@ export type ItemCardapio = {
   nome: string;
   descricao: string | null;
   preco: number | null;
+  /** Ids dos selos (inclui "vpj" quando a coluna legada vpj está ligada). */
   badges: Badge[];
-  vpj: boolean;
   img: ImgKey | null;
   fotoUrl: string | null;
   grupo: string | null;
@@ -50,7 +60,8 @@ export type ItemExecutivoDB = {
   secao: SecaoExecutivo;
   nome: string;
   preco: number;
-  selo: "vpj" | "duroc" | null;
+  /** Id de um selo cadastrado. */
+  selo: string | null;
   img: ImgKey | null;
   disponivel: boolean;
   ordem: number;
@@ -107,6 +118,12 @@ export type FidelidadeConfig = {
   regras: string;
 };
 
+/** Página inicial do site: o mais pedido e a seleção do cardápio (painel → Página inicial). */
+export type HomeConfig = {
+  maisPedido: { itemId: string; chamada: string; titulo: string; texto: string };
+  destaques: string[];
+};
+
 export const AVISO_PADRAO: AvisoConfig = { ativo: false, texto: "", link: "", linkTexto: "" };
 export const FIDELIDADE_PADRAO: FidelidadeConfig = {
   ativo: true,
@@ -136,14 +153,14 @@ const data = (v: unknown) => {
 };
 
 export function mapItem(l: Linha): ItemCardapio {
+  const badges = (l.badges as Badge[]) ?? [];
   return {
     id: String(l.id),
     categoriaId: String(l.categoria_id),
     nome: String(l.nome),
     descricao: txt(l.descricao),
     preco: num(l.preco),
-    badges: (l.badges as Badge[]) ?? [],
-    vpj: Boolean(l.vpj),
+    badges: l.vpj && !badges.includes("vpj") ? [...badges, "vpj"] : badges,
     img: txt(l.img) as ImgKey | null,
     fotoUrl: txt(l.foto_url),
     grupo: txt(l.grupo),
@@ -159,7 +176,7 @@ export function mapItemExecutivo(l: Linha): ItemExecutivoDB {
     secao: l.secao as SecaoExecutivo,
     nome: String(l.nome),
     preco: Number(l.preco),
-    selo: (l.selo as "vpj" | "duroc" | null) ?? null,
+    selo: txt(l.selo),
     img: txt(l.img) as ImgKey | null,
     disponivel: Boolean(l.disponivel),
     ordem: Number(l.ordem),
@@ -186,6 +203,20 @@ export function mapPromocao(l: Linha): Promocao {
     visualizacoes: Number(l.visualizacoes),
     cliques: Number(l.cliques),
     criadoEm: new Date(l.criado_em as string).toISOString(),
+  };
+}
+
+export function mapSelo(l: Linha): SeloDef {
+  return {
+    id: String(l.id),
+    nome: String(l.nome),
+    descricao: txt(l.descricao),
+    forma: l.forma as FormaSelo,
+    simbolo: l.simbolo as SimboloSelo,
+    letra: txt(l.letra),
+    cor: String(l.cor),
+    ordem: Number(l.ordem),
+    ativo: Boolean(l.ativo),
   };
 }
 
@@ -239,6 +270,17 @@ export async function lerExecutivo(): Promise<ExecutivoDados> {
   };
 }
 
+export async function lerSelos(): Promise<SeloDef[]> {
+  try {
+    const linhas = await sql`select * from selos order by ordem, nome`;
+    return linhas.map(mapSelo);
+  } catch (erro) {
+    // Tabela ainda não criada (db:setup pendente): vale o conjunto padrão.
+    if ((erro as { code?: string }).code === "42P01") return SELOS_PADRAO;
+    throw erro;
+  }
+}
+
 export async function lerConfig<T>(chave: string, padrao: T): Promise<T> {
   const linhas = await sql`select valor from configuracoes where chave = ${chave}`;
   return linhas[0] ? { ...padrao, ...(linhas[0].valor as T) } : padrao;
@@ -272,10 +314,13 @@ function executivoDoArquivo(): ExecutivoDados {
   };
 }
 
+const cardapioDoArquivo = (): Categoria[] =>
+  cardapioEstatico.map((c) => ({ ...c, itens: c.itens.map(comSeloVpj) }));
+
 /** Cardápio no formato que o site já consumia (`data/menu.ts`). */
 export const cardapioDoSite = unstable_cache(
   async (): Promise<Categoria[]> => {
-    if (!bancoConfigurado) return cardapioEstatico;
+    if (!bancoConfigurado) return cardapioDoArquivo();
     try {
       const cats = await lerCardapio();
       return cats
@@ -293,7 +338,6 @@ export const cardapioDoSite = unstable_cache(
               descricao: i.descricao ?? undefined,
               preco: i.preco,
               badges: i.badges.length ? i.badges : undefined,
-              vpj: i.vpj || undefined,
               img: i.img ?? undefined,
               grupo: i.grupo ?? undefined,
               disponivel: i.disponivel,
@@ -303,7 +347,7 @@ export const cardapioDoSite = unstable_cache(
         .filter((c) => c.itens.length > 0);
     } catch (erro) {
       console.error("[cardapio] usando dados estáticos:", erro);
-      return cardapioEstatico;
+      return cardapioDoArquivo();
     }
   },
   ["cardapio-site"],
@@ -377,4 +421,62 @@ export const fidelidadeDoSite = unstable_cache(
   },
   ["fidelidade-site"],
   { tags: [TAGS.config], revalidate: 3600 },
+);
+
+/** Selos cadastrados (inclusive os desativados: o site esconde pelo `ativo`). */
+export const selosDoSite = unstable_cache(
+  async (): Promise<SeloDef[]> => {
+    if (!bancoConfigurado) return SELOS_PADRAO;
+    try {
+      const selos = await lerSelos();
+      return selos.length ? selos : SELOS_PADRAO;
+    } catch (erro) {
+      console.error("[selos] usando os padrões:", erro);
+      return SELOS_PADRAO;
+    }
+  },
+  ["selos-site"],
+  { tags: [TAGS.selos], revalidate: 3600 },
+);
+
+export type PratoDaHome = MenuItem & { categoriaSlug: string; categoriaNome: string };
+
+export type HomeDoSite = {
+  maisPedido: (PratoDaHome & Omit<HomeConfig["maisPedido"], "itemId">) | null;
+  destaques: PratoDaHome[];
+};
+
+/**
+ * Pratos da página inicial, já resolvidos no cardápio publicado. Prato que
+ * saiu do site (oculto ou excluído) some da home sem quebrar a página.
+ */
+export async function homeDoSite(): Promise<HomeDoSite> {
+  const [cardapio, config] = await Promise.all([cardapioDoSite(), configHomeDoSite()]);
+  const porId = new Map<string, PratoDaHome>();
+  for (const c of cardapio) {
+    for (const i of c.itens) {
+      // Na peça, os risotos não repetem "Risoto de" (a categoria já diz); fora dela, precisa.
+      const nome = c.id === "risotos" && !/^risoto/i.test(i.nome) ? `Risoto de ${i.nome}` : i.nome;
+      porId.set(i.id, { ...i, nome, categoriaSlug: c.slug, categoriaNome: c.nome });
+    }
+  }
+  const { itemId, ...textos } = config.maisPedido;
+  const prato = porId.get(itemId);
+  return {
+    maisPedido: prato ? { ...prato, ...textos } : null,
+    destaques: config.destaques.map((id) => porId.get(id)).filter((p): p is PratoDaHome => Boolean(p)),
+  };
+}
+
+export const configHomeDoSite = unstable_cache(
+  async (): Promise<HomeConfig> => {
+    if (!bancoConfigurado) return HOME_PADRAO;
+    try {
+      return await lerConfig("home", HOME_PADRAO);
+    } catch {
+      return HOME_PADRAO;
+    }
+  },
+  ["home-site"],
+  { tags: [TAGS.home], revalidate: 3600 },
 );
