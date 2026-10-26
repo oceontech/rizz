@@ -23,7 +23,7 @@ export type ReservasConfig = {
   permanencia: number;
   /** Último horário oferecido = fim do turno menos isto, em minutos. */
   ultimoAntesDoFim: number;
-  /** Acima disto, o cliente fala com a equipe pelo WhatsApp. */
+  /** Acima disto, a reserva do site chega pendente para a equipe confirmar. */
   maxPessoasOnline: number;
   /** Antecedência mínima para reservar pelo site, em minutos. */
   antecedenciaMinima: number;

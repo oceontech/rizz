@@ -65,6 +65,9 @@ Os nomes estão em `.env.example`; os valores ficam no `.env.local` e na Vercel.
 | `AUTH_SECRET` | assina o cookie do painel | ok |
 | `GOOGLE_PLACES_API_KEY`, `GOOGLE_PLACE_ID` | avaliações do Google | **não configuradas**: o site usa o retrato fixo em `data/reviews.ts` |
 | `RESEND_API_KEY` | envio de e-mails (Resend) | **em configuração** (ver `docs/ESTADO.md`) |
+| `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCIA` | WhatsApp pela Evolution API (VPS, `https://evo.rizz.genext.group`) | no `.env.local`; **falta na Vercel** (ver `docs/whatsapp.md`) |
+| `CRON_SECRET` | protege a rota dos lembretes (`/api/whatsapp/lembretes`) | **a configurar** |
+| `SITE_URL` | base dos links nas mensagens (opcional) | opcional |
 
 ## Estrutura
 

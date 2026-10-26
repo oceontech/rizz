@@ -1,9 +1,11 @@
+import { after } from "next/server";
 import { z } from "zod";
 
 import { normalizarTelefone } from "@/lib/admin/formato";
 import { sql } from "@/lib/db";
 import { OCASIOES } from "@/lib/reservas/regras";
 import { horariosDisponiveis, livresNoHorario, novoCodigo } from "@/lib/reservas/servidor";
+import { avisarReserva } from "@/lib/whatsapp/avisos";
 
 const esquema = z.object({
   nome: z.string().trim().min(2, "Informe seu nome.").max(120),
@@ -37,9 +39,6 @@ export async function POST(req: Request) {
 
   const { cfg, horarios } = await horariosDisponiveis(d.data);
   if (!cfg.ativo) return erro("As reservas pelo site estão pausadas. Fale com a gente pelo WhatsApp.", 409);
-  if (d.pessoas > cfg.maxPessoasOnline) {
-    return erro(`Para mais de ${cfg.maxPessoasOnline} pessoas, fale com a equipe pelo WhatsApp.`, 409);
-  }
   const horario = horarios.find((h) => h.hora === d.hora);
   if (!horario || horario.livres < d.pessoas) {
     return erro("Esse horário acabou de lotar. Escolha outro, por favor.", 409);
@@ -54,7 +53,8 @@ export async function POST(req: Request) {
   }
 
   const codigo = novoCodigo();
-  const status = cfg.confirmacaoAutomatica ? "confirmada" : "pendente";
+  // Grupos grandes entram pendentes: a equipe confirma e monta o espaço.
+  const status = cfg.confirmacaoAutomatica && d.pessoas <= cfg.maxPessoasOnline ? "confirmada" : "pendente";
   const [nova] = await sql`
     insert into reservas (nome, telefone, pessoas, data, hora, obs, ocasiao, status, origem, codigo)
     values (${d.nome}, ${d.telefone}, ${d.pessoas}, ${d.data}, ${d.hora}, ${d.obs || null},
@@ -67,5 +67,6 @@ export async function POST(req: Request) {
     return erro("Esse horário acabou de lotar. Escolha outro, por favor.", 409);
   }
 
+  after(() => avisarReserva(Number(nova.id), "nova"));
   return Response.json({ ok: true, codigo, status });
 }

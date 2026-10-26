@@ -23,7 +23,7 @@ Fica como JSON na tabela `configuracoes`, chave `reservas`. Padrões em `RESERVA
 | `intervalo` | 30 min | Entre os horários oferecidos (15, 20, 30 ou 60) |
 | `permanencia` | 105 min | Quanto tempo a reserva ocupa os lugares; também é a duração do evento no `.ics` |
 | `ultimoAntesDoFim` | 60 min | Último horário = fim do turno menos isto |
-| `maxPessoasOnline` | 8 | Acima disto, o site manda para o WhatsApp |
+| `maxPessoasOnline` | 8 | "Grupo grande": acima disto, a reserva pelo site chega pendente para a equipe confirmar (o site aceita até 40) |
 | `antecedenciaMinima` | 60 min | Para reservar hoje |
 | `diasAFrente` | 60 dias | Até quando o site aceita (conferido também no servidor) |
 
@@ -35,6 +35,8 @@ Fica como JSON na tabela `configuracoes`, chave `reservas`. Padrões em `RESERVA
 4. `PATCH /api/reservas/[codigo]` com `{ acao: "cancelar" }` ou `{ acao: "alterar", pessoas, data, hora }`. Só vale para `pendente`/`confirmada` antes do horário (`podeMexer`).
 
 Proteção contra robôs: campo invisível `site` (precisa vir vazio).
+
+Mensagens automáticas pelo WhatsApp (confirmação, alteração, cancelamento, lembrete e aviso à equipe): ver [`whatsapp.md`](whatsapp.md).
 
 ## Painel (`/admin/reservas`)
 

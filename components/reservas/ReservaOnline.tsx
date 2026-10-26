@@ -9,6 +9,8 @@ import {
   Loader2,
   MapPin,
   MessageCircle,
+  Minus,
+  Plus,
   Sparkles,
   UserRound,
   Users,
@@ -43,6 +45,9 @@ type HorarioSite = { hora: string; turno: Turno; livres: number; poucos: boolean
 type Etapa = "pessoas" | "dia" | "horario" | "dados" | "revisao";
 
 const NOMES_DIA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+/** Acima disto, nem o contador de grupo: a conversa é com a equipe. */
+const GRUPO_MAXIMO = 40;
 
 /** Classe dos campos grandes, no estilo dos formulários da Apple. */
 const CAIXA = "h-13 rounded-xl border-transparent bg-superficie text-[17px] hover:border-transparent md:h-13 md:text-[17px]";
@@ -162,6 +167,19 @@ function Opcao({
     >
       {children}
     </button>
+  );
+}
+
+function BotaoContador({ className, ...props }: React.ComponentProps<"button">) {
+  return (
+    <button
+      type="button"
+      {...props}
+      className={cn(
+        "grid size-12 place-items-center rounded-full bg-white text-primary-texto shadow-suave transition-[background-color,transform,opacity] outline-none hover:bg-primary-suave focus-visible:ring-3 focus-visible:ring-primary/30 active:scale-95 disabled:pointer-events-none disabled:opacity-35",
+        className,
+      )}
+    />
   );
 }
 
@@ -347,7 +365,7 @@ export default function ReservaOnline({
 
   const max = agenda.maxPessoas;
   const grupoGrande = pessoas > max;
-  const linkGrupo = whatsappLink(`Olá! Gostaria de reservar uma mesa para um grupo de mais de ${max} pessoas no Rizz.`);
+  const linkGrupo = whatsappLink(`Olá! Gostaria de reservar uma mesa para um grupo de mais de ${GRUPO_MAXIMO} pessoas no Rizz.`);
 
   const porTurno = (["almoco", "jantar"] as const)
     .map((t) => ({ turno: t, lista: (horariosDoDia ?? []).filter((h) => h.turno === t) }))
@@ -480,7 +498,7 @@ export default function ReservaOnline({
                   role="radio"
                   aria-checked={grupoGrande}
                   ativo={grupoGrande}
-                  onClick={() => setPessoas(max + 1)}
+                  onClick={() => setPessoas((p) => Math.max(p, max + 1))}
                   className="mt-3 h-14 w-full"
                 >
                   Mais de {max} pessoas
@@ -488,19 +506,41 @@ export default function ReservaOnline({
 
                 {grupoGrande ? (
                   <div className="mt-6 rounded-3xl bg-superficie p-6">
-                    <p className="text-[19px] font-semibold tracking-tight">Grupos grandes merecem atenção especial.</p>
-                    <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-                      Para mais de {max} pessoas, a equipe monta o espaço com você. Fale com a gente pelo WhatsApp e
-                      combinamos tudo.
+                    <p className="text-[19px] font-semibold tracking-tight">Quantas pessoas no total?</p>
+                    <div className="mt-4 flex items-center gap-3">
+                      <BotaoContador
+                        aria-label="Menos uma pessoa"
+                        disabled={pessoas <= max + 1}
+                        onClick={() => setPessoas((p) => Math.max(max + 1, p - 1))}
+                      >
+                        <Minus className="size-5" />
+                      </BotaoContador>
+                      <output aria-live="polite" className="numeros min-w-16 text-center text-[32px] font-semibold tracking-tight">
+                        {pessoas}
+                      </output>
+                      <BotaoContador
+                        aria-label="Mais uma pessoa"
+                        disabled={pessoas >= GRUPO_MAXIMO}
+                        onClick={() => setPessoas((p) => Math.min(GRUPO_MAXIMO, p + 1))}
+                      >
+                        <Plus className="size-5" />
+                      </BotaoContador>
+                    </div>
+                    <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
+                      {online
+                        ? "Grupos grandes ficam pendentes até a equipe confirmar e preparar o espaço. A confirmação chega pelo WhatsApp."
+                        : "A equipe confirma o espaço com você pelo WhatsApp."}
                     </p>
-                    <a
-                      href={linkGrupo}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-[15px] font-semibold text-white transition-colors hover:bg-primary-hover"
-                    >
-                      <MessageCircle className="size-[18px]" /> Falar no WhatsApp
-                    </a>
+                    <p className="mt-2 text-[14px] text-muted-foreground">
+                      Mais de {GRUPO_MAXIMO} pessoas?{" "}
+                      <a href={linkGrupo} target="_blank" rel="noopener noreferrer" className="font-medium text-primary-texto underline underline-offset-4">
+                        Fale com a gente
+                      </a>
+                      .
+                    </p>
+                    <Rodape>
+                      <BotaoPrincipal onClick={() => ir("dia")}>Continuar</BotaoPrincipal>
+                    </Rodape>
                   </div>
                 ) : (
                   alterando && (

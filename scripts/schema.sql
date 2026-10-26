@@ -104,6 +104,25 @@ create table if not exists reserva_bloqueios (
 );
 create index if not exists reserva_bloqueios_data_idx on reserva_bloqueios (data);
 
+-- Mensagens de WhatsApp enviadas pela Evolution API (confirmação, lembrete,
+-- aviso à equipe...). Serve de histórico no painel e evita lembrete repetido:
+-- só pode haver um lembrete não falho por reserva.
+create table if not exists whatsapp_envios (
+  id          serial primary key,
+  reserva_id  int references reservas (id) on delete cascade,
+  tipo        text not null,
+  telefone    text not null,
+  texto       text,
+  status      text not null default 'enviando' check (status in ('enviando','enviado','erro')),
+  erro        text,
+  criado_em   timestamptz not null default now(),
+  enviado_em  timestamptz
+);
+create index if not exists whatsapp_envios_reserva_idx on whatsapp_envios (reserva_id, tipo);
+create index if not exists whatsapp_envios_criado_idx on whatsapp_envios (criado_em desc);
+create unique index if not exists whatsapp_envios_lembrete_idx on whatsapp_envios (reserva_id)
+  where tipo = 'lembrete' and status <> 'erro';
+
 -- Promoções / pop-up -------------------------------------------
 
 create table if not exists promocoes (
