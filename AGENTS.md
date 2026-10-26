@@ -13,7 +13,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Site do restaurante Rizz Cucina & Vino (Espírito Santo do Pinhal/SP), cliente da Oceon. Tem duas partes:
 
 - **Site público:** home com cenas de scroll, cardápio, carta de vinhos, avaliações, fidelidade, **reservas online** e privacidade.
-- **Painel `/admin`:** cardápio, menu executivo, selos, reservas, página inicial do site, promoções/pop-up, WhatsApp e configurações. A fidelidade está trancada ("Em breve").
+- **Painel `/admin`:** reservas (com o selo de conexão do WhatsApp), cardápio (aba Menu executivo), página inicial do site, promoções/pop-up e configurações (abas Selos e WhatsApp). A fidelidade está trancada ("Em breve"). Subpáginas viram abas pelo campo `pai` em `components/admin/nav.ts`; os endereços não mudam.
 
 O estado atual e o que falta fazer estão em [`docs/ESTADO.md`](docs/ESTADO.md). **Leia esse arquivo antes de começar.**
 

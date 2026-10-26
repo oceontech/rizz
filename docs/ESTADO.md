@@ -4,6 +4,8 @@ Atualizado em 26/10/2026. Ao resolver um item, apague-o daqui (ou mova para "Fei
 
 ## Feito recentemente
 
+- **Organização do painel** (branch `feat/painel-organizacao`): Menu executivo virou aba do Cardápio; Selos e WhatsApp viraram abas de Configurações (sidebar mais curta, mesmos endereços). Nas Reservas, um selo mostra se o WhatsApp está conectado; desconectado, abre a janela já com o QR Code (`components/admin/whatsapp/conexao.tsx`, usado também na tela do WhatsApp). Página inicial: o prato é escolhido num seletor com fotos e, ao trocar, título e texto vêm do prato (antes ficavam os do camarão e parecia que nada mudava).
+
 - **Upgrade do painel: cores, selos e página inicial** (branch `feat/painel-upgrade`).
   - Cores: o vinho ficou só em pontos de marca (logo, avatar). Ação principal em grafite; cada área do painel tem uma cor própria (`data-secao` no Shell, tokens `--secao*` em `admin.css`); switch ligado em verde; situações com cores de significado (verde, âmbar, vermelho, azul).
   - Corrigido: o painel parava de aceitar cliques depois de abrir um editor pelo menu "…" (dois modais do Radix deixavam `pointer-events: none` no body). `MenuAcoes` agora é não modal e roda a ação depois de fechar. Reproduzido e conferido no navegador.

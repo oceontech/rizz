@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/sistema/ui
 import { sair } from "@/lib/admin/sessao-actions";
 import { cn } from "@/lib/utils";
 
-import { COOKIE_SIDEBAR, NAV, NAV_BARRA, areaDe, ativo, type Secao } from "./nav";
+import { COOKIE_SIDEBAR, NAV, NAV_BARRA, NAV_SIDEBAR, abasDe, areaDe, ativoNaSidebar, type Secao } from "./nav";
 
 type Props = {
   usuario: { nome: string; email: string };
@@ -174,7 +174,7 @@ function ConteudoSidebar({
       Icone={n.Icone}
       secao={n.secao}
       emBreve={n.emBreve}
-      atual={ativo(pathname, n.href)}
+      atual={ativoNaSidebar(pathname, n.href)}
       recolhida={recolhida}
       contexto={contexto}
       contador={n.href === "/admin/reservas" ? pendentes : undefined}
@@ -196,14 +196,14 @@ function ConteudoSidebar({
             >
               {titulo}
             </p>
-            <ul className="flex flex-col gap-1">{NAV.filter((n) => n.grupo === grupo).map(item)}</ul>
+            <ul className="flex flex-col gap-1">{NAV_SIDEBAR.filter((n) => n.grupo === grupo).map(item)}</ul>
           </div>
         ))}
       </nav>
 
       <div className="mt-2 flex shrink-0 flex-col gap-3 border-t border-sidebar-border pt-4 baixa:gap-2 baixa:pt-3">
         <ul className="flex flex-col gap-1">
-          {NAV.filter((n) => n.grupo === "rodape").map(item)}
+          {NAV_SIDEBAR.filter((n) => n.grupo === "rodape").map(item)}
           <li>
             <ComDica ativa={recolhida} texto="Ver o site">
               {/* <a> de propósito: o site é outro root layout */}
@@ -283,11 +283,49 @@ function BotaoRecolher({ recolhida, aoClicar }: { recolhida: boolean; aoClicar: 
   );
 }
 
+/**
+ * Abas das páginas com subpáginas (Cardápio → Menu executivo; Configurações →
+ * Selos, WhatsApp). Ficam acima do conteúdo, fora da transição de página,
+ * para não piscarem ao trocar de aba.
+ */
+function Abas({ pathname }: { pathname: string }) {
+  const abas = abasDe(pathname);
+  if (!abas.length) return null;
+  const atual = areaDe(pathname)?.href;
+  return (
+    <nav aria-label="Seções desta página" className="-mx-4 mb-5 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:px-0">
+      <ul className="sobre-a-pagina inline-flex items-center gap-1 rounded-full p-1">
+        {abas.map((a) => {
+          const aqui = a.href === atual;
+          return (
+            <li key={a.href} data-secao={a.secao}>
+              <Link
+                href={a.href}
+                aria-current={aqui ? "page" : undefined}
+                className={cn(
+                  "relative flex h-9 items-center gap-2 rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors",
+                  aqui ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {aqui && (
+                  <motion.span layoutId="aba-ativa" className="absolute inset-0 rounded-full bg-card shadow-suave dark:bg-input" transition={MOLA} />
+                )}
+                <a.Icone className={cn("relative size-4", aqui && "text-secao-texto")} strokeWidth={1.75} aria-hidden />
+                <span className="relative">{a.aba ?? a.rotulo}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
 /** Barra inferior em pílula (celular), com o restante das seções no "Mais". */
 function BarraCelular({ usuario, pendentes }: { usuario: Props["usuario"]; pendentes: number }) {
   const pathname = usePathname();
   const [mais, setMais] = useState(false);
-  const foraDaBarra = !NAV_BARRA.some((h) => ativo(pathname, h));
+  const foraDaBarra = !NAV_BARRA.some((h) => ativoNaSidebar(pathname, h));
 
   return (
     <>
@@ -297,7 +335,7 @@ function BarraCelular({ usuario, pendentes }: { usuario: Props["usuario"]; pende
       >
         <ul className="mx-auto grid max-w-md grid-cols-5 rounded-full bg-sidebar p-1.5 shadow-modal">
           {NAV.filter((n) => NAV_BARRA.includes(n.href)).map(({ href, curto, Icone, secao }) => {
-            const atual = ativo(pathname, href);
+            const atual = ativoNaSidebar(pathname, href);
             return (
               <li key={href} data-secao={secao}>
                 <Link
@@ -424,6 +462,7 @@ export default function Shell({ usuario, pendentes, recolhidaInicial, children }
           data-secao={area?.secao}
           className="mx-auto mt-2 w-full max-w-[1240px] flex-1 lg:mt-1 lg:[&_header:first-of-type]:pr-14"
         >
+          <Abas pathname={pathname} />
           <TransicaoPagina key={pathname}>{children}</TransicaoPagina>
         </main>
       </div>

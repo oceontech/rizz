@@ -6,7 +6,6 @@ import {
   Clock,
   History,
   KeyRound,
-  Loader2,
   MessageSquareText,
   Plus,
   QrCode,
@@ -19,26 +18,25 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
   avisar,
   BarraSalvar,
   BotaoSalvar,
-  CampoOpcoes,
   CampoSelect,
   CampoSwitch,
   CampoTelefone,
   Confirmar,
 } from "@/components/admin/campos";
 import { Cabecalho, ListaCard, Secao, Selo } from "@/components/admin/ui";
+import { ConectarWhatsapp, Passos } from "@/components/admin/whatsapp/conexao";
 import { Campo } from "@/components/sistema/formulario/campo";
 import { AreaTexto } from "@/components/sistema/inputs/input-texto";
 import { Button } from "@/components/sistema/ui/button";
 import { mascaraTelefone } from "@/lib/admin/formato";
 import {
-  conectarWhatsapp,
   desconectarWhatsapp,
   estadoWhatsapp,
   salvarConfigWhatsapp,
@@ -46,7 +44,6 @@ import {
   type EstadoWhatsapp,
 } from "@/lib/admin/whatsapp-actions";
 import type { Envio } from "@/lib/whatsapp/avisos";
-import type { QrCode as Qr } from "@/lib/whatsapp/evolution";
 import {
   EXEMPLO,
   MODELOS_PADRAO,
@@ -73,10 +70,6 @@ const HORAS_LEMBRETE = [
   { id: "24", rotulo: "1 dia antes" },
 ];
 
-/** Cada QR vale uns 40 s; depois de alguns minutos sem escanear, para de pedir. */
-const RENOVAR_QR_MS = 35_000;
-const DESISTIR_MS = 4 * 60_000;
-
 function telefoneLegivel(digitos: string | null) {
   if (!digitos) return "";
   const d = digitos.replace(/^55(?=\d{10,11}$)/, "");
@@ -94,21 +87,6 @@ function haQuanto(iso: string, agora: number) {
 }
 
 // ─── Conexão ───────────────────────────────────────────────────
-
-function Passos({ itens }: { itens: React.ReactNode[] }) {
-  return (
-    <ol className="flex flex-col gap-3">
-      {itens.map((item, i) => (
-        <li key={i} className="flex items-start gap-3 text-sm">
-          <span className="numeros grid size-6 shrink-0 place-items-center rounded-full bg-primary-suave text-xs font-semibold text-primary-texto">
-            {i + 1}
-          </span>
-          <span className="pt-0.5 leading-snug">{item}</span>
-        </li>
-      ))}
-    </ol>
-  );
-}
 
 function SemConfiguracao() {
   return (
@@ -198,68 +176,6 @@ function Conectado({ estado, aoMudar }: { estado: EstadoWhatsapp; aoMudar: () =>
 }
 
 function Conectar({ aoConectar }: { aoConectar: () => void }) {
-  const [modo, setModo] = useState<"qr" | "codigo">("qr");
-  const [numero, setNumero] = useState("");
-  const [qr, setQr] = useState<Qr | null>(null);
-  const [gerando, setGerando] = useState(false);
-  const [expirou, setExpirou] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-  const inicio = useRef(0);
-
-  async function gerar() {
-    setGerando(true);
-    setErro(null);
-    setExpirou(false);
-    const r = await conectarWhatsapp(modo === "codigo" ? numero : undefined);
-    setGerando(false);
-    if (!r.ok) return setErro(r.erro);
-    if (!r.dados?.imagem && !r.dados?.codigoPareamento) {
-      return setErro("A Evolution não devolveu o código. Tente de novo em alguns segundos.");
-    }
-    if (!inicio.current) inicio.current = Date.now();
-    setQr(r.dados);
-  }
-
-  // Enquanto o código está na tela: confere a conexão a cada 3 s e renova o QR.
-  const aberto = Boolean(qr) && !expirou;
-  useEffect(() => {
-    if (!aberto) return;
-    let vivo = true;
-    const conferir = setInterval(async () => {
-      const r = await estadoWhatsapp();
-      if (!vivo) return;
-      if (r.ok && r.dados?.info?.estado === "open") {
-        toast.success("WhatsApp conectado!");
-        aoConectar();
-      }
-    }, 3000);
-    const renovar = setInterval(async () => {
-      if (Date.now() - inicio.current > DESISTIR_MS) {
-        setExpirou(true);
-        inicio.current = 0;
-        return;
-      }
-      if (modo === "qr") {
-        const r = await conectarWhatsapp();
-        if (vivo && r.ok && r.dados?.imagem) setQr(r.dados);
-      }
-    }, RENOVAR_QR_MS);
-    return () => {
-      vivo = false;
-      clearInterval(conferir);
-      clearInterval(renovar);
-    };
-  }, [aberto, modo, aoConectar]);
-
-  function trocarModo(m: "qr" | "codigo") {
-    setModo(m);
-    setQr(null);
-    setErro(null);
-    inicio.current = 0;
-  }
-
-  const numeroOk = numero.replace(/\D/g, "").length >= 12;
-
   return (
     <Secao
       icone={QrCode}
@@ -267,90 +183,7 @@ function Conectar({ aoConectar }: { aoConectar: () => void }) {
       descricao="Funciona como o WhatsApp Web: o celular continua com o WhatsApp normal, e o painel passa a enviar as mensagens de reserva."
       acoes={<Selo tom="atencao" ponto>Desconectado</Selo>}
     >
-      <CampoOpcoes
-        label="Como conectar"
-        value={modo}
-        onChange={trocarModo}
-        opcoes={[
-          { id: "qr", rotulo: "QR Code" },
-          { id: "codigo", rotulo: "Código pelo número" },
-        ]}
-        descricao={
-          modo === "qr"
-            ? "Para quem está com o celular do restaurante na mão, ao lado do computador."
-            : "Para quem está no próprio celular do restaurante e não tem como escanear a tela."
-        }
-      />
-
-      {modo === "codigo" && !qr && (
-        <CampoTelefone label="Número do WhatsApp do restaurante" value={numero} onChange={setNumero} />
-      )}
-
-      {erro && (
-        <p role="alert" className="flex items-start gap-2.5 rounded-xl bg-negativo/10 px-3.5 py-3 text-sm text-negativo-texto">
-          <CircleAlert className="mt-0.5 size-4 shrink-0" />
-          {erro}
-        </p>
-      )}
-
-      {qr && !expirou ? (
-        <div className="grid items-center gap-6 sm:grid-cols-[auto_1fr]">
-          {modo === "qr" && qr.imagem ? (
-            <div className="relative mx-auto rounded-2xl bg-white p-3 shadow-suave">
-              {/* O QR é uma imagem em base64 gerada na hora: não passa pelo otimizador. */}
-              <Image src={qr.imagem} alt="QR Code para conectar o WhatsApp" width={232} height={232} unoptimized className="size-58" />
-            </div>
-          ) : (
-            <div className="mx-auto rounded-2xl bg-muted px-6 py-5 text-center">
-              <p className="text-xs font-medium text-muted-foreground">Código de conexão</p>
-              <p className="mt-1 font-mono text-3xl font-semibold tracking-[0.2em]">
-                {qr.codigoPareamento?.replace(/^(.{4})(.{4})$/, "$1-$2") ?? "—"}
-              </p>
-            </div>
-          )}
-          <div className="flex flex-col gap-4">
-            <Passos
-              itens={
-                modo === "qr"
-                  ? [
-                      "Abra o WhatsApp no celular do restaurante.",
-                      <>
-                        Toque em <b>⋮</b> (Android) ou <b>Configurações</b> (iPhone) e depois em <b>Aparelhos conectados</b>.
-                      </>,
-                      <>
-                        Toque em <b>Conectar um aparelho</b> e aponte a câmera para o código ao lado.
-                      </>,
-                    ]
-                  : [
-                      <>
-                        No WhatsApp, abra <b>Aparelhos conectados</b> → <b>Conectar um aparelho</b>.
-                      </>,
-                      <>
-                        Toque em <b>Conectar com número de telefone</b>.
-                      </>,
-                      "Digite o código mostrado aqui.",
-                    ]
-              }
-            />
-            <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" /> Esperando o celular… a tela atualiza sozinha.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {expirou && <p className="text-sm text-muted-foreground">O código expirou. Gere outro quando estiver com o celular em mãos.</p>}
-          <BotaoSalvar
-            pendente={gerando}
-            onClick={gerar}
-            disabled={modo === "codigo" && !numeroOk}
-            className="self-start"
-          >
-            {modo === "qr" ? <QrCode /> : <KeyRound />}
-            {modo === "qr" ? "Gerar QR Code" : "Gerar código"}
-          </BotaoSalvar>
-        </div>
-      )}
+      <ConectarWhatsapp aoConectar={aoConectar} />
     </Secao>
   );
 }
