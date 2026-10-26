@@ -625,7 +625,8 @@ export function BarraSalvar({
             )}
             <Button
               size="sm"
-              className="rounded-full bg-background text-foreground hover:bg-background/90"
+              variant="marca"
+              className="rounded-full"
               onClick={aoSalvar}
               disabled={salvando}
             >

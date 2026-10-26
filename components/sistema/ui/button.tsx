@@ -11,6 +11,8 @@ const buttonVariants = cva(
       // fantasma para ações leves; destrutivo sólido só na confirmação final.
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary-hover",
+        // Vinho do Rizz: só nos poucos pontos de marca (entrar, nova reserva, salvar)
+        marca: "bg-marca text-white hover:bg-[color-mix(in_oklab,var(--marca),black_14%)]",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-muted-hover aria-expanded:bg-muted-hover",
         ghost:

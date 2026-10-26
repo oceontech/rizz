@@ -39,7 +39,7 @@ export default function LoginForm({ de }: { de?: string }) {
         <InputSenha name="senha" autoComplete="current-password" required placeholder="••••••••" />
       </Campo>
 
-      <Button type="submit" size="lg" disabled={pendente} className="mt-1 w-full rounded-full">
+      <Button type="submit" size="lg" variant="marca" disabled={pendente} className="mt-1 w-full rounded-full">
         {pendente && <Loader2 className="animate-spin" />}
         {pendente ? "Entrando…" : "Entrar no painel"}
       </Button>
