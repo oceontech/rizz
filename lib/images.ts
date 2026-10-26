@@ -51,3 +51,10 @@ export type ImgKey = keyof typeof images;
 export function img(key: ImgKey): StaticImageData {
   return images[key];
 }
+
+/** Foto de um prato: a enviada pelo painel (Blob) ou a do acervo do site. */
+export function fotoDoPrato(p: { foto?: string; img?: ImgKey }): string | StaticImageData | null {
+  if (p.foto) return p.foto;
+  if (p.img && p.img in images) return images[p.img];
+  return null;
+}

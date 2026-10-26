@@ -3,10 +3,10 @@
 import { useRef, type ReactNode } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
-import { pratoAssinatura } from "@/data/menu";
 
 /** O próprio vídeo avança e retrocede com o scroll, sem reprodução automática. */
-export default function IntroCamarao({ children }: { children: ReactNode }) {
+/** Abertura em vídeo do camarão; a home só a usa quando o mais pedido é o camarão. */
+export default function IntroCamarao({ nome, children }: { nome: string; children: ReactNode }) {
   const raiz = useRef<HTMLDivElement>(null);
   const cenaRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -209,7 +209,7 @@ export default function IntroCamarao({ children }: { children: ReactNode }) {
             O mais pedido!
           </p>
           <p data-chamada-texto className="max-w-[30ch] font-sans text-base font-light leading-relaxed text-tinta/80 md:text-xl">
-            {pratoAssinatura.nome}
+            {nome}
           </p>
         </div>
       </div>

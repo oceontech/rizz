@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BookOpen, CalendarDays, CalendarPlus, Clock, Megaphone, Plus, type LucideIcon } from "lucide-react";
+import { ArrowRight, BookOpen, CalendarDays, CalendarPlus, Clock, Megaphone, Plus, Zap, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
 import { NAV, type Secao } from "@/components/admin/nav";
@@ -202,7 +202,7 @@ export default function Dashboard({ nome, resumo }: { nome: string; resumo: Resu
         </Card>
 
         <Card>
-          <TituloBloco icone={ArrowRight} titulo="Atalhos" descricao="O que mais se faz no dia a dia" />
+          <TituloBloco icone={Zap} titulo="Atalhos" descricao="O que mais se faz no dia a dia" />
           <Atalhos />
         </Card>
       </div>

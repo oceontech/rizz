@@ -15,6 +15,7 @@ import bcrypt from "bcryptjs";
 
 import { executivo } from "../data/executivo.ts";
 import { cardapio } from "../data/menu.ts";
+import { SELOS_PADRAO } from "../lib/selos.ts";
 
 const url = process.env.DATABASE_URL;
 if (!url) throw new Error("DATABASE_URL ausente. Rode `vercel env pull`.");
@@ -50,6 +51,19 @@ if (totalCategorias === 0) {
   console.log(`✓ cardápio: ${cardapio.length} categorias`);
 } else {
   console.log("· cardápio já populado — mantido");
+}
+
+// Selos --------------------------------------------------------
+const [{ n: totalSelos }] = (await sql`select count(*)::int as n from selos`) as { n: number }[];
+if (totalSelos === 0) {
+  for (const s of SELOS_PADRAO) {
+    await sql`
+      insert into selos (id, nome, descricao, forma, simbolo, letra, cor, ordem, ativo)
+      values (${s.id}, ${s.nome}, ${s.descricao}, ${s.forma}, ${s.simbolo}, ${s.letra}, ${s.cor}, ${s.ordem}, ${s.ativo})`;
+  }
+  console.log(`✓ selos: ${SELOS_PADRAO.length}`);
+} else {
+  console.log("· selos já cadastrados — mantidos");
 }
 
 // Executivo ----------------------------------------------------

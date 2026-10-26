@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "../shadcn-base.css";
+@import "../selos.css";
 
 /* ───────────────────────────────────────────────────────────
    Painel Rizz — sistema visual do Ge System (cinza neutro, cards

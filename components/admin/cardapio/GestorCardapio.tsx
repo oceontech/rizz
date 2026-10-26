@@ -14,18 +14,17 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { avisar, Confirmar } from "@/components/admin/campos";
-import { Cabecalho, MenuAcoes, Selo, useUltimo, type Tom } from "@/components/admin/ui";
+import { SeloEtiqueta } from "@/components/admin/selos/compartilhado";
+import { Cabecalho, MenuAcoes, Selo, useUltimo } from "@/components/admin/ui";
 import { EstadoVazio } from "@/components/sistema/estados/estado-vazio";
 import { InputBusca } from "@/components/sistema/inputs/input-texto";
 import { ItemEscalonado, ListaEscalonada } from "@/components/sistema/movimento";
 import { ControleSegmentado } from "@/components/sistema/pickers/controle-segmentado";
 import { Button } from "@/components/sistema/ui/button";
 import { Card } from "@/components/sistema/ui/card";
-import { Switch } from "@/components/sistema/ui/switch";
-import { BADGES, type Badge } from "@/data/menu";
 import {
   alternarDisponivel,
   excluirCategoria,
@@ -37,6 +36,7 @@ import {
 import { brl } from "@/lib/admin/formato";
 import type { CategoriaCardapio, ItemCardapio } from "@/lib/dados";
 import { images } from "@/lib/images";
+import type { SeloDef } from "@/lib/selos";
 import { cn } from "@/lib/utils";
 
 import EditorCategoria from "./EditorCategoria";
@@ -45,26 +45,48 @@ import ReajustePrecos from "./ReajustePrecos";
 
 type Filtro = "todos" | "esgotados" | "ocultos";
 
-const TOM_BADGE: Record<Badge, Tom> = {
-  vegetariano: "positivo",
-  rizz: "marca",
-  tartufato: "atencao",
-};
-
 export function fotoDoItem(item: Pick<ItemCardapio, "fotoUrl" | "img">) {
   if (item.fotoUrl) return item.fotoUrl;
   if (item.img && item.img in images) return images[item.img];
   return null;
 }
 
+const ancora = (id: string) => `categoria-${id}`;
+
+/**
+ * Situação do prato hoje, num toque: verde "Disponível" ou vermelho
+ * "Esgotado". Mais claro que um switch sem rótulo no meio da linha.
+ */
+function BotaoSituacao({ disponivel, nome, aoMudar }: { disponivel: boolean; nome: string; aoMudar: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => aoMudar(!disponivel)}
+      aria-pressed={disponivel}
+      aria-label={`${nome}: ${disponivel ? "disponível. Tocar para marcar como esgotado" : "esgotado. Tocar para voltar ao cardápio"}`}
+      className={cn(
+        "flex h-8 w-[7.25rem] shrink-0 items-center justify-center gap-1.5 rounded-full text-xs font-semibold transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/40",
+        disponivel
+          ? "bg-positivo/12 text-positivo-texto hover:bg-positivo/20"
+          : "bg-negativo/10 text-negativo-texto hover:bg-negativo/16",
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", disponivel ? "bg-positivo" : "bg-negativo")} aria-hidden />
+      {disponivel ? "Disponível" : "Esgotado"}
+    </button>
+  );
+}
+
 function LinhaItem({
   item,
+  selos,
   primeiro,
   ultimo,
   onEditar,
   onExcluir,
 }: {
   item: ItemCardapio;
+  selos: Map<string, SeloDef>;
   primeiro: boolean;
   ultimo: boolean;
   onEditar: () => void;
@@ -73,6 +95,7 @@ function LinhaItem({
   const [disponivel, setDisponivel] = useState(item.disponivel);
   const [, iniciar] = useTransition();
   const foto = fotoDoItem(item);
+  const seusSelos = item.badges.map((b) => selos.get(b)).filter((s): s is SeloDef => Boolean(s));
 
   function alternar(v: boolean) {
     setDisponivel(v);
@@ -101,60 +124,67 @@ function LinhaItem({
   }
 
   return (
-    <li className={cn("flex gap-3 px-3 py-3 transition-colors sm:items-center sm:px-4", !item.visivel && "bg-muted/60")}>
+    <li
+      className={cn(
+        "group/linha flex gap-3.5 px-3 py-3 transition-colors hover:bg-muted/40 sm:items-center sm:px-5",
+        !item.visivel && "bg-muted/50",
+      )}
+    >
       <button
         type="button"
         onClick={onEditar}
-        className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-muted outline-none focus-visible:ring-3 focus-visible:ring-primary-suave"
+        className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/40 sm:size-16"
         aria-label={`Editar ${item.nome}`}
       >
         {foto ? (
-          <Image src={foto} alt="" fill sizes="56px" className={cn("object-cover", !disponivel && "grayscale")} />
+          <Image src={foto} alt="" fill sizes="64px" className={cn("object-cover", !disponivel && "grayscale")} />
         ) : (
           <ImageIcon className="absolute inset-0 m-auto size-5 text-texto-terciario" strokeWidth={1.5} />
         )}
       </button>
 
       <div className="min-w-0 grow">
-        <div className="flex items-start justify-between gap-3">
-          <button type="button" onClick={onEditar} className="min-w-0 text-left">
-            <p className={cn("text-[15px] leading-snug font-medium", !disponivel && "text-muted-foreground line-through")}>
-              {item.nome}
-            </p>
-            {item.descricao && (
-              <p className="mt-0.5 line-clamp-2 text-[13px] text-muted-foreground sm:line-clamp-1">{item.descricao}</p>
+        <button type="button" onClick={onEditar} className="block max-w-full min-w-0 text-left outline-none">
+          <p
+            className={cn(
+              "text-[15px] leading-snug font-medium group-hover/linha:underline group-hover/linha:decoration-border group-hover/linha:underline-offset-4",
+              !disponivel && "text-muted-foreground",
             )}
-          </button>
-          <p className="numeros shrink-0 text-sm font-semibold sm:hidden">
-            {item.preco === null ? "Consulta" : brl.format(item.preco)}
+          >
+            {item.nome}
           </p>
-        </div>
+          {item.descricao && <p className="mt-0.5 line-clamp-1 text-[13px] text-muted-foreground">{item.descricao}</p>}
+        </button>
 
-        {(item.grupo || item.badges.length > 0 || item.vpj || !item.visivel || !disponivel) && (
+        {(item.grupo || seusSelos.length > 0 || !item.visivel) && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {!disponivel && <Selo tom="negativo">Esgotado</Selo>}
             {!item.visivel && (
               <Selo>
-                <EyeOff /> Oculto
+                <EyeOff /> Oculto no site
               </Selo>
             )}
-            {item.grupo && <Selo>{item.grupo}</Selo>}
-            {item.badges.map((b) => (
-              <Selo key={b} tom={TOM_BADGE[b]}>
-                {BADGES[b].rotulo}
-              </Selo>
+            {item.grupo && <Selo tom="info">{item.grupo}</Selo>}
+            {seusSelos.map((s) => (
+              <SeloEtiqueta key={s.id} selo={s} />
             ))}
-            {item.vpj && <Selo>VPJ</Selo>}
           </div>
         )}
+
+        <div className="mt-2.5 flex items-center justify-between gap-3 sm:hidden">
+          <p className="numeros text-sm font-semibold">{item.preco === null ? "Consulta" : brl.format(item.preco)}</p>
+          <BotaoSituacao disponivel={disponivel} nome={item.nome} aoMudar={alternar} />
+        </div>
       </div>
 
-      <p className="numeros hidden w-24 shrink-0 text-right text-sm font-semibold sm:block">
-        {item.preco === null ? <span className="font-normal text-muted-foreground">Consulta</span> : brl.format(item.preco)}
+      <p className="numeros hidden w-24 shrink-0 text-right text-[15px] font-semibold sm:block">
+        {item.preco === null ? <span className="text-sm font-normal text-muted-foreground">Consulta</span> : brl.format(item.preco)}
       </p>
 
-      <div className="flex shrink-0 flex-col items-end justify-between gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <Switch checked={disponivel} onCheckedChange={alternar} aria-label={`${item.nome} disponível`} />
+      <div className="hidden sm:block">
+        <BotaoSituacao disponivel={disponivel} nome={item.nome} aoMudar={alternar} />
+      </div>
+
+      <div className="shrink-0 self-start sm:self-center">
         <MenuAcoes
           rotulo={`Ações de ${item.nome}`}
           aoEscolher={acao}
@@ -171,10 +201,72 @@ function LinhaItem({
   );
 }
 
-export default function GestorCardapio({ categorias }: { categorias: CategoriaCardapio[] }) {
+/** Índice das categorias (desktop): leva até a categoria e marca a que está na tela. */
+function IndiceCategorias({ categorias }: { categorias: CategoriaCardapio[] }) {
+  const [atual, setAtual] = useState(categorias[0]?.id ?? "");
+
+  useEffect(() => {
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        const visivel = entradas.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visivel) setAtual(visivel.target.id.replace("categoria-", ""));
+      },
+      { rootMargin: "-15% 0px -70% 0px" },
+    );
+    for (const c of categorias) {
+      const el = document.getElementById(ancora(c.id));
+      if (el) observador.observe(el);
+    }
+    return () => observador.disconnect();
+  }, [categorias]);
+
+  return (
+    <nav aria-label="Categorias" className="sticky top-6 hidden max-h-[calc(100dvh-3rem)] w-56 shrink-0 overflow-y-auto pb-6 lg:block">
+      <p className="mb-2 px-3 text-[0.68rem] font-semibold tracking-[0.08em] text-muted-foreground uppercase">Categorias</p>
+      <ul className="flex flex-col gap-0.5">
+        {categorias.map((c) => {
+          const esgotados = c.itens.filter((i) => !i.disponivel).length;
+          return (
+            <li key={c.id}>
+              <a
+                href={`#${ancora(c.id)}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(ancora(c.id))?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  setAtual(c.id);
+                }}
+                className={cn(
+                  "flex h-9 items-center gap-2 rounded-full px-3 text-sm transition-colors",
+                  atual === c.id ? "bg-card font-medium text-foreground shadow-suave" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span className={cn("min-w-0 grow truncate", !c.visivel && "line-through decoration-muted-foreground/50")}>{c.nome}</span>
+                {esgotados > 0 && (
+                  <span className="size-1.5 shrink-0 rounded-full bg-negativo" title={`${esgotados} esgotado(s)`} aria-hidden />
+                )}
+                <span className="numeros text-xs text-texto-terciario">{c.itens.length}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+export default function GestorCardapio({
+  categorias,
+  selos,
+  abrirNovo = false,
+}: {
+  categorias: CategoriaCardapio[];
+  selos: SeloDef[];
+  abrirNovo?: boolean;
+}) {
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("todos");
-  const [editando, setEditando] = useState<ItemCardapio | "novo" | null>(null);
+  const [editando, setEditando] = useState<ItemCardapio | "novo" | null>(abrirNovo ? "novo" : null);
+  const [sessao, setSessao] = useState(0);
   const [novoNaCategoria, setNovoNaCategoria] = useState<string | null>(null);
   const [categoriaEditada, setCategoriaEditada] = useState<CategoriaCardapio | "nova" | null>(null);
   const [reajuste, setReajuste] = useState(false);
@@ -183,6 +275,7 @@ export default function GestorCardapio({ categorias }: { categorias: CategoriaCa
   >(null);
   const excluido = useUltimo(excluindo);
   const [, iniciar] = useTransition();
+  const mapaSelos = useMemo(() => new Map(selos.map((s) => [s.id, s])), [selos]);
 
   const todos = categorias.flatMap((c) => c.itens);
   const contagem = {
@@ -207,12 +300,15 @@ export default function GestorCardapio({ categorias }: { categorias: CategoriaCa
   const filtrando = busca.trim() !== "" || filtro !== "todos";
   const exibidas = filtrando ? visiveis.filter((c) => c.itens.length > 0) : visiveis;
 
+  function novoPrato(categoriaId: string | null) {
+    setNovoNaCategoria(categoriaId);
+    setSessao((n) => n + 1);
+    setEditando("novo");
+  }
+
   function acaoCategoria(cat: CategoriaCardapio, chave: string) {
     if (chave === "editar") return setCategoriaEditada(cat);
-    if (chave === "novo") {
-      setNovoNaCategoria(cat.id);
-      return setEditando("novo");
-    }
+    if (chave === "novo") return novoPrato(cat.id);
     if (chave === "excluir") return setExcluindo({ tipo: "categoria", cat });
     if (chave === "cima" || chave === "baixo") {
       iniciar(async () => {
@@ -226,7 +322,7 @@ export default function GestorCardapio({ categorias }: { categorias: CategoriaCa
     <>
       <Cabecalho
         titulo="Cardápio"
-        descricao="Preços, pratos esgotados e o que aparece no site. As alterações publicam na hora."
+        descricao="Preços, pratos esgotados, selos e o que aparece no site. As alterações publicam na hora."
         acoes={
           <>
             <Button variant="secondary" className="rounded-full bg-card shadow-suave hover:bg-accent" onClick={() => setReajuste(true)}>
@@ -239,13 +335,7 @@ export default function GestorCardapio({ categorias }: { categorias: CategoriaCa
             >
               <FolderPlus /> Categoria
             </Button>
-            <Button
-              className="rounded-full"
-              onClick={() => {
-                setNovoNaCategoria(null);
-                setEditando("novo");
-              }}
-            >
+            <Button className="rounded-full" onClick={() => novoPrato(null)}>
               <Plus /> Novo prato
             </Button>
           </>
@@ -275,74 +365,94 @@ export default function GestorCardapio({ categorias }: { categorias: CategoriaCa
         </div>
       </div>
 
-      {exibidas.length === 0 ? (
-        <Card>
-          <EstadoVazio icone={BookOpen} titulo="Nenhum prato encontrado" descricao="Ajuste a busca ou o filtro." />
-        </Card>
-      ) : (
-        <ListaEscalonada className="flex flex-col gap-4">
-          {exibidas.map((cat, ci) => (
-            <ItemEscalonado key={cat.id}>
-              <Card className="gap-0 py-0">
-                <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
-                  <div className="min-w-0 grow">
-                    <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-                      {cat.nome}
-                      <span className="numeros text-xs font-medium text-muted-foreground">{cat.itens.length}</span>
-                      {!cat.visivel && (
-                        <Selo>
-                          <EyeOff /> Oculta
-                        </Selo>
-                      )}
-                    </h2>
-                    {cat.descricao && <p className="truncate text-[13px] text-muted-foreground">{cat.descricao}</p>}
-                  </div>
-                  <Button size="sm" variant="ghost" className="hidden rounded-full sm:inline-flex" onClick={() => acaoCategoria(cat, "novo")}>
-                    <Plus /> Prato
-                  </Button>
-                  <MenuAcoes
-                    rotulo={`Ações da categoria ${cat.nome}`}
-                    aoEscolher={(k) => acaoCategoria(cat, k)}
-                    acoes={[
-                      { id: "novo", rotulo: "Adicionar prato", icone: Plus },
-                      { id: "editar", rotulo: "Editar categoria", icone: Pencil },
-                      { id: "cima", rotulo: "Subir categoria", icone: ArrowUp, desabilitada: ci === 0 || filtrando, separar: true },
-                      {
-                        id: "baixo",
-                        rotulo: "Descer categoria",
-                        icone: ArrowDown,
-                        desabilitada: ci === exibidas.length - 1 || filtrando,
-                      },
-                      { id: "excluir", rotulo: "Excluir categoria", icone: Trash2, perigo: true, separar: true },
-                    ]}
-                  />
-                </div>
-                {cat.itens.length === 0 ? (
-                  <p className="border-t px-5 py-6 text-sm text-muted-foreground">Nenhum prato nesta categoria.</p>
-                ) : (
-                  <ul className="divide-y border-t">
-                    {cat.itens.map((item, i) => (
-                      <LinhaItem
-                        key={`${item.id}-${item.disponivel}-${item.visivel}`}
-                        item={item}
-                        primeiro={i === 0 || filtrando}
-                        ultimo={i === cat.itens.length - 1 || filtrando}
-                        onEditar={() => setEditando(item)}
-                        onExcluir={() => setExcluindo({ tipo: "item", item })}
+      <div className="flex items-start gap-6">
+        {!filtrando && <IndiceCategorias categorias={categorias} />}
+
+        <div className="min-w-0 grow">
+          {exibidas.length === 0 ? (
+            <Card>
+              <EstadoVazio icone={BookOpen} titulo="Nenhum prato encontrado" descricao="Ajuste a busca ou o filtro." />
+            </Card>
+          ) : (
+            <ListaEscalonada className="flex flex-col gap-4">
+              {exibidas.map((cat, ci) => (
+                <ItemEscalonado key={cat.id}>
+                  <Card id={ancora(cat.id)} className="scroll-mt-6 gap-0 py-0">
+                    <div className="flex items-center gap-3 px-4 py-4 sm:px-5">
+                      <div className="min-w-0 grow">
+                        <h2 className="flex items-center gap-2 text-base font-semibold">
+                          {cat.nome}
+                          <span className="numeros grid h-5 min-w-5 place-items-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
+                            {cat.itens.length}
+                          </span>
+                          {!cat.visivel && (
+                            <Selo>
+                              <EyeOff /> Oculta no site
+                            </Selo>
+                          )}
+                        </h2>
+                        {cat.descricao && <p className="truncate text-[13px] text-muted-foreground">{cat.descricao}</p>}
+                      </div>
+                      <Button size="sm" variant="ghost" className="hidden rounded-full sm:inline-flex" onClick={() => novoPrato(cat.id)}>
+                        <Plus /> Prato
+                      </Button>
+                      <MenuAcoes
+                        rotulo={`Ações da categoria ${cat.nome}`}
+                        aoEscolher={(k) => acaoCategoria(cat, k)}
+                        acoes={[
+                          { id: "novo", rotulo: "Adicionar prato", icone: Plus },
+                          { id: "editar", rotulo: "Editar categoria", icone: Pencil },
+                          { id: "cima", rotulo: "Subir categoria", icone: ArrowUp, desabilitada: ci === 0 || filtrando, separar: true },
+                          {
+                            id: "baixo",
+                            rotulo: "Descer categoria",
+                            icone: ArrowDown,
+                            desabilitada: ci === exibidas.length - 1 || filtrando,
+                          },
+                          { id: "excluir", rotulo: "Excluir categoria", icone: Trash2, perigo: true, separar: true },
+                        ]}
                       />
-                    ))}
-                  </ul>
-                )}
-              </Card>
-            </ItemEscalonado>
-          ))}
-        </ListaEscalonada>
-      )}
+                    </div>
+                    {cat.itens.length === 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => novoPrato(cat.id)}
+                        className="flex w-full items-center gap-2 border-t px-5 py-5 text-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                      >
+                        <Plus className="size-4" /> Nenhum prato ainda. Adicionar o primeiro
+                      </button>
+                    ) : (
+                      <ul className="divide-y border-t">
+                        {cat.itens.map((item, i) => (
+                          <LinhaItem
+                            key={`${item.id}-${item.disponivel}-${item.visivel}`}
+                            item={item}
+                            selos={mapaSelos}
+                            primeiro={i === 0 || filtrando}
+                            ultimo={i === cat.itens.length - 1 || filtrando}
+                            onEditar={() => {
+                              setSessao((n) => n + 1);
+                              setEditando(item);
+                            }}
+                            onExcluir={() => setExcluindo({ tipo: "item", item })}
+                          />
+                        ))}
+                      </ul>
+                    )}
+                  </Card>
+                </ItemEscalonado>
+              ))}
+            </ListaEscalonada>
+          )}
+        </div>
+      </div>
 
       <EditorItem
         editando={editando}
+        sessao={sessao}
         categoriaInicial={novoNaCategoria}
         categorias={categorias}
+        selos={selos}
         onFechar={() => setEditando(null)}
       />
 

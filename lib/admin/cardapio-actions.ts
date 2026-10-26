@@ -8,16 +8,14 @@ import { sql } from "@/lib/db";
 
 import { ErroAmigavel, idCurto, protegida, slugify } from "./comum";
 
-const BADGES = ["vegetariano", "rizz", "tartufato"] as const;
-
 const esquemaItem = z.object({
   id: z.string().optional(),
   categoriaId: z.string().min(1, "Escolha a categoria."),
   nome: z.string().trim().min(2, "Informe o nome do prato."),
   descricao: z.string().trim().max(400).nullable(),
   preco: z.number().min(0).max(100000).nullable(),
-  badges: z.array(z.enum(BADGES)),
-  vpj: z.boolean(),
+  /** Ids dos selos (tabela `selos`). O VPJ é um deles; a coluna vpj fica sempre false. */
+  badges: z.array(z.string().trim().min(1).max(40)).max(12),
   grupo: z.string().trim().max(60).nullable(),
   disponivel: z.boolean(),
   visivel: z.boolean(),
@@ -34,7 +32,7 @@ export async function salvarItem(entrada: ItemEntrada) {
         await sql`
           update itens set
             categoria_id = ${d.categoriaId}, nome = ${d.nome}, descricao = ${d.descricao || null},
-            preco = ${d.preco}, badges = ${d.badges}, vpj = ${d.vpj}, grupo = ${d.grupo || null},
+            preco = ${d.preco}, badges = ${d.badges}, vpj = false, grupo = ${d.grupo || null},
             disponivel = ${d.disponivel}, visivel = ${d.visivel}, foto_url = ${d.fotoUrl},
             atualizado_em = now()
           where id = ${d.id}`;
@@ -46,7 +44,7 @@ export async function salvarItem(entrada: ItemEntrada) {
       await sql`
         insert into itens (id, categoria_id, nome, descricao, preco, badges, vpj, grupo, disponivel, visivel, foto_url, ordem)
         values (${id}, ${d.categoriaId}, ${d.nome}, ${d.descricao || null}, ${d.preco}, ${d.badges},
-                ${d.vpj}, ${d.grupo || null}, ${d.disponivel}, ${d.visivel}, ${d.fotoUrl}, ${proxima})`;
+                false, ${d.grupo || null}, ${d.disponivel}, ${d.visivel}, ${d.fotoUrl}, ${proxima})`;
       return id;
     },
     { tags: [TAGS.cardapio] },

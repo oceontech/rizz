@@ -1,8 +1,21 @@
 # Estado do projeto e pendências
 
-Atualizado em 19/10/2026. Ao resolver um item, apague-o daqui (ou mova para "Feito recentemente").
+Atualizado em 26/10/2026. Ao resolver um item, apague-o daqui (ou mova para "Feito recentemente").
 
 ## Feito recentemente
+
+- **Upgrade do painel: cores, selos e página inicial** (branch `feat/painel-upgrade`).
+  - Cores: o vinho ficou só em pontos de marca (logo, avatar). Ação principal em grafite; cada área do painel tem uma cor própria (`data-secao` no Shell, tokens `--secao*` em `admin.css`); switch ligado em verde; situações com cores de significado (verde, âmbar, vermelho, azul).
+  - Corrigido: o painel parava de aceitar cliques depois de abrir um editor pelo menu "…" (dois modais do Radix deixavam `pointer-events: none` no body). `MenuAcoes` agora é não modal e roda a ação depois de fechar. Reproduzido e conferido no navegador.
+  - **Selos** viraram cadastro (`/admin/selos`, tabela `selos`): nome, legenda, formato, símbolo e cor, desenhados em SVG (`components/ui/SeloSvg.tsx`) com entrada animada (`app/selos.css`). O VPJ e o Duroc viraram selos como os outros; a coluna `itens.vpj` fica por compatibilidade e é lida como o selo `vpj`.
+  - **Página inicial** editável (`/admin/home`, configuração `home`): o prato mais pedido (com chamada, título e texto) e a seleção do cardápio. O vídeo de abertura é do camarão: com outro prato, a dobra entra sem ele.
+  - Cardápio do painel: índice de categorias, selos desenhados nas linhas, botão de situação (Disponível/Esgotado) e editor com prévia de como o prato aparece no site.
+  - **Fidelidade trancada** ("Em breve"): o gestor continua em `components/admin/fidelidade/`; para liberar, ver o comentário em `app/(admin)/admin/(painel)/fidelidade/page.tsx`. A visão geral não mostra mais os blocos dela.
+  - Barra "alterações não salvas" no lugar do botão flutuante (WhatsApp e ajustes de reservas).
+  - Conferido: lint, typecheck, build e capturas locais logado (sessão só local, sem salvar nada).
+
+- **WhatsApp pela Evolution API** (em produção desde 26/10/2026). Guia em [`whatsapp.md`](whatsapp.md). Evolution na VPS (`https://evo.rizz.genext.group`), variáveis na Vercel, tabela `whatsapp_envios` criada e lembretes pelo cron da VPS a cada 10 min.
+  - Falta: conectar o número pelo painel (QR Code), mandar a mensagem de teste e ligar **Enviar mensagens automáticas** (estava desligado).
 
 - **Nova UI do painel e da reserva** (em produção desde 23/10/2026).
   - Painel: saiu o HeroUI; entrou o sistema visual do Ge System (cinza neutro, cards sem borda, sidebar escura flutuante e recolhível, barra inferior em pílula no celular, tema claro/escuro), com o vinho do Rizz no lugar do azul. Componentes base em `components/sistema/`, tokens em `app/(admin)/admin.css`.
@@ -15,20 +28,6 @@ Atualizado em 19/10/2026. Ao resolver um item, apague-o daqui (ou mova para "Fei
   - Migração aplicada no banco (`npm run db:setup`).
   - Testado ponta a ponta pela API local: reservar, link pessoal, `.ics`, alterar, cancelar e as recusas (duplicada, grupo grande, data fora do limite, robô, link inválido). A reserva de teste foi apagada.
   - **Não testado:** clicando no navegador (site e painel com login).
-
-## Em andamento: WhatsApp pela Evolution API
-
-Código pronto na branch `feat/whatsapp-evolution` (ainda não publicado). Guia completo em [`whatsapp.md`](whatsapp.md).
-
-- [x] Tela `/admin/whatsapp`: conectar por QR Code ou código, teste de envio, mensagens automáticas, textos editáveis com prévia e histórico.
-- [x] Confirmação, pedido recebido, alteração, cancelamento, lembrete e aviso à equipe, ligados às rotas do site e às ações do painel.
-- [x] Grupos grandes deixam de ir para o WhatsApp: reservam pelo site e chegam pendentes.
-- [x] Evolution na VPS: `https://evo.rizz.genext.group` (projeto `rizz` do `genext-group/vps-infra`, Evolution v2.3.7). Variáveis no `.env.local`.
-- [ ] Variáveis `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCIA` e `CRON_SECRET` na Vercel.
-- [ ] `! npm run db:setup` (tabela `whatsapp_envios`) **antes** de publicar.
-- [ ] Publicar, conectar o número pelo painel e mandar a mensagem de teste.
-- [x] Agendador dos lembretes: cron na VPS a cada 10 min (`/etc/cron.d/rizz-lembretes`, ver `projects/rizz/README.md` do vps-infra). Falta instalar o `CRON_SECRET` lá.
-- Conferido contra a Evolution de verdade só a chave (`fetchInstances` = 200); QR Code e envio ficam para depois de publicar. Conferido: lint, typecheck e build.
 
 ## Em andamento: e-mail com Resend
 

@@ -1,33 +1,28 @@
-import { BADGES, type Badge } from "@/data/menu";
+"use client";
+
+import { createContext, useContext, useMemo, type ReactNode } from "react";
+
+import SeloSvg from "@/components/ui/SeloSvg";
+import { mapaDeSelos, SELOS_PADRAO, type SeloDef } from "@/lib/selos";
 
 /**
- * Os três símbolos do cardápio, redesenhados como na peça impressa:
- * disco verde com folha, disco dourado com "R", disco preto da trufa.
+ * Selos cadastrados no painel, disponíveis para todo o site. O layout do site
+ * busca a lista (com cache) e a entrega aqui; sem provider, valem os padrões.
  */
-export function SeloBadge({ badge }: { badge: Badge }) {
-  const info = BADGES[badge];
+const ContextoSelos = createContext<{ lista: SeloDef[]; mapa: Map<string, SeloDef> } | null>(null);
 
-  const estilo: Record<Badge, string> = {
-    vegetariano: "bg-verde text-creme",
-    rizz: "bg-ouro text-white",
-    tartufato: "bg-tinta text-creme",
-  };
-
-  return (
-    <span
-      className={`inline-flex size-[1.0625rem] shrink-0 items-center justify-center rounded-full text-[0.5rem] font-semibold not-italic leading-none ${estilo[badge]}`}
-      title={info.descricao}
-    >
-      {badge === "vegetariano" ? (
-        <svg viewBox="0 0 24 24" className="size-2.5" fill="currentColor" aria-hidden>
-          <path d="M20 4c-9 0-15 4-15 11 0 2 .6 3.6 1.6 4.8L4 22l1.4 1.4 2.3-2.3C9 22 10.4 22.4 12 22.4 19 22.4 20 12 20 4m-2.4 2.6c-.3 6-1.8 13.4-5.8 13.4-.9 0-1.7-.2-2.4-.6C12.6 15.8 15 12.6 18 10.4c-3.6 1.5-6.6 4.3-9.6 8.2-.5-.7-.8-1.7-.8-2.9 0-5.2 4.5-8.6 11-9.1" />
-        </svg>
-      ) : (
-        <span aria-hidden>{info.sigla}</span>
-      )}
-      <span className="sr-only">{info.descricao}</span>
-    </span>
+export function SelosProvider({ selos, children }: { selos: SeloDef[]; children: ReactNode }) {
+  const valor = useMemo(
+    () => ({ lista: selos.filter((s) => s.ativo).sort((a, b) => a.ordem - b.ordem), mapa: mapaDeSelos(selos) }),
+    [selos],
   );
+  return <ContextoSelos.Provider value={valor}>{children}</ContextoSelos.Provider>;
+}
+
+const PADRAO = { lista: SELOS_PADRAO, mapa: mapaDeSelos(SELOS_PADRAO) };
+
+export function useSelos() {
+  return useContext(ContextoSelos) ?? PADRAO;
 }
 
 const tons = {
@@ -44,34 +39,38 @@ const tons = {
 } as const;
 
 /**
- * Etiqueta legível: o disco da peça impressa + o nome por extenso. O disco
- * sozinho ("T", "R") não dizia nada a quem não conhece a legenda.
+ * Etiqueta legível: o selo desenhado + o nome por extenso. O desenho sozinho
+ * não diz nada a quem não conhece a legenda.
  *
  * Com `onAlternar` vira botão de filtro — tocar na etiqueta de um prato
  * mostra só os pratos com ela.
  */
-export function EtiquetaBadge({
-  badge,
+export function EtiquetaSelo({
+  id,
   tom = "claro",
   ativo = false,
+  atraso = 0,
   onAlternar,
 }: {
-  badge: Badge;
+  id: string;
   tom?: keyof typeof tons;
   ativo?: boolean;
-  onAlternar?: (b: Badge) => void;
+  atraso?: number;
+  onAlternar?: (id: string) => void;
 }) {
-  const info = BADGES[badge];
+  const selo = useSelos().mapa.get(id);
+  if (!selo) return null;
   const t = tons[tom];
   const classe = `inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full border pl-[3px] pr-2.5 font-sans text-[0.6875rem] font-normal not-italic leading-none tracking-[0.03em] transition-colors duration-300 ${
     ativo ? t.ativo : t.base
   }`;
+  const desenho = <SeloSvg selo={selo} tamanho={18} animar atraso={atraso} titulo={false} />;
 
   if (!onAlternar) {
     return (
-      <span className={classe} title={info.descricao}>
-        <SeloBadge badge={badge} />
-        {info.rotulo}
+      <span className={classe} title={selo.descricao ?? selo.nome}>
+        {desenho}
+        {selo.nome}
       </span>
     );
   }
@@ -79,13 +78,13 @@ export function EtiquetaBadge({
   return (
     <button
       type="button"
-      onClick={() => onAlternar(badge)}
+      onClick={() => onAlternar(id)}
       aria-pressed={ativo}
-      title={ativo ? `Remover filtro: ${info.rotulo}` : `Filtrar por: ${info.rotulo}`}
+      title={ativo ? `Remover filtro: ${selo.nome}` : `Filtrar por: ${selo.nome}`}
       className={`${classe} ${t.interativo} cursor-pointer`}
     >
-      <SeloBadge badge={badge} />
-      {info.rotulo}
+      {desenho}
+      {selo.nome}
     </button>
   );
 }
@@ -97,68 +96,36 @@ export function ListaSelos({
   onAlternar,
   className = "",
 }: {
-  badges?: Badge[];
+  badges?: string[];
   tom?: keyof typeof tons;
-  ativos?: Badge[];
-  onAlternar?: (b: Badge) => void;
+  ativos?: string[];
+  onAlternar?: (id: string) => void;
   className?: string;
 }) {
-  if (!badges?.length) return null;
+  const { mapa } = useSelos();
+  const validos = (badges ?? []).filter((b) => mapa.has(b));
+  if (!validos.length) return null;
 
   return (
     <span className={`inline-flex flex-wrap items-center gap-1.5 ${className}`}>
-      {badges.map((b) => (
-        <EtiquetaBadge
-          key={b}
-          badge={b}
-          tom={tom}
-          ativo={ativos.includes(b)}
-          onAlternar={onAlternar}
-        />
+      {validos.map((b, i) => (
+        <EtiquetaSelo key={b} id={b} tom={tom} atraso={i * 0.08} ativo={ativos.includes(b)} onAlternar={onAlternar} />
       ))}
     </span>
   );
 }
 
-/** Carimbo de carne certificada, como na peça. */
-export function SeloOrigem({
-  tipo = "vpj",
-  className = "",
-}: {
-  tipo?: "vpj" | "duroc";
-  className?: string;
-}) {
-  const rotulo = tipo === "vpj" ? "VPJ" : "DUROC";
-  const titulo =
-    tipo === "vpj"
-      ? "Identificação VPJ no cardápio"
-      : "Duroc Pork";
-
-  return (
-    <span
-      title={titulo}
-      className={`inline-flex h-6 shrink-0 items-center rounded-full border border-vinho/45 px-2.5 font-sans text-[0.625rem] font-semibold not-italic leading-none tracking-[0.12em] text-vinho/85 ${className}`}
-    >
-      <span aria-hidden>{rotulo}</span>
-      <span className="sr-only">{titulo}</span>
-    </span>
-  );
-}
-
-/** Legenda dos símbolos, no pé do cardápio — igual à peça impressa. */
+/** Legenda dos selos, no pé do cardápio — como na peça impressa. */
 export function Legenda({ className = "" }: { className?: string }) {
+  const { lista } = useSelos();
   return (
     <ul className={`flex flex-wrap gap-x-8 gap-y-3 text-sm italic ${className}`}>
-      {(Object.keys(BADGES) as Badge[]).map((b) => (
-        <li key={b} className="flex items-center gap-2.5">
-          <SeloBadge badge={b} />
-          <span>{BADGES[b].descricao}</span>
+      {lista.map((s, i) => (
+        <li key={s.id} className="flex items-center gap-2.5">
+          <SeloSvg selo={s} tamanho={26} animar atraso={i * 0.08} />
+          <span>{s.descricao ?? s.nome}</span>
         </li>
       ))}
-      <li className="flex items-center gap-2.5">
-        <SeloOrigem />
-        <span>VPJ nos itens indicados</span>
-      </li>
     </ul>
   );
 }

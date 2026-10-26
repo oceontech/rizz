@@ -3,11 +3,12 @@
 import { useMemo, useRef, useState } from "react";
 
 import { CONDICOES, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
-import { ListaSelos, SeloOrigem } from "@/components/ui/Selos";
+import { ListaSelos, useSelos } from "@/components/ui/Selos";
+import SeloSvg from "@/components/ui/SeloSvg";
 import Preco from "@/components/ui/Preco";
 import Image from "next/image";
 
-import { BADGES, type Badge, type Categoria, type MenuItem } from "@/data/menu";
+import type { Badge, Categoria, MenuItem } from "@/data/menu";
 import { scrollToTarget } from "@/lib/scroll";
 
 type FaixaPreco = "todas" | "ate60" | "de60a90" | "acima90";
@@ -32,7 +33,7 @@ function Linha({
   ativos: Badge[];
   onAlternar: (b: Badge) => void;
 }) {
-  const temEtiquetas = Boolean(item.badges?.length || item.vpj);
+  const temEtiquetas = Boolean(item.badges?.length);
   // Marcado como esgotado no painel: segue listado, mas apagado e sem preço.
   const esgotado = item.disponivel === false;
 
@@ -78,7 +79,6 @@ function Linha({
       {temEtiquetas && (
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
           <ListaSelos badges={item.badges} ativos={ativos} onAlternar={onAlternar} />
-          {item.vpj && <SeloOrigem />}
         </div>
       )}
     </li>
@@ -87,6 +87,12 @@ function Linha({
 
 export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
   const [badges, setBadges] = useState<Badge[]>([]);
+  // Filtros: só os selos que aparecem em algum prato do cardápio publicado.
+  const { lista: todosOsSelos } = useSelos();
+  const selosEmUso = useMemo(() => {
+    const usados = new Set(cardapio.flatMap((c) => c.itens.flatMap((i) => i.badges ?? [])));
+    return todosOsSelos.filter((s) => usados.has(s.id));
+  }, [cardapio, todosOsSelos]);
   const [faixa, setFaixa] = useState<FaixaPreco>("todas");
   const [busca, setBusca] = useState("");
   const [ativa, setAtiva] = useState(cardapio[0]?.slug ?? "");
@@ -370,21 +376,22 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
         </label>
 
         <div className="flex flex-wrap items-center gap-2">
-          {(Object.keys(BADGES) as Badge[]).map((b) => {
-            const on = badges.includes(b);
+          {selosEmUso.map((selo, i) => {
+            const on = badges.includes(selo.id);
             return (
               <button
-                key={b}
+                key={selo.id}
                 type="button"
-                onClick={() => alternarBadge(b)}
+                onClick={() => alternarBadge(selo.id)}
                 aria-pressed={on}
-                className={`h-9 rounded-full border px-4 text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-300 ${
+                className={`flex h-9 items-center gap-2 rounded-full border pl-1.5 pr-4 text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-300 ${
                   on
                     ? "border-vinho bg-vinho text-creme"
                     : "border-tinta/20 text-tinta/65 hover:border-vinho/50 hover:text-vinho"
                 }`}
               >
-                {BADGES[b].rotulo}
+                <SeloSvg selo={selo} tamanho={22} animar atraso={i * 0.07} titulo={false} />
+                {selo.nome}
               </button>
             );
           })}

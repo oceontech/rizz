@@ -9,10 +9,11 @@ import Marquee from "@/components/home/Marquee";
 import Mosaico from "@/components/home/Mosaico";
 import PratoAssinatura from "@/components/home/PratoAssinatura";
 import Visite from "@/components/home/Visite";
-import { executivoDoSite } from "@/lib/dados";
+import { executivoDoSite, homeDoSite } from "@/lib/dados";
 
 export default async function HomePage() {
-  const executivo = await executivoDoSite();
+  const [executivo, home] = await Promise.all([executivoDoSite(), homeDoSite()]);
+  const { maisPedido } = home;
 
   return (
     <>
@@ -20,10 +21,15 @@ export default async function HomePage() {
       <Galeria />
       <Marquee />
       <Manifesto />
-      <IntroCamarao>
-        <PratoAssinatura entradaPeloVideo />
-      </IntroCamarao>
-      <Destaques />
+      {/* O vídeo de abertura é do camarão: com outro prato, a dobra entra sozinha. */}
+      {maisPedido?.id === "camarao-empanado" ? (
+        <IntroCamarao nome={maisPedido.nome}>
+          <PratoAssinatura prato={maisPedido} entradaPeloVideo />
+        </IntroCamarao>
+      ) : (
+        maisPedido && <PratoAssinatura prato={maisPedido} />
+      )}
+      {home.destaques.length > 0 && <Destaques pratos={home.destaques} />}
       <Mosaico />
       {executivo.ativo && <Executivo executivo={executivo} />}
       <AvaliacoesResumo />

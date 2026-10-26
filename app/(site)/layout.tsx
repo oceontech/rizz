@@ -14,8 +14,9 @@ import FloatingCta from "@/components/layout/FloatingCta";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import PopupPromocional from "@/components/promo/PopupPromocional";
+import { SelosProvider } from "@/components/ui/Selos";
 import { resumoAvaliacoes } from "@/data/reviews";
-import { avisoDoSite, promocoesDoSite } from "@/lib/dados";
+import { avisoDoSite, promocoesDoSite, selosDoSite } from "@/lib/dados";
 import { openingHoursSpecification } from "@/lib/hours";
 import { site } from "@/lib/site";
 
@@ -118,7 +119,7 @@ const dadosEstruturados = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Publicados pelo painel (/admin). Cacheados com tag: o painel invalida.
-  const [aviso, promocoes] = await Promise.all([avisoDoSite(), promocoesDoSite()]);
+  const [aviso, promocoes, selos] = await Promise.all([avisoDoSite(), promocoesDoSite(), selosDoSite()]);
   const avisoAtivo = aviso.ativo && aviso.texto.trim() ? aviso : null;
 
   return (
@@ -142,7 +143,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
           <Header aviso={avisoAtivo} />
 
-          <main id="conteudo">{children}</main>
+          <main id="conteudo">
+            <SelosProvider selos={selos}>{children}</SelosProvider>
+          </main>
 
           <Footer />
           <BottomNav />

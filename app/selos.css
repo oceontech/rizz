@@ -1,0 +1,75 @@
+/* ───────────────────────────────────────────────────────────
+   Entrada dos selos (components/ui/SeloSvg.tsx), comum ao site e
+   ao painel. O selo começa "fora" e, ao aparecer na tela, o formato
+   gira e cresce com mola, o anel interno se desenha e o símbolo surge.
+   ─────────────────────────────────────────────────────────── */
+
+.selo-svg[data-selo-animado] .selo-forma,
+.selo-svg[data-selo-animado] .selo-simbolo {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.selo-svg[data-selo-animado="fora"] .selo-forma {
+  opacity: 0;
+  transform: scale(0.4) rotate(-25deg);
+}
+.selo-svg[data-selo-animado="fora"] .selo-simbolo {
+  opacity: 0;
+}
+
+.selo-svg[data-selo-animado="dentro"] .selo-forma {
+  animation: selo-entra 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) var(--selo-atraso, 0s) both;
+}
+.selo-svg[data-selo-animado="dentro"] .selo-anel {
+  stroke-dasharray: 1;
+  animation: selo-anel 0.8s cubic-bezier(0.4, 0, 0.2, 1) calc(var(--selo-atraso, 0s) + 0.15s) both;
+}
+.selo-svg[data-selo-animado="dentro"] .selo-simbolo {
+  animation: selo-simbolo 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--selo-atraso, 0s) + 0.28s) both;
+}
+
+@keyframes selo-entra {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-25deg);
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes selo-anel {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes selo-simbolo {
+  from {
+    opacity: 0;
+    transform: scale(0.55) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selo-svg[data-selo-animado] .selo-forma,
+  .selo-svg[data-selo-animado] .selo-anel,
+  .selo-svg[data-selo-animado] .selo-simbolo {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}

@@ -6,7 +6,7 @@ import Reveal from "@/components/motion/Reveal";
 import RevealScrub from "@/components/motion/RevealScrub";
 import BadgeExecutivo from "@/components/ui/BadgeExecutivo";
 import { BotaoLink } from "@/components/ui/Botao";
-import { Legenda, SeloOrigem } from "@/components/ui/Selos";
+import { EtiquetaSelo, Legenda } from "@/components/ui/Selos";
 import IndicadorAbertura from "@/components/ui/StatusAbertura";
 import Preco from "@/components/ui/Preco";
 import { cardapioDoSite, executivoDoSite, type ExecutivoDados } from "@/lib/dados";
@@ -86,7 +86,7 @@ function BlocoExecutivo({ executivo }: { executivo: ExecutivoDados }) {
                   >
                     <span className="flex min-w-0 grow flex-wrap items-center gap-x-2 text-[0.9375rem] leading-snug text-vinho md:text-base">
                       {item.nome}
-                      {item.selo && <SeloOrigem tipo={item.selo} />}
+                      {item.selo && <EtiquetaSelo id={item.selo} />}
                     </span>
                     {executivo.condicoesConfirmadas && (
                       <Preco
