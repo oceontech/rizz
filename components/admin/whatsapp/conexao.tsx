@@ -148,20 +148,18 @@ export function ConectarWhatsapp({ aoConectar, autoGerar = false }: { aoConectar
       {qr && !expirou ? (
         <div className="grid items-center gap-6 sm:grid-cols-[auto_1fr]">
           {modo === "qr" && qr.imagem ? (
-            <div className="relative mx-auto rounded-2xl bg-white p-3 shadow-suave">
+            <div className="mx-auto rounded-2xl border-4 border-marca bg-white p-3">
               {/* O QR é uma imagem em base64 gerada na hora: não passa pelo otimizador.
-                  A Evolution entrega em azul: vira preto e branco e, sobre o vinho com
-                  "screen", o preto ganha a cor da marca e o branco continua branco. */}
-              <span className="block bg-marca">
-                <Image
-                  src={qr.imagem}
-                  alt="QR Code para conectar o WhatsApp"
-                  width={232}
-                  height={232}
-                  unoptimized
-                  className="size-58 mix-blend-screen grayscale contrast-[10]"
-                />
-              </span>
+                  A Evolution entrega em azul: o filtro deixa preto no branco, e o recorte
+                  de 2px tira a linha clara que a imagem traz nas bordas. */}
+              <Image
+                src={qr.imagem}
+                alt="QR Code para conectar o WhatsApp"
+                width={232}
+                height={232}
+                unoptimized
+                className="size-58 grayscale contrast-[10] [clip-path:inset(2px)]"
+              />
             </div>
           ) : (
             <div className="mx-auto rounded-2xl bg-muted px-6 py-5 text-center">
