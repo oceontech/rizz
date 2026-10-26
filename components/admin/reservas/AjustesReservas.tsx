@@ -87,12 +87,13 @@ function Regras({ config }: { config: ReservasConfig }) {
             descricao="Depois disso, os lugares voltam a ficar livres."
           />
           <CampoNumero
-            label="Máximo de pessoas pelo site"
+            label="Grupo grande: acima de"
             value={c.maxPessoasOnline}
             onChange={(v) => mudar("maxPessoasOnline", v ?? 8)}
             min={1}
-            max={30}
-            descricao="Grupos maiores falam com a equipe pelo WhatsApp."
+            max={60}
+            unidade="pessoas"
+            descricao="Grupos maiores reservam pelo site normalmente, mas chegam pendentes para a equipe confirmar e preparar o espaço."
           />
         </div>
       </Secao>

@@ -1,10 +1,13 @@
 "use server";
 
+import { after } from "next/server";
 import { z } from "zod";
 
+import { paraDataISO } from "@/lib/dados";
 import { sql } from "@/lib/db";
 import { OCASIOES, RESERVAS_PADRAO, type ReservasConfig } from "@/lib/reservas/regras";
 import { lerConfigReservas, livresNoHorario, novoCodigo } from "@/lib/reservas/servidor";
+import { avisarReserva } from "@/lib/whatsapp/avisos";
 
 import { ErroAmigavel, protegida } from "./comum";
 import { normalizarTelefone } from "./formato";
@@ -35,23 +38,46 @@ export async function salvarReserva(entrada: z.infer<typeof esquema>) {
     const d = esquema.parse(entrada);
     const telefone = d.telefone ? normalizarTelefone(d.telefone) || null : null;
     if (d.id) {
+      const id = d.id;
+      const [antes] = await sql`select pessoas, data, hora, status from reservas where id = ${id}`;
       await sql`update reservas set nome = ${d.nome}, telefone = ${telefone}, pessoas = ${d.pessoas},
                 data = ${d.data}, hora = ${d.hora}, obs = ${d.obs || null}, ocasiao = ${d.ocasiao},
                 mesa = ${d.mesa || null}, status = ${d.status}, atualizado_em = now(),
                 codigo = coalesce(codigo, ${novoCodigo()})
-                where id = ${d.id}`;
+                where id = ${id}`;
+      if (antes) {
+        const evento = eventoDaMudanca(String(antes.status), d.status);
+        const mudouHorario =
+          Number(antes.pessoas) !== d.pessoas || paraDataISO(antes.data) !== d.data || String(antes.hora) !== d.hora;
+        if (evento) after(() => avisarReserva(id, evento));
+        else if (mudouHorario) after(() => avisarReserva(id, "alterada"));
+      }
       return;
     }
-    await sql`insert into reservas (nome, telefone, pessoas, data, hora, obs, ocasiao, mesa, status, origem, codigo)
-              values (${d.nome}, ${telefone}, ${d.pessoas}, ${d.data}, ${d.hora}, ${d.obs || null},
-                      ${d.ocasiao}, ${d.mesa || null}, ${d.status}, 'painel', ${novoCodigo()})`;
+    const [nova] = await sql`
+      insert into reservas (nome, telefone, pessoas, data, hora, obs, ocasiao, mesa, status, origem, codigo)
+      values (${d.nome}, ${telefone}, ${d.pessoas}, ${d.data}, ${d.hora}, ${d.obs || null},
+              ${d.ocasiao}, ${d.mesa || null}, ${d.status}, 'painel', ${novoCodigo()})
+      returning id`;
+    after(() => avisarReserva(Number(nova.id), "nova"));
   });
+}
+
+/** Só confirmar e cancelar geram mensagem; "Chegou" e "Não veio", não. */
+function eventoDaMudanca(antes: string, depois: StatusReserva) {
+  if (antes === depois) return null;
+  if (depois === "confirmada") return "confirmada" as const;
+  if (depois === "cancelada") return "cancelada" as const;
+  return null;
 }
 
 export async function mudarStatusReserva(id: number, status: StatusReserva) {
   return protegida(async () => {
     z.enum(STATUS).parse(status);
+    const [antes] = await sql`select status from reservas where id = ${id}`;
     await sql`update reservas set status = ${status}, atualizado_em = now() where id = ${id}`;
+    const evento = antes ? eventoDaMudanca(String(antes.status), status) : null;
+    if (evento) after(() => avisarReserva(id, evento));
   });
 }
 
@@ -127,7 +153,7 @@ const esquemaConfig = z.object({
   intervalo: z.number().int().refine((n) => [15, 20, 30, 60].includes(n), "Intervalo inválido."),
   permanencia: z.number().int().min(30).max(360),
   ultimoAntesDoFim: z.number().int().min(0).max(240),
-  maxPessoasOnline: z.number().int().min(1).max(30),
+  maxPessoasOnline: z.number().int().min(1).max(60),
   antecedenciaMinima: z.number().int().min(0).max(24 * 60),
   diasAFrente: z.number().int().min(1).max(180),
 }) satisfies z.ZodType<ReservasConfig>;

@@ -5,6 +5,7 @@ import {
   Heart,
   LayoutGrid,
   Megaphone,
+  MessageCircle,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -18,6 +19,7 @@ export const NAV: ItemNav[] = [
   { href: "/admin/executivo", rotulo: "Menu executivo", curto: "Executivo", Icone: BriefcaseBusiness, grupo: "principal" },
   { href: "/admin/fidelidade", rotulo: "Fidelidade", curto: "Fidelidade", Icone: Heart, grupo: "principal" },
   { href: "/admin/promocoes", rotulo: "Promoções e pop-up", curto: "Promoções", Icone: Megaphone, grupo: "principal" },
+  { href: "/admin/whatsapp", rotulo: "WhatsApp", curto: "WhatsApp", Icone: MessageCircle, grupo: "rodape" },
   { href: "/admin/configuracoes", rotulo: "Configurações", curto: "Ajustes", Icone: Settings, grupo: "rodape" },
 ];
 

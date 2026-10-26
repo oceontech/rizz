@@ -16,6 +16,20 @@ Atualizado em 19/10/2026. Ao resolver um item, apague-o daqui (ou mova para "Fei
   - Testado ponta a ponta pela API local: reservar, link pessoal, `.ics`, alterar, cancelar e as recusas (duplicada, grupo grande, data fora do limite, robô, link inválido). A reserva de teste foi apagada.
   - **Não testado:** clicando no navegador (site e painel com login).
 
+## Em andamento: WhatsApp pela Evolution API
+
+Código pronto na branch `feat/whatsapp-evolution` (ainda não publicado). Guia completo em [`whatsapp.md`](whatsapp.md).
+
+- [x] Tela `/admin/whatsapp`: conectar por QR Code ou código, teste de envio, mensagens automáticas, textos editáveis com prévia e histórico.
+- [x] Confirmação, pedido recebido, alteração, cancelamento, lembrete e aviso à equipe, ligados às rotas do site e às ações do painel.
+- [x] Grupos grandes deixam de ir para o WhatsApp: reservam pelo site e chegam pendentes.
+- [x] Evolution na VPS: `https://evo.rizz.genext.group` (projeto `rizz` do `genext-group/vps-infra`, Evolution v2.3.7). Variáveis no `.env.local`.
+- [ ] Variáveis `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCIA` e `CRON_SECRET` na Vercel.
+- [ ] `! npm run db:setup` (tabela `whatsapp_envios`) **antes** de publicar.
+- [ ] Publicar, conectar o número pelo painel e mandar a mensagem de teste.
+- [x] Agendador dos lembretes: cron na VPS a cada 10 min (`/etc/cron.d/rizz-lembretes`, ver `projects/rizz/README.md` do vps-infra). Falta instalar o `CRON_SECRET` lá.
+- Conferido contra a Evolution de verdade só a chave (`fetchInstances` = 200); QR Code e envio ficam para depois de publicar. Conferido: lint, typecheck e build.
+
 ## Em andamento: e-mail com Resend
 
 Objetivo: o painel mandar e-mails. Primeiro uso: **convite de administrador**. Hoje não há como cadastrar um novo usuário do painel (ver "Acesso ao painel" abaixo).
@@ -47,9 +61,9 @@ Passo a passo:
 
 ### Reservas (ver detalhes em `reservas.md`)
 - **Corrida no último lugar:** o servidor grava e só depois confere a lotação. Se duas pessoas reservarem o último lugar no mesmo instante, as duas podem ser desfeitas, mas nunca passam da lotação. A correção é uma trava (`pg_advisory_xact_lock` por data+turno, dentro de `sql.transaction`).
-- **A equipe não é avisada** de reserva nova; precisa abrir o painel. Com a confirmação manual ligada, uma pendente pode passar despercebida. A solução depende do Resend.
+- **A equipe não é avisada** de reserva nova; precisa abrir o painel. Com a confirmação manual ligada, uma pendente pode passar despercebida. Resolve com o "aviso à equipe" do WhatsApp, quando estiver configurado (seção acima).
 - **Sem limite de pedidos por pessoa** na API pública; a única proteção contra robôs é o campo invisível. Daria para lotar um turno com reservas falsas.
-- **O cliente só recebe o link na tela** depois de reservar; se perder, a equipe reenvia pelo painel (ação "Enviar confirmação" no WhatsApp).
+- **O cliente só recebe o link na tela** depois de reservar; se perder, a equipe reenvia pelo painel (ação "Enviar confirmação" no WhatsApp). Resolve com a confirmação automática do WhatsApp, quando estiver configurada.
 - A recusa do robô devolve a mensagem crua do zod (em inglês). É inofensivo, só aparece para robôs.
 
 ### Conteúdo e dados (herdado da v2, ver `ENTREGA.md`)
