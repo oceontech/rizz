@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useRef } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
@@ -72,8 +73,11 @@ export default function Footer() {
     { scope: raiz },
   );
 
+  // A versão B da home (/b) usa um só tom escuro, sem a faixa mais clara.
+  const versaoB = usePathname() === "/b";
+
   return (
-    <footer ref={raiz} className="border-t border-creme/10 bg-noite-2">
+    <footer ref={raiz} className={`border-t border-creme/10 ${versaoB ? "bg-noite" : "bg-noite-2"}`}>
       <div className="wrap pt-16 md:pt-24">
         <div className="grid gap-12 md:grid-cols-[1.1fr_1fr_1fr]">
           <div>

@@ -100,11 +100,11 @@ export default function VinhoDaCasa() {
             alt=""
             fill
             sizes="(min-width: 768px) 50vw, 100vw"
-            className="-z-10 object-cover opacity-60 mix-blend-luminosity"
+            className="-z-10 object-cover opacity-25 mix-blend-luminosity"
           />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-vinho-fundo via-vinho/60 to-vinho/30" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-noite via-vinho-fundo/85 to-vinho-fundo/65" />
 
-          <p className="absolute top-[7%] left-[8%] text-ambar md:top-[14%] md:right-[8%] md:left-auto md:text-right">
+          <p className="absolute top-[7%] left-[8%] z-10 text-ambar md:top-[14%] md:right-[8%] md:left-auto md:text-right">
             <span className="block font-display text-2xl italic md:text-4xl">Vinho fino</span>
             <span className="block font-sans text-2xl leading-none font-semibold tracking-[-0.01em] uppercase md:text-4xl">
               Tinto seco
@@ -112,11 +112,19 @@ export default function VinhoDaCasa() {
           </p>
 
           <div data-garrafa className="relative mt-[10svh] h-[58svh] w-auto md:mt-0 md:h-[66svh]">
+            {/* Sombra: a mesma garrafa, toda preta, desfocada e deslocada. */}
+            <Image
+              src={garrafa}
+              alt=""
+              aria-hidden
+              sizes="(min-width: 768px) 20vw, 40vw"
+              className="absolute inset-0 h-full w-auto translate-x-[24%] translate-y-[2%] rotate-[5deg] opacity-80 blur-[7px] brightness-0"
+            />
             <Image
               src={garrafa}
               alt="Garrafa do vinho Rizz Syrah, colheita de inverno, safra 2023"
               sizes="(min-width: 768px) 20vw, 40vw"
-              className="h-full w-auto drop-shadow-[0_40px_60px_rgb(0_0_0/0.55)]"
+              className="relative h-full w-auto"
             />
           </div>
         </div>

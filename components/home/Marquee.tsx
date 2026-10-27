@@ -20,7 +20,7 @@ const palavras = [
  * ela segue devagar. É o detalhe que faz a página parecer viva sem pedir nada
  * do usuário.
  */
-export default function Marquee() {
+export default function Marquee({ amarela = false }: { amarela?: boolean }) {
   const raiz = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -85,13 +85,23 @@ export default function Marquee() {
 
   const fila = (
     <ul className="flex shrink-0 items-center" aria-hidden>
-      {palavras.map((p) => (
+      {palavras.map((p, i) => (
         <li key={p} className="flex items-center">
-          <span className="whitespace-nowrap px-7 font-display text-2xl italic text-creme/80 md:px-10 md:text-4xl">
-            {p}
-          </span>
+          {/* Na faixa amarela (versão B) as palavras alternam itálico e caixa
+              alta, como nos cartazes. */}
+          {amarela ? (
+            <span
+              className={`whitespace-nowrap px-6 text-vinho md:px-9 ${i % 2 ? "font-sans text-2xl font-semibold tracking-[-0.02em] uppercase md:text-4xl" : "font-display text-3xl italic md:text-5xl"}`}
+            >
+              {p}
+            </span>
+          ) : (
+            <span className="whitespace-nowrap px-7 font-display text-2xl italic text-creme/80 md:px-10 md:text-4xl">
+              {p}
+            </span>
+          )}
           {/* Losango discreto como separador. */}
-          <span className="size-1 shrink-0 rotate-45 bg-ouro/70" />
+          <span className={`size-1 shrink-0 rotate-45 ${amarela ? "bg-vinho/60" : "bg-ouro/70"}`} />
         </li>
       ))}
     </ul>
@@ -100,7 +110,7 @@ export default function Marquee() {
   return (
     <div
       ref={raiz}
-      className="overflow-hidden border-y border-creme/12 bg-noite-2 py-5 md:py-7"
+      className={`overflow-hidden ${amarela ? "bg-ouro-claro py-4 md:py-6" : "border-y border-creme/12 bg-noite-2 py-5 md:py-7"}`}
     >
       <div className="flex [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]">
         <div data-trilho className="flex will-change-transform">
