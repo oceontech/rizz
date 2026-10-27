@@ -2,7 +2,6 @@ import Image from "next/image";
 
 import Parallax from "@/components/motion/Parallax";
 import Reveal from "@/components/motion/Reveal";
-import RevealScrub from "@/components/motion/RevealScrub";
 import { img, type ImgKey } from "@/lib/images";
 
 const capitulos: {
@@ -52,9 +51,10 @@ export default function CozinhaB() {
       <div className="wrap">
         <div className="max-w-3xl">
           <p className="eyebrow text-vinho">Nossa cozinha</p>
-          <RevealScrub as="h2" id="cozinha-b" className="mt-5 text-display text-vinho">
-            Por onde começar.
-          </RevealScrub>
+          <h2 id="cozinha-b" className="mt-5 flex flex-col items-start text-vinho not-italic">
+            <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.75rem,7vw,5rem)] leading-none">Por onde</span>
+            <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(4.5rem,13vw,9.5rem)] leading-[0.9]">começar</span>
+          </h2>
         </div>
 
         <ol className="mt-16 flex flex-col gap-24 md:mt-24 md:gap-36">
@@ -84,17 +84,17 @@ export default function CozinhaB() {
                       className={`absolute -bottom-6 max-w-[15rem] rotate-[-3deg] bg-creme-2 px-4 py-3 text-[0.8125rem] leading-snug shadow-[0_14px_30px_rgb(58_18_25/0.18)] ${invertido ? "-left-2 md:-left-8" : "-right-2 md:-right-8"}`}
                     >
                       <span className="eyebrow block text-[0.625rem] text-vinho">No prato</span>
-                      <span className="mt-1 block font-display text-lg italic text-tinta">{c.prato}</span>
+                      <span className="mt-1 block font-[family-name:var(--font-pinyon)] text-[1.35rem] leading-snug text-tinta">{c.prato}</span>
                     </p>
                   </Reveal>
                 </div>
 
                 <div className={`md:col-span-6 ${invertido ? "md:order-1 md:col-start-1" : "md:col-start-7"}`}>
                   <Reveal>
-                    <span aria-hidden className="block font-display text-[clamp(4.5rem,11vw,9rem)] leading-none text-vinho/15 italic">
+                    <span aria-hidden className="block font-[family-name:var(--font-pinyon)] text-[clamp(4.5rem,11vw,8rem)] leading-none text-vinho/25">
                       {c.numero}
                     </span>
-                    <h3 className="-mt-4 font-display text-titulo text-vinho italic md:-mt-8">{c.destaque}</h3>
+                    <h3 className="-mt-2 font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(2.75rem,5.4vw,4.75rem)] leading-[0.92] text-vinho md:-mt-4">{c.destaque.replace(/\.$/, "")}</h3>
                     <p className="mt-5 max-w-lg text-lg leading-relaxed text-tinta/80">{c.texto}</p>
                   </Reveal>
                 </div>

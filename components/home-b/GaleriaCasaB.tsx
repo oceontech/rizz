@@ -5,6 +5,8 @@ import { useRef } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 import { img, type ImgKey } from "@/lib/images";
+
+import VideoB from "./VideoB";
 import { site } from "@/lib/site";
 
 /**
@@ -130,6 +132,7 @@ export default function GaleriaCasaB() {
       const flutuam = gsap.utils.toArray<HTMLElement>("[data-flutua]", no);
       const titulo = no.querySelector<HTMLElement>("[data-titulo]");
       const legenda = no.querySelector<HTMLElement>("[data-legenda]");
+      const escurece = no.querySelector<HTMLElement>("[data-escurece]");
       if (!salao || !salaoFoto || !titulo || !legenda) return;
 
       const mm = gsap.matchMedia();
@@ -147,6 +150,7 @@ export default function GaleriaCasaB() {
             gsap.set(pratos, { autoAlpha: 0 });
             gsap.set(legenda, { autoAlpha: 1 });
             gsap.set(titulo, { autoAlpha: 1, scale: 1 });
+            gsap.set(escurece, { opacity: 0.45 });
             return;
           }
 
@@ -255,6 +259,7 @@ export default function GaleriaCasaB() {
             )
             .to(pratos, { autoAlpha: 0, duration: 0.3 }, 0.65)
             // O nome entra junto com a abertura do salão, crescendo, e fica.
+            .fromTo(escurece, { opacity: 0 }, { opacity: 0.45, duration: 0.8, ease: "power1.out" }, 0.05)
             .fromTo(
               titulo,
               { autoAlpha: 0, scale: 0.55 },
@@ -292,30 +297,26 @@ export default function GaleriaCasaB() {
           className="absolute inset-0 will-change-[clip-path]"
           style={{ clipPath: JANELA.estreita }}
         >
-          {/* Celular: o salão vertical. Desktop: foto horizontal do ambiente
-              interno, em resolução cheia — a vertical ficava esticada e mole
-              em tela larga. */}
+          {/* Vídeo do ambiente: horizontal no desktop (entrada e salão por
+              dentro), vertical no celular. A foto fica de pôster. */}
           <div
             data-salao-foto
             className="relative size-full will-change-transform"
           >
-            <Image
-              src={img("salao-claraboia")}
-              alt="Salão do Rizz com claraboia e taças de vinho"
-              placeholder="blur"
-              fill
-              sizes="100vw"
-              className="object-cover md:hidden"
+            <VideoB
+              nome="salao-ambiente-v"
+              rotulo="O salão do Rizz, com claraboia, lustres e paredes de tijolo"
+              className="absolute inset-0 size-full object-cover md:hidden"
             />
-            <Image
-              src="/hero/hero-2.webp"
-              alt="Entrada do salão do Rizz, com arcos de tijolo e lustre"
-              fill
-              sizes="100vw"
-              className="hidden object-cover md:block"
+            <VideoB
+              nome="salao-ambiente"
+              rotulo="A entrada e o salão do Rizz por dentro"
+              className="absolute inset-0 hidden size-full object-cover md:block"
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-noite/80 via-noite/10 to-noite/30" />
+          {/* Escurece junto com a entrada do nome, para o texto ler bem. */}
+          <div data-escurece className="absolute inset-0 bg-noite opacity-0" />
         </div>
 
         {PRATOS.map((p) => (
@@ -346,7 +347,7 @@ export default function GaleriaCasaB() {
           data-titulo
           className="pointer-events-none invisible absolute inset-0 grid place-items-center opacity-0 will-change-transform"
         >
-          <p className="font-display text-[22vw] italic leading-none text-creme [text-shadow:0_4px_40px_rgb(43_7_16/0.85)] md:text-[12vw]">
+          <p className="font-[family-name:var(--font-pinyon)] text-[28vw] leading-none text-creme [text-shadow:0_4px_40px_rgb(43_7_16/0.85)] md:text-[14vw]">
             Rizz
           </p>
         </div>
@@ -358,8 +359,9 @@ export default function GaleriaCasaB() {
           <p className="eyebrow text-ambar">
             {site.endereco.cidade} · {site.endereco.uf}
           </p>
-          <p className="mx-auto mt-4 max-w-[20ch] font-display text-titulo italic leading-tight text-creme">
-            Conheça a casa.
+          <p className="mt-3 flex flex-col items-center text-creme">
+            <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.4rem,6vw,4rem)] leading-none">Conheça</span>
+            <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(3.5rem,9vw,6.5rem)] leading-[0.9]">a casa</span>
           </p>
         </div>
       </div>

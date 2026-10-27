@@ -17,54 +17,75 @@ import VideoB from "./VideoB";
 
 type Prato = NonNullable<HomeDoSite["maisPedido"]>;
 
-/** Cantos cortados em diagonal, como etiquetas recortadas. */
-const CORTE_TOPO = "[clip-path:polygon(14%_0,100%_0,100%_100%,0_100%,0_9%)]";
-const CORTE_BASE = "[clip-path:polygon(0_0,100%_0,100%_91%,86%_100%,0_100%)]";
-
 /**
- * Vídeo da apresentação do prato, o único da página com som. Começa mudo
- * (o navegador só deixa tocar sozinho sem áudio) e o botão liga o som,
- * voltando ao início para a fala ser ouvida inteira.
+ * Vídeo da apresentação do prato, o único da página com som.
+ *
+ * Ao entrar na tela ele tenta tocar já com som e pausa ao sair. Os
+ * navegadores só deixam um vídeo tocar sozinho com som depois que a pessoa
+ * interagiu com a página (um toque ou clique; rolar não conta). Se o som for
+ * bloqueado, ele toca mudo e liga o som no primeiro toque na página, ou no
+ * botão.
  */
 function Apresentacao() {
   const ref = useRef<HTMLVideoElement>(null);
+  const visivel = useRef(false);
   const [mudo, setMudo] = useState(true);
 
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const tocar = async () => {
+      if (!video.src) video.src = "/videos/b/camarao-apresentacao.mp4";
+      try {
+        video.muted = false;
+        await video.play();
+        setMudo(false);
+      } catch {
+        video.muted = true;
+        setMudo(true);
+        void video.play().catch(() => {});
+      }
+    };
+
     const observador = new IntersectionObserver(
       ([e]) => {
-        if (e.isIntersecting) {
-          if (!video.src) video.src = "/videos/b/camarao-apresentacao.mp4";
-          void video.play().catch(() => {});
-        } else {
-          video.pause();
-        }
+        visivel.current = e.isIntersecting;
+        if (e.isIntersecting) void tocar();
+        else video.pause();
       },
-      { rootMargin: "200px 0px" },
+      { threshold: 0.45 },
     );
     observador.observe(video);
-    return () => observador.disconnect();
+
+    // Primeiro toque na página: se o vídeo está à vista e mudo, liga o som.
+    const aoInteragir = () => {
+      if (visivel.current && video.muted) {
+        video.muted = false;
+        setMudo(false);
+      }
+    };
+    window.addEventListener("pointerdown", aoInteragir);
+    window.addEventListener("keydown", aoInteragir);
+
+    return () => {
+      observador.disconnect();
+      window.removeEventListener("pointerdown", aoInteragir);
+      window.removeEventListener("keydown", aoInteragir);
+    };
   }, []);
 
   function alternarSom() {
     const video = ref.current;
     if (!video) return;
-    if (mudo) {
-      if (!video.src) video.src = "/videos/b/camarao-apresentacao.mp4";
-      video.currentTime = 0;
-      video.muted = false;
-      void video.play().catch(() => {});
-    } else {
-      video.muted = true;
-    }
+    video.muted = !mudo;
+    if (mudo) void video.play().catch(() => {});
     setMudo(!mudo);
   }
 
   return (
-    <div className={`relative aspect-[9/16] bg-noite ${CORTE_BASE}`}>
+    <div className="relative aspect-[9/16] overflow-hidden bg-noite">
       <video
         ref={ref}
         poster="/videos/b/camarao-apresentacao.jpg"
@@ -80,10 +101,11 @@ function Apresentacao() {
         type="button"
         onClick={alternarSom}
         aria-pressed={!mudo}
-        className="absolute bottom-6 left-5 flex items-center gap-2.5 rounded-full bg-creme/95 py-2.5 pr-4 pl-3 text-xs font-medium tracking-[0.08em] text-tinta uppercase shadow-[0_10px_30px_rgb(0_0_0/0.35)] transition-colors hover:bg-white"
+        aria-label={mudo ? "Ligar o som" : "Desligar o som"}
+        className="absolute bottom-5 left-5 flex items-center gap-2.5 rounded-full bg-creme/95 py-2.5 pr-4 pl-3 text-xs font-medium tracking-[0.08em] text-tinta uppercase shadow-[0_10px_30px_rgb(0_0_0/0.35)] transition-colors hover:bg-white"
       >
         {mudo ? <VolumeX className="size-4" /> : <Volume2 className="size-4 text-vinho" />}
-        {mudo ? "Ouvir a apresentação" : "Som ligado"}
+        {mudo ? "Ligar o som" : "Som ligado"}
       </button>
     </div>
   );
@@ -170,7 +192,7 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
     return (
       <section ref={raiz} aria-labelledby="prato-b" className="relative overflow-hidden bg-white py-24 text-tinta md:py-32">
         <div className="wrap grid items-center gap-14 md:grid-cols-12 md:gap-8">
-          <div data-entrada-prato className={`relative aspect-[4/5] md:col-span-6 ${CORTE_TOPO}`}>
+          <div data-entrada-prato className={`relative aspect-[4/5] md:col-span-6`}>
             {foto ? (
               <Image
                 src={foto}
@@ -194,22 +216,23 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
 
   return (
     <section ref={raiz} aria-labelledby="prato-b" className="relative overflow-hidden bg-white pt-20 pb-28 text-tinta md:py-28">
-      <div className="mx-auto grid max-w-[100rem] gap-16 px-5 md:grid-cols-12 md:items-center md:gap-6 md:px-8 lg:gap-10">
+      <div className="mx-auto grid max-w-[100rem] gap-12 px-5 md:grid-cols-12 md:items-center md:gap-6 md:px-8 lg:gap-10">
         {/* Celular: o texto vem primeiro. */}
         <div data-entrada-prato className="order-1 md:order-2 md:col-span-4 md:pl-10 lg:pl-14">
           <Texto prato={prato} />
         </div>
 
         {/* Preparo + foto sobreposta */}
-        <div data-entrada-prato className="relative order-2 mr-10 md:order-1 md:col-span-4 md:mr-0">
-          <div className={`relative aspect-[9/14] md:aspect-[9/15] ${CORTE_TOPO}`}>
+        {/* No celular fica só a apresentação, para a tela não pesar. */}
+        <div data-entrada-prato className="relative order-2 hidden md:order-1 md:col-span-4 md:block">
+          <div className="relative aspect-[9/15] overflow-hidden">
             <VideoB nome="camarao-preparo" rotulo="Camarões sendo empanados e o prato sendo montado" className="absolute inset-0 size-full object-cover" />
           </div>
           <div
             data-profundidade="18"
             className="absolute -right-10 bottom-[-12%] w-[58%] shadow-[0_30px_60px_rgb(43_7_16/0.35)] md:-right-[10%] md:bottom-[-14%] md:w-[48%]"
           >
-            <div className={`relative aspect-[3/4] ${CORTE_BASE}`}>
+            <div className="relative aspect-[3/4] overflow-hidden">
               {foto && (
                 <Image
                   src={foto}
@@ -226,18 +249,18 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
         </div>
 
         {/* Apresentação + salão */}
-        <div data-entrada-prato className="relative order-3 ml-10 md:col-span-4 md:ml-0 md:pl-10 lg:pl-16">
+        <div data-entrada-prato className="relative order-3 md:col-span-4 md:pl-10 lg:pl-16">
           <Apresentacao />
           <div
             data-profundidade="24"
-            className="absolute -top-10 -left-8 w-[44%] overflow-hidden rounded-full shadow-[0_24px_50px_rgb(43_7_16/0.35)] ring-[6px] ring-white md:-top-14 md:-left-2 md:w-[40%] lg:left-2"
+            className="absolute -top-10 -left-8 hidden w-[44%] overflow-hidden rounded-full md:block shadow-[0_24px_50px_rgb(43_7_16/0.35)] ring-[6px] ring-white md:-top-14 md:-left-2 md:w-[40%] lg:left-2"
           >
             <div className="relative aspect-square">
               <VideoB nome="camarao-salao" rotulo="O salão do Rizz e o cardápio, até o prato chegar à mesa" className="absolute inset-0 size-full object-cover" />
             </div>
           </div>
           <div data-profundidade="10" className="absolute -right-6 -bottom-14 hidden w-[34%] shadow-[0_24px_50px_rgb(43_7_16/0.3)] lg:block">
-            <div className="relative aspect-[3/4] [clip-path:polygon(0_0,100%_0,100%_86%,82%_100%,0_100%)]">
+            <div className="relative aspect-[3/4] overflow-hidden">
               <Image src={camaraoMesa} alt="Camarão rosa empanado com risoto e creme, servido à mesa" fill placeholder="blur" sizes="12vw" className="object-cover" />
             </div>
           </div>

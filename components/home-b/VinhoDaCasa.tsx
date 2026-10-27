@@ -112,10 +112,8 @@ export default function VinhoDaCasa() {
           <div className="absolute inset-0 -z-10 bg-gradient-to-t from-noite via-vinho-fundo/80 to-vinho-fundo/60" />
 
           <p className="absolute top-[7%] left-[8%] z-10 text-ambar md:top-[14%] md:right-[8%] md:left-auto md:text-right">
-            <span className="block font-display text-2xl italic md:text-4xl">Vinho fino</span>
-            <span className="block font-sans text-2xl leading-none font-semibold tracking-[-0.01em] uppercase md:text-4xl">
-              Tinto seco
-            </span>
+            <span className="relative z-10 -mb-[0.1em] block font-[family-name:var(--font-pinyon)] text-3xl leading-none md:text-5xl">Vinho fino</span>
+            <span className="block font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-4xl leading-[0.9] md:text-6xl">Tinto seco</span>
           </p>
 
           <div data-garrafa className="relative mt-[10svh] h-[58svh] w-auto md:mt-0 md:h-[66svh]">

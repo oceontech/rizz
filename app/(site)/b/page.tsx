@@ -44,13 +44,13 @@ export default async function HomeB() {
       <Marquee amarela />
       <CozinhaB />
       {maisPedido?.id === "camarao-empanado" ? (
-        <IntroCamarao nome={maisPedido.nome} fadeTopo="var(--color-creme)">
+        <IntroCamarao nome={maisPedido.nome} fadeTopo="var(--color-creme)" letreiro>
           <PratoAssinaturaB prato={maisPedido} entradaPeloVideo />
         </IntroCamarao>
       ) : (
         maisPedido && <PratoAssinaturaB prato={maisPedido} />
       )}
-      {home.destaques.length > 0 && <Destaques pratos={home.destaques} />}
+      {home.destaques.length > 0 && <Destaques pratos={home.destaques} letreiro />}
       <GaleriaB />
       <VinhoDaCasa />
       <MosaicoB />

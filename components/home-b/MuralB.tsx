@@ -52,10 +52,10 @@ export default function MuralB() {
             id="mural-b"
             className="flex flex-col items-center leading-[0.9] not-italic"
           >
-            <span className="font-display text-[clamp(2.75rem,5vw,4.5rem)] text-creme italic">
+            <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.75rem,5vw,4.25rem)] text-creme">
               A mesa
             </span>
-            <span className="font-sans text-[clamp(2.5rem,4.6vw,4rem)] font-semibold tracking-[-0.03em] text-ouro-claro uppercase">
+            <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(3.75rem,6.5vw,6rem)] text-ouro-claro">
               do Rizz
             </span>
           </h2>

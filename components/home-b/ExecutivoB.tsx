@@ -36,12 +36,9 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
           </div>
 
           <Reveal>
-            <h2 id="executivo-b" className="mt-8 flex flex-col leading-[0.95] not-italic">
-              <span className="font-display text-[clamp(2.75rem,7vw,5rem)] italic">Entrada,</span>
-              <span className="font-sans text-[clamp(2.6rem,6.6vw,4.75rem)] font-semibold tracking-[-0.03em] uppercase">
-                prato
-              </span>
-              <span className="font-display text-[clamp(2.75rem,7vw,5rem)] italic">e sobremesa</span>
+            <h2 id="executivo-b" className="mt-8 flex flex-col items-start not-italic">
+              <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.4rem,5.5vw,4rem)] leading-none">Entrada, prato e</span>
+              <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(4rem,10vw,7.5rem)] leading-[0.9]">sobremesa</span>
             </h2>
           </Reveal>
 

@@ -91,7 +91,7 @@ export default function Marquee({ amarela = false }: { amarela?: boolean }) {
               alta, como nos cartazes. */}
           {amarela ? (
             <span
-              className={`whitespace-nowrap px-6 text-vinho md:px-9 ${i % 2 ? "font-sans text-2xl font-semibold tracking-[-0.02em] uppercase md:text-4xl" : "font-display text-3xl italic md:text-5xl"}`}
+              className={`whitespace-nowrap px-6 text-vinho md:px-9 ${i % 2 ? "font-[family-name:var(--font-instrument)] text-4xl tracking-[0.01em] uppercase md:text-6xl" : "font-[family-name:var(--font-pinyon)] text-3xl md:text-5xl"}`}
             >
               {p}
             </span>
