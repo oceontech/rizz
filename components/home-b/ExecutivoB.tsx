@@ -107,17 +107,17 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
             />
           </div>
           {fotos.length > 0 && (
-            // Celular: linhas com foto quadrada e texto grande ao lado.
+            // Celular: linhas em papel creme, com foto grande e texto ao lado.
             // Desktop: três quadros colados, com o texto por cima da foto.
-            <ul className="grid bg-vinho md:grid-cols-3 md:[&>li]:-m-px">
+            <ul className="grid divide-y divide-tinta/10 bg-creme md:divide-y-0 md:bg-vinho md:grid-cols-3 md:[&>li]:-m-px">
               {fotos.map((p) => (
                 <li key={p.id} className="relative flex items-center gap-4 md:block md:aspect-[3/4]">
-                  <div className="relative size-28 shrink-0 md:absolute md:inset-0 md:size-auto">
-                    <Image src={img(p.img!)} alt={p.nome} fill sizes="(min-width: 768px) 15vw, 112px" className="object-cover" />
+                  <div className="relative size-40 shrink-0 md:absolute md:inset-0 md:size-auto">
+                    <Image src={img(p.img!)} alt={p.nome} fill sizes="(min-width: 768px) 15vw, 160px" className="object-cover" />
                   </div>
                   <div className="py-3 pr-5 md:absolute md:inset-x-0 md:bottom-0 md:bg-gradient-to-t md:from-noite/90 md:via-noite/60 md:to-transparent md:p-4 md:pt-16">
-                    <p className="text-base leading-snug text-creme md:text-[0.9375rem]">{p.nome}</p>
-                    {confirmado && <Preco valor={p.preco} className="mt-1.5 text-2xl text-ouro-claro md:text-xl" />}
+                    <p className="text-[1.0625rem] leading-snug text-tinta md:text-[0.9375rem] md:text-creme">{p.nome}</p>
+                    {confirmado && <Preco valor={p.preco} className="mt-1.5 text-2xl text-vinho md:text-xl md:text-ouro-claro" />}
                   </div>
                 </li>
               ))}
