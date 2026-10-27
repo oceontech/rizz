@@ -5,7 +5,6 @@ import IntroCamarao from "@/components/home/IntroCamarao";
 import Marquee from "@/components/home/Marquee";
 import AvaliacoesB from "@/components/home-b/AvaliacoesB";
 import CozinhaB from "@/components/home-b/CozinhaB";
-import { instrument, pinyon } from "@/components/home-b/fontes";
 import ExecutivoB from "@/components/home-b/ExecutivoB";
 import GaleriaB from "@/components/home-b/GaleriaB";
 import GaleriaCasaB from "@/components/home-b/GaleriaCasaB";
@@ -38,8 +37,7 @@ export default async function HomeB() {
   const { maisPedido } = home;
 
   return (
-    // As fontes da B entram por variável CSS só nesta página.
-    <div className={`${instrument.variable} ${pinyon.variable}`}>
+    <>
       <HeroB />
       <GaleriaCasaB />
       <Marquee amarela />
@@ -61,6 +59,6 @@ export default async function HomeB() {
       <AvaliacoesB />
       <ReservaB />
       <VisiteB />
-    </div>
+    </>
   );
 }

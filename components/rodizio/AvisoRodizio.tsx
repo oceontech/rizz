@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { BotaoLink } from "@/components/ui/Botao";
+import fotoRodizio from "@/assets/img/rodizio-mesa.webp";
 import { diasDoRodizio, horarioDoRodizio, rodizio, statusDoRodizio, type StatusRodizio } from "@/lib/rodizio";
 import { whatsappLink } from "@/lib/site";
 
@@ -93,9 +95,12 @@ export function CartaoRodizio({ className = "" }: { className?: string }) {
   return (
     <aside
       aria-label="Rodízio de risotos"
-      className={`relative isolate overflow-hidden rounded-3xl bg-vinho p-6 text-creme md:p-9 ${className}`}
+      className={`relative isolate overflow-hidden rounded-3xl bg-noite p-6 text-creme md:p-10 ${className}`}
     >
-      <div aria-hidden className="absolute -top-24 -right-24 -z-10 size-72 rounded-full bg-ambar/15 blur-3xl" />
+      {/* Foto dos risotos do rodízio ao fundo, escurecida à esquerda, onde
+          fica o texto, e mais aberta à direita. */}
+      <Image src={fotoRodizio} alt="" fill placeholder="blur" sizes="(min-width: 860px) 80rem, 100vw" className="-z-20 object-cover" />
+      <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-noite via-noite/85 to-noite/55 md:bg-gradient-to-r md:from-noite md:via-noite/85 md:to-noite/30" />
 
       <div className="flex flex-wrap items-center gap-3">
         {status ? (
@@ -110,21 +115,21 @@ export function CartaoRodizio({ className = "" }: { className?: string }) {
       </div>
 
       <h2 className="mt-6 flex flex-col items-start not-italic">
-        <span className="relative z-10 -mb-[0.1em] font-display text-[clamp(1.9rem,4vw,2.75rem)] leading-none italic">Rodízio de</span>
-        <span className="font-sans text-[clamp(2.4rem,6vw,4rem)] leading-[0.95] font-semibold tracking-[-0.02em] text-ouro-claro uppercase">risotos</span>
+        <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.4rem,5vw,3.5rem)] leading-none">Rodízio de</span>
+        <span className="font-[family-name:var(--font-instrument)] text-[clamp(4rem,10vw,6.5rem)] leading-[0.88] tracking-[0.01em] text-ouro-claro uppercase">risotos</span>
       </h2>
-      <p className="mt-3 text-sm text-creme/75">
+      <p className="mt-3 text-base text-creme/85">
         {diasDoRodizio()}, no jantar · {horarioDoRodizio()}
       </p>
 
       {/* Celular: lista corrida; a partir de sm, três cartões. */}
       <ol className="mt-6 divide-y divide-creme/10 sm:mt-7 sm:grid sm:grid-cols-3 sm:gap-4 sm:divide-y-0">
         {rodizio.etapas.map((e, i) => (
-          <li key={e.titulo} className="flex gap-4 py-3 sm:block sm:rounded-2xl sm:bg-creme/8 sm:p-4">
-            <span className="font-display text-2xl leading-none text-ambar italic">0{i + 1}</span>
+          <li key={e.titulo} className="flex gap-4 py-3 sm:block sm:rounded-2xl sm:bg-noite/55 sm:p-5 sm:backdrop-blur-sm">
+            <span className="font-[family-name:var(--font-instrument)] text-3xl leading-none text-ambar">0{i + 1}</span>
             <div>
-              <p className="font-medium sm:mt-1">{e.titulo}</p>
-              <p className="mt-0.5 text-sm leading-snug text-creme/70 sm:mt-1">{e.texto}</p>
+              <p className="font-[family-name:var(--font-instrument)] text-2xl tracking-[0.01em] uppercase sm:mt-2">{e.titulo}</p>
+              <p className="mt-1 text-[0.9375rem] leading-snug text-creme/85">{e.texto}</p>
             </div>
           </li>
         ))}

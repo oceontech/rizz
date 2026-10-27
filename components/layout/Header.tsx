@@ -12,6 +12,7 @@ import { site } from "@/lib/site";
 export type AvisoHeader = { texto: string; link: string; linkTexto: string } | null;
 
 const links = [
+  { href: "/", rotulo: "Início" },
   { href: "/cardapio", rotulo: "Cardápio" },
   { href: "/carta-de-vinhos", rotulo: "Vinhos" },
   { href: "/avaliacoes", rotulo: "Avaliações" },
@@ -177,7 +178,8 @@ export default function Header({ aviso = null }: { aviso?: AvisoHeader }) {
           className="hidden items-center gap-10 md:flex"
         >
           {links.map((l) => {
-            const ativo = pathname.startsWith(l.href);
+            // "/" casaria com tudo: o início só fica ativo na própria home (e na B).
+            const ativo = l.href === "/" ? pathname === "/" || pathname === "/b" : pathname.startsWith(l.href);
             return (
               <Link
                 key={l.href}

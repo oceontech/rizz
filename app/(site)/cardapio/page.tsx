@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import MenuClient from "@/components/menu/MenuClient";
+import VideoB from "@/components/home-b/VideoB";
 import { CartaoRodizio } from "@/components/rodizio/AvisoRodizio";
 import Reveal from "@/components/motion/Reveal";
-import RevealScrub from "@/components/motion/RevealScrub";
 import BadgeExecutivo from "@/components/ui/BadgeExecutivo";
 import { BotaoLink } from "@/components/ui/Botao";
 import { EtiquetaSelo, Legenda } from "@/components/ui/Selos";
@@ -39,9 +39,10 @@ function BlocoExecutivo({ executivo }: { executivo: ExecutivoDados }) {
           <BadgeExecutivo claro executivo={executivo} />
         </div>
 
-        <RevealScrub className="mt-5 text-display text-vinho">
-          Menu executivo
-        </RevealScrub>
+        <h2 className="mt-5 flex flex-col items-start text-vinho not-italic">
+          <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.4rem,6vw,4rem)] leading-none">Menu</span>
+          <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(3.75rem,11vw,7rem)] leading-[0.9]">executivo</span>
+        </h2>
 
         {executivo.condicoesConfirmadas ? (
           <div className="mt-7 flex flex-wrap items-end gap-x-12 gap-y-4">
@@ -119,11 +120,12 @@ export default async function CardapioPage() {
       <header className="wrap pt-28 md:pt-44">
         <p className="eyebrow text-vinho">À mesa</p>
 
-        <RevealScrub as="h1" className="mt-5 text-display text-vinho">
-          Cardápio
-        </RevealScrub>
+        <h1 className="mt-4 flex flex-col items-start text-vinho not-italic">
+          <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.75rem,7vw,4.5rem)] leading-none">Nosso</span>
+          <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(4.5rem,15vw,9rem)] leading-[0.88]">Cardápio</span>
+        </h1>
 
-        <p className="mt-6 max-w-prose leading-relaxed text-tinta/70">
+        <p className="mt-6 max-w-prose text-lg leading-relaxed text-tinta/80">
           Conheça os pratos, acompanhamentos e bebidas do Rizz.
         </p>
 
@@ -158,18 +160,29 @@ export default async function CardapioPage() {
         {executivo.ativo && <BlocoExecutivo executivo={executivo} />}
       </div>
 
-      <section className="border-t border-tinta/12 py-20 text-center md:py-28">
-        <div className="wrap">
-          <RevealScrub className="mx-auto max-w-3xl text-titulo text-vinho">
-            Gostou de algum prato? Planeje sua visita.
-          </RevealScrub>
+      {/* Fecho com o salão em vídeo, escurecido, e o letreiro por cima. */}
+      <section className="relative isolate flex min-h-[80svh] items-center overflow-hidden bg-noite py-24 text-center text-creme md:py-32">
+        <VideoB nome="salao-ambiente" rotulo="O salão do Rizz por dentro" className="absolute inset-0 -z-20 hidden size-full object-cover md:block" />
+        <VideoB nome="salao-ambiente-v" rotulo="O salão do Rizz por dentro" className="absolute inset-0 -z-20 size-full object-cover md:hidden" />
+        <div className="absolute inset-0 -z-10 bg-noite/65" />
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-t from-noite to-transparent" />
 
+        <div className="wrap flex flex-col items-center">
+          <Reveal>
+            <h2 className="flex flex-col items-center not-italic">
+              <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.75rem,8vw,5.5rem)] leading-none">Gostou de algum prato?</span>
+              <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(4rem,14vw,10rem)] leading-[0.9] text-ouro-claro">Venha provar</span>
+            </h2>
+          </Reveal>
           <Reveal delay={0.1}>
-            <div className="mt-10 flex flex-wrap justify-center gap-3">
-              <BotaoLink href="/reservas" variante="vinho" tamanho="lg">
+            <p className="mx-auto mt-6 max-w-md text-lg leading-relaxed text-creme/80">
+              Almoço e jantar em {site.endereco.cidade}. Reserve sua mesa pelo site.
+            </p>
+            <div className="mt-9 flex flex-wrap justify-center gap-3">
+              <BotaoLink href="/reservas" tamanho="lg">
                 Reservar mesa
               </BotaoLink>
-              <BotaoLink href="/#visite" variante="contorno-tinta" tamanho="lg">
+              <BotaoLink href="/#visite" variante="contorno" tamanho="lg">
                 Horários e endereço
               </BotaoLink>
             </div>
