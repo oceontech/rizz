@@ -109,7 +109,7 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
           {fotos.length > 0 && (
             // Celular: linhas com foto quadrada e texto grande ao lado.
             // Desktop: três quadros colados, com o texto por cima da foto.
-            <ul className="grid bg-vinho md:grid-cols-3">
+            <ul className="grid bg-vinho md:grid-cols-3 md:[&>li]:-m-px">
               {fotos.map((p) => (
                 <li key={p.id} className="relative flex items-center gap-4 md:block md:aspect-[3/4]">
                   <div className="relative size-28 shrink-0 md:absolute md:inset-0 md:size-auto">

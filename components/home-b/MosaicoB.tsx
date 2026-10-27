@@ -81,7 +81,11 @@ export default function MosaicoB() {
 
       const mm = gsap.matchMedia();
 
-      mm.add(CONDICOES, (contexto) => {
+      mm.add({ ...CONDICOES, larga: "(min-width: 768px)" }, (contexto) => {
+        // No desktop o filme são três vídeos lado a lado. Escalar o conjunto
+        // fazia as emendas entre eles cair em pixels diferentes a cada quadro
+        // e "tremer"; lá só o recorte se abre, sem zoom.
+        const zoom = contexto.conditions?.larga ? 1 : undefined;
         if (contexto.conditions?.parado) {
           gsap.set(janela, {
             clipPath: "inset(0% round 0px)",
@@ -110,7 +114,7 @@ export default function MosaicoB() {
         )
           .fromTo(
             filme,
-            { scale: 1.14 },
+            { scale: zoom ?? 1.14 },
             { scale: 1, ease: "none", duration: 0.45 },
             0,
           )
@@ -129,7 +133,7 @@ export default function MosaicoB() {
           .fromTo(
             filme,
             { scale: 1 },
-            { scale: 1.12, ease: "none", duration: 0.32 },
+            { scale: zoom ?? 1.12, ease: "none", duration: 0.32 },
             0.6,
           )
           // 3. O que estava por baixo aparece.
@@ -188,10 +192,14 @@ export default function MosaicoB() {
           <div data-filme className="size-full will-change-transform">
             {/* Desktop: três clipes lado a lado, de cores e cenas diferentes
                 (vinho, açafrão, chapa), no lugar do vídeo vertical esticado. */}
-            <div className="hidden size-full grid-cols-3 md:grid">
-              <VideoB nome="vinho" className="size-full object-cover" />
-              <VideoB nome="acafrao" className="size-full object-cover" />
-              <VideoB nome="grelha" className="size-full object-cover" />
+            <div className="hidden size-full grid-cols-[repeat(3,minmax(0,1fr))] md:grid">
+              {["vinho", "acafrao", "grelha"].map((nome) => (
+                // Cada vídeo numa célula própria, 1px mais larga que ela: as
+                // larguras ficam iguais e a emenda não mostra o fundo.
+                <div key={nome} className="relative -mr-px min-w-0 last:mr-0">
+                  <VideoB nome={nome} className="absolute inset-0 size-full object-cover" />
+                </div>
+              ))}
             </div>
             <video
               ref={videoRef}

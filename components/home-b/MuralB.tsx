@@ -46,7 +46,7 @@ const FOTOS: { chave: ImgKey; nome: string; alta?: boolean; video?: string }[] =
 export default function MuralB() {
   return (
     <section aria-labelledby="mural-b" className="bg-noite">
-      <ul className="grid [&>li]:-m-[0.5px] auto-rows-[56vw] grid-flow-dense grid-cols-2 md:auto-rows-[24vw] md:grid-cols-4">
+      <ul className="grid [&>li]:-m-px auto-rows-[56vw] grid-flow-dense grid-cols-2 md:auto-rows-[24vw] md:grid-cols-4">
         <li className="col-span-2 flex flex-col items-center justify-center gap-6 bg-vinho px-6 text-center md:col-span-1 md:row-span-2">
           <h2
             id="mural-b"

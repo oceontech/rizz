@@ -11,41 +11,52 @@ import VideoB from "./VideoB";
 
 type Quadro = { chave: ImgKey; nome: string; video?: string; formato: string };
 
-/**
- * Fotos e clipes do álbum. `formato` varia a altura dos quadros para as
- * colunas não ficarem alinhadas como uma tabela.
- */
-const QUADROS: Quadro[] = [
-  { chave: "risoto-salmao-trufado", nome: "Risoto de salmão trufado com limão siciliano", formato: "aspect-[3/4]" },
-  { chave: "salmao-funghi-risoto-brie", nome: "Salmão ao creme de funghi", video: "salmao-funghi", formato: "aspect-[9/14]" },
-  { chave: "risoto-camarao", nome: "Risoto de camarão", formato: "aspect-[4/5]" },
-  { chave: "ancho-talharim-parma", nome: "Ancho Red Angus com talharim na fonduta de parmesão", formato: "aspect-[3/4]" },
-  { chave: "salmao-pistache-risoto-limao", nome: "Salmão na farofa de pistache com risoto de limão siciliano", formato: "aspect-[4/5]" },
-  { chave: "massa-formaggio-file", nome: "Massa ao formaggio com crispy de parma e filé mignon", formato: "aspect-[3/4]" },
-  { chave: "carpaccio-salada", nome: "Carpaccio bovino com salada", formato: "aspect-square" },
-  { chave: "peixe-arroz-negro", nome: "Camarões com arroz negro", video: "camarao-arroz-negro", formato: "aspect-[9/14]" },
-  { chave: "camarao-pesto-pistache", nome: "Camarão rosa com massa ao pesto e farofa de pistache", formato: "aspect-[4/5]" },
-  { chave: "brownie-frutas-vermelhas", nome: "Brownie com calda de frutas vermelhas e sorvete de creme", formato: "aspect-[3/4]" },
-  { chave: "arancini-salmao-trufado", nome: "Arancini de salmão trufado", formato: "aspect-square" },
-  { chave: "burrata-cogumelos-trufados", nome: "Burrata com confit de cogumelos trufados", formato: "aspect-[4/5]" },
-];
+/** Fotos e clipes do álbum, por apelido. `formato` varia a altura dos quadros. */
+const Q = {
+  salmaoTrufado: { chave: "risoto-salmao-trufado", nome: "Risoto de salmão trufado com limão siciliano", formato: "aspect-[3/4]" },
+  videoSalmao: { chave: "salmao-funghi-risoto-brie", nome: "Salmão ao creme de funghi", video: "salmao-funghi", formato: "aspect-[9/14]" },
+  camarao: { chave: "risoto-camarao", nome: "Risoto de camarão", formato: "aspect-[4/5]" },
+  ancho: { chave: "ancho-talharim-parma", nome: "Ancho Red Angus com talharim na fonduta de parmesão", formato: "aspect-[3/4]" },
+  pistache: { chave: "salmao-pistache-risoto-limao", nome: "Salmão na farofa de pistache com risoto de limão siciliano", formato: "aspect-[4/5]" },
+  formaggio: { chave: "massa-formaggio-file", nome: "Massa ao formaggio com crispy de parma e filé mignon", formato: "aspect-[3/4]" },
+  carpaccio: { chave: "carpaccio-salada", nome: "Carpaccio bovino com salada", formato: "aspect-square" },
+  videoArrozNegro: { chave: "peixe-arroz-negro", nome: "Camarões com arroz negro", video: "camarao-arroz-negro", formato: "aspect-[9/14]" },
+  pesto: { chave: "camarao-pesto-pistache", nome: "Camarão rosa com massa ao pesto e farofa de pistache", formato: "aspect-[4/5]" },
+  brownie: { chave: "brownie-frutas-vermelhas", nome: "Brownie com calda de frutas vermelhas e sorvete de creme", formato: "aspect-[3/4]" },
+  arancini: { chave: "arancini-salmao-trufado", nome: "Arancini de salmão trufado", formato: "aspect-square" },
+  burrata: { chave: "burrata-cogumelos-trufados", nome: "Burrata com confit de cogumelos trufados", formato: "aspect-[4/5]" },
+  videoMolho: { chave: "file-creme-funghi-risoto-brie", nome: "Molho sendo servido sobre o risoto", video: "molho", formato: "aspect-[9/14]" },
+  costela: { chave: "risoto-costela-rucula", nome: "Risoto de costela bovina com rúcula e redução de balsâmico", formato: "aspect-[3/4]" },
+  polenta: { chave: "polenta-ragu-cogumelos", nome: "Polenta cremosa com ragu de cogumelos", formato: "aspect-square" },
+} satisfies Record<string, Quadro>;
 
 /**
- * Distribui os quadros em `n` colunas, alternando. No desktop a lista entra
- * duas vezes (a segunda deslocada): com só três quadros por coluna, a coluna
- * mais rápida terminava antes da parede e mostrava o fundo.
+ * Colunas montadas à mão para espalhar os três vídeos: no desktop, um no
+ * alto à esquerda, um mais abaixo à direita e outro embaixo à esquerda; no
+ * celular, alternando de lado. Seis quadros por coluna: a parede é mais
+ * baixa que as colunas, que deslizam por dentro sem mostrar o fundo.
  */
-const colunas = (n: number) => {
-  const lista = n > 2 ? [...QUADROS, ...QUADROS.slice(5), ...QUADROS.slice(0, 5)] : QUADROS;
-  return Array.from({ length: n }, (_, c) => lista.filter((_, i) => i % n === c));
-};
+const DESKTOP: Quadro[][] = [
+  [Q.videoSalmao, Q.salmaoTrufado, Q.carpaccio, Q.brownie, Q.costela, Q.burrata],
+  [Q.camarao, Q.ancho, Q.arancini, Q.videoMolho, Q.pistache, Q.polenta],
+  [Q.formaggio, Q.burrata, Q.pesto, Q.salmaoTrufado, Q.carpaccio, Q.ancho],
+  [Q.pistache, Q.polenta, Q.videoArrozNegro, Q.costela, Q.camarao, Q.formaggio],
+];
+
+const CELULAR: Quadro[][] = [
+  [Q.videoSalmao, Q.camarao, Q.formaggio, Q.carpaccio, Q.videoMolho, Q.brownie],
+  [Q.salmaoTrufado, Q.ancho, Q.videoArrozNegro, Q.pistache, Q.burrata, Q.pesto],
+];
 
 /** Deslocamento de cada coluna ao longo da rolagem, em % da própria altura. */
 const VELOCIDADES = [-14, 10, -20, 6];
 
 function Coluna({ quadros, indice }: { quadros: Quadro[]; indice: number }) {
   return (
-    <div data-coluna={indice} className="flex min-w-0 flex-1 flex-col will-change-transform">
+    // -mr-px: as colunas se sobrepõem 1px. Cada uma anda com transform
+    // próprio e tem largura fracionada; sem a sobra, o fundo aparecia num fio
+    // vertical entre elas.
+    <div data-coluna={indice} className="-mr-px flex min-w-0 flex-1 flex-col will-change-transform last:mr-0">
       {quadros.map((q, i) => (
         // -mt-px: as fotos encostam sem o fio de antisserrilhado entre elas.
         <figure key={`${q.chave}-${i}`} className={`group relative -mt-px overflow-hidden ${q.formato}`}>
@@ -61,7 +72,7 @@ function Coluna({ quadros, indice }: { quadros: Quadro[]; indice: number }) {
               className="object-cover transition-transform duration-1000 ease-[var(--ease-rizz)] group-hover:scale-[1.05]"
             />
           )}
-          <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-noite/85 to-transparent px-4 pt-14 pb-4 font-display text-base leading-snug text-creme italic transition-opacity duration-500 md:px-5 md:text-lg md:opacity-0 md:group-hover:opacity-100">
+          <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-4 pt-16 pb-4 font-display text-lg leading-snug text-white italic transition-opacity duration-500 md:px-6 md:pb-5 md:text-2xl md:opacity-0 md:group-hover:opacity-100">
             {q.nome}
           </figcaption>
         </figure>
@@ -125,12 +136,12 @@ export default function GaleriaB() {
       {/* Parede: a altura é menor que as colunas, que deslizam por dentro. */}
       <div className="relative mt-14 h-[150svh] overflow-hidden md:mt-20 md:h-[165svh]">
         <div className="flex md:hidden">
-          {colunas(2).map((c, i) => (
+          {CELULAR.map((c, i) => (
             <Coluna key={i} quadros={c} indice={i} />
           ))}
         </div>
         <div className="hidden md:flex">
-          {colunas(4).map((c, i) => (
+          {DESKTOP.map((c, i) => (
             <Coluna key={i} quadros={c} indice={i} />
           ))}
         </div>
