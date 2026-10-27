@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 
 import { CONDICOES, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { ListaSelos, useSelos } from "@/components/ui/Selos";
@@ -85,7 +85,18 @@ function Linha({
   );
 }
 
-export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
+/**
+ * `extra`: seção que vem depois das categorias (o menu executivo), com aba
+ * própria e destacada. Fica dentro deste bloco para as abas continuarem
+ * grudadas no topo enquanto ela está na tela.
+ */
+export default function MenuClient({
+  cardapio,
+  extra,
+}: {
+  cardapio: Categoria[];
+  extra?: { slug: string; nome: string; conteudo: ReactNode };
+}) {
   const [badges, setBadges] = useState<Badge[]>([]);
   // Filtros: só os selos que aparecem em algum prato do cardápio publicado.
   const { lista: todosOsSelos } = useSelos();
@@ -138,6 +149,9 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
       .filter((cat) => cat.itens.length > 0);
   }, [cardapio, badges, faixa, busca]);
 
+  // Seções acompanhadas pelas abas: as categorias filtradas e a extra.
+  const secoes = useMemo(() => [...filtrado.map((c) => c.slug), ...(extra ? [extra.slug] : [])], [filtrado, extra]);
+
   const total = filtrado.reduce((soma, c) => soma + c.itens.length, 0);
   const filtrando =
     badges.length > 0 || faixa !== "todas" || busca.trim() !== "";
@@ -161,8 +175,8 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
       const faixa = gsap.utils.clamp(0, 1);
 
       const medir = () => {
-        inicios = filtrado.map((cat) => {
-          const el = document.getElementById(cat.slug);
+        inicios = secoes.map((slug) => {
+          const el = document.getElementById(slug);
           return el ? el.getBoundingClientRect().top + window.scrollY : 0;
         });
       };
@@ -210,7 +224,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
 
         const pref = preferida.current;
         if (pref) {
-          const iPref = filtrado.findIndex((c) => c.slug === pref.slug);
+          const iPref = secoes.indexOf(pref.slug);
           if (y >= max - 2 && iPref >= 0) {
             pref.noFim = true;
             i = iPref;
@@ -221,7 +235,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
           }
         }
 
-        const slug = filtrado[i]?.slug;
+        const slug = secoes[i];
         if (!slug || slug === atual) return;
         atual = slug;
         setAtiva(slug);
@@ -267,7 +281,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
         delete raizDoc.dataset.abasPresas;
       };
     },
-    { scope: raiz, dependencies: [filtrado], revertOnUpdate: true },
+    { scope: raiz, dependencies: [secoes], revertOnUpdate: true },
   );
 
   // As linhas entram em cascata quando a categoria aparece.
@@ -348,6 +362,25 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
               </a>
             );
           })}
+          {extra && (
+            <a
+              data-aba={extra.slug}
+              href={`#${extra.slug}`}
+              onClick={(e) => {
+                e.preventDefault();
+                preferida.current = { slug: extra.slug, noFim: false };
+                scrollToTarget(`#${extra.slug}`, 56);
+                window.history.replaceState(null, "", `#${extra.slug}`);
+              }}
+              aria-current={ativa === extra.slug ? "true" : undefined}
+              className={`relative ml-2 flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-colors duration-300 ${
+                ativa === extra.slug ? "border-transparent text-creme" : "border-ambar bg-ambar/15 text-vinho hover:bg-ambar/25"
+              }`}
+            >
+              <span className="relative size-1.5 rounded-full bg-ambar" aria-hidden />
+              {extra.nome}
+            </a>
+          )}
         </div>
       </div>
 
@@ -504,6 +537,12 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
             );
           })}
         </div>
+      )}
+
+      {extra && (
+        <section id={extra.slug} className="mt-24 scroll-mt-36 md:mt-32">
+          {extra.conteudo}
+        </section>
       )}
     </div>
   );

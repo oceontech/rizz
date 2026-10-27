@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import BlocoExecutivo from "@/components/menu/BlocoExecutivo";
 import MenuClient from "@/components/menu/MenuClient";
 import VideoB from "@/components/home-b/VideoB";
 import { CartaoRodizio } from "@/components/rodizio/AvisoRodizio";
 import Reveal from "@/components/motion/Reveal";
-import BadgeExecutivo from "@/components/ui/BadgeExecutivo";
 import { BotaoLink } from "@/components/ui/Botao";
-import { EtiquetaSelo, Legenda } from "@/components/ui/Selos";
+import { Legenda } from "@/components/ui/Selos";
 import IndicadorAbertura from "@/components/ui/StatusAbertura";
-import Preco from "@/components/ui/Preco";
-import { cardapioDoSite, executivoDoSite, type ExecutivoDados } from "@/lib/dados";
-import { preco } from "@/lib/format";
-import { site, whatsappLink } from "@/lib/site";
+import { cardapioDoSite, executivoDoSite } from "@/lib/dados";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Cardápio",
@@ -20,96 +18,6 @@ export const metadata: Metadata = {
     "Conheça os pratos e bebidas do Rizz Cucina & Vino em Espírito Santo do Pinhal e consulte as opções do almoço executivo.",
   alternates: { canonical: "/cardapio" },
 };
-
-function BlocoExecutivo({ executivo }: { executivo: ExecutivoDados }) {
-  const colunas = [
-    { titulo: "Entradas", itens: executivo.entradas },
-    { titulo: "Pratos principais", itens: executivo.pratos },
-    { titulo: "Sobremesas", itens: executivo.sobremesas },
-  ];
-
-  return (
-    <section
-      id="executivo"
-      className="scroll-mt-36 border-t border-tinta/12 bg-creme-2 py-20 md:py-28"
-    >
-      <div className="wrap">
-        <div className="flex flex-wrap items-center gap-4">
-          <p className="eyebrow text-vinho">Almoço executivo</p>
-          <BadgeExecutivo claro executivo={executivo} />
-        </div>
-
-        <h2 className="mt-5 flex flex-col items-start text-vinho not-italic">
-          <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.4rem,6vw,4rem)] leading-none">Menu</span>
-          <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(3.75rem,11vw,7rem)] leading-[0.9]">executivo</span>
-        </h2>
-
-        {executivo.condicoesConfirmadas ? (
-          <div className="mt-7 flex flex-wrap items-end gap-x-12 gap-y-4">
-            <Preco
-              valor={executivo.precoCompleto}
-              className="text-[3rem] leading-none text-vinho md:text-[4rem]"
-            />
-            <p className="max-w-sm text-sm italic text-tinta/70">
-              {executivo.chamada}. Valor do menu completo por pessoa.
-              Pratos principais a partir de{" "}
-              <strong className="font-medium not-italic text-vinho">
-                R$ {preco(executivo.precoAvulsoMin)}
-              </strong>
-              . {executivo.dias}, {executivo.horario}.
-            </p>
-          </div>
-        ) : (
-          <p className="mt-7 max-w-prose leading-relaxed text-tinta/70">
-            {executivo.chamada}. Consulte os dias e os valores com a equipe.
-          </p>
-        )}
-        {!executivo.condicoesConfirmadas && (
-          <div className="mt-7">
-            <BotaoLink href={whatsappLink("Olá! Gostaria de consultar os dias, as opções e os valores do almoço executivo do Rizz.")} variante="vinho">
-              Consultar executivo pelo WhatsApp
-            </BotaoLink>
-          </div>
-        )}
-
-        <div className="mt-8 h-px bg-ouro/60" />
-
-        <div className="mt-12 grid gap-12 md:grid-cols-3">
-          {colunas.map((coluna) => (
-            <div key={coluna.titulo}>
-              <h3 className="text-center text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-vinho/70">
-                {coluna.titulo}
-              </h3>
-              <ul className="mt-5">
-                {coluna.itens.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex items-baseline gap-3 border-b border-tinta/10 py-3 last:border-0"
-                  >
-                    <span className="flex min-w-0 grow flex-wrap items-center gap-x-2 text-[0.9375rem] leading-snug text-vinho md:text-base">
-                      {item.nome}
-                      {item.selo && <EtiquetaSelo id={item.selo} />}
-                    </span>
-                    {executivo.condicoesConfirmadas && (
-                      <Preco
-                        valor={item.preco}
-                        className="shrink-0 text-base text-vinho md:text-[1.0625rem]"
-                      />
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-12 text-xs italic text-tinta/50">
-          Consulte a equipe sobre as opções disponíveis no dia.
-        </p>
-      </div>
-    </section>
-  );
-}
 
 export default async function CardapioPage() {
   // Publicado pelo painel; cai nos dados de `data/` se o banco falhar.
@@ -148,7 +56,10 @@ export default async function CardapioPage() {
       </header>
 
       <div className="wrap mt-12 md:mt-16">
-        <MenuClient cardapio={cardapio} />
+        <MenuClient
+          cardapio={cardapio}
+          extra={executivo.ativo ? { slug: "executivo", nome: "Menu executivo", conteudo: <BlocoExecutivo executivo={executivo} /> } : undefined}
+        />
 
         <div className="mt-20 border-t border-tinta/12 pt-10">
           <h2 className="eyebrow mb-6 text-vinho">Legenda</h2>
@@ -156,9 +67,6 @@ export default async function CardapioPage() {
         </div>
       </div>
 
-      <div className="mt-24 md:mt-32">
-        {executivo.ativo && <BlocoExecutivo executivo={executivo} />}
-      </div>
 
       {/* Fecho com o salão em vídeo, escurecido, e o letreiro por cima. */}
       <section className="relative isolate flex min-h-[80svh] items-center overflow-hidden bg-noite py-24 text-center text-creme md:py-32">
