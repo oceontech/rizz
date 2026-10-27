@@ -18,7 +18,7 @@ export default function Letreiro({
 }) {
   return (
     <h2 id={id} className={`flex flex-col items-center text-center not-italic ${className}`}>
-      <span className="relative z-10 -mb-[0.32em] font-[family-name:var(--font-pinyon)] text-[clamp(2.9rem,11vw,6rem)] leading-none text-creme">
+      <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.9rem,11vw,6rem)] leading-none text-creme">
         {cursiva}
       </span>
       <span className="font-[family-name:var(--font-instrument)] text-[clamp(4.5rem,21vw,11rem)] leading-[0.95] tracking-[0.01em] text-creme uppercase [text-shadow:0_6px_40px_rgb(0_0_0/0.45)]">

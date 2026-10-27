@@ -6,9 +6,10 @@ import { useRef } from "react";
 import { BotaoLink } from "@/components/ui/Botao";
 import garrafa from "@/assets/img/vinho-rizz-syrah.webp";
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
+import { img } from "@/lib/images";
 import { whatsappLink } from "@/lib/site";
 
-import VideoB from "./VideoB";
+import Textura from "./Textura";
 
 /**
  * O vinho com o nome da casa, em formato de cartaz: painel dourado com o
@@ -62,20 +63,23 @@ export default function VinhoDaCasa() {
     <section ref={raiz} aria-labelledby="vinho-da-casa" className="bg-noite py-6 md:py-10">
       <div className="mx-auto grid max-w-[90rem] gap-3 px-3 md:grid-cols-2 md:px-6">
         {/* Painel do nome */}
-        <div className="flex min-h-[66svh] flex-col items-center justify-between bg-ouro-claro [clip-path:inset(0_round_2rem)] md:[clip-path:inset(0_round_2.5rem)] md:min-h-[78svh] px-6 py-12 text-center text-vinho md:py-16">
+        <div className="relative isolate flex min-h-[66svh] flex-col items-center justify-between bg-ouro-claro [clip-path:inset(0_round_2rem)] md:[clip-path:inset(0_round_2.5rem)] md:min-h-[78svh] px-6 py-12 text-center text-vinho md:py-16">
+          <Textura />
           <p className="eyebrow text-vinho">O vinho da casa</p>
 
+          {/* Mesma combinação dos letreiros da B: cursiva encostando na
+              serifada alta em caixa alta. */}
           <h2 id="vinho-da-casa" className="flex flex-col items-center not-italic">
-            <span data-letreiro className="font-display text-[clamp(5.5rem,16vw,12rem)] leading-[0.8] italic">
+            <span data-letreiro className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(4rem,13vw,8.5rem)] leading-none">
               Rizz
             </span>
             <span
               data-letreiro
-              className="font-sans text-[clamp(3rem,9vw,6.5rem)] leading-[0.9] font-semibold tracking-[-0.03em] uppercase"
+              className="font-[family-name:var(--font-instrument)] text-[clamp(6rem,26vw,13rem)] leading-[0.9] tracking-[0.01em] uppercase"
             >
               Syrah
             </span>
-            <span data-letreiro className="mt-2 font-display text-[clamp(1.75rem,4vw,3rem)] leading-none italic">
+            <span data-letreiro className="mt-3 font-sans text-[0.7rem] font-medium tracking-[0.42em] uppercase md:text-xs">
               Colheita de inverno
             </span>
           </h2>
@@ -95,11 +99,17 @@ export default function VinhoDaCasa() {
         </div>
 
         {/* Cena da garrafa */}
-        <div className="relative isolate flex min-h-[78svh] items-center justify-center bg-vinho-fundo [clip-path:inset(0_round_2rem)] md:[clip-path:inset(0_round_2.5rem)]">
-          {/* O clipe do álbum com a garrafa, a taça e o risoto, bem escuro e
-              desfocado: é cenário, quem aparece é a garrafa recortada. */}
-          <VideoB nome="vinho" className="absolute inset-0 -z-20 size-full scale-110 object-cover blur-[3px]" />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-noite via-vinho-fundo/85 to-vinho-fundo/70" />
+        <div className="relative isolate flex min-h-[78svh] items-center justify-center bg-noite [clip-path:inset(0_round_2rem)] md:[clip-path:inset(0_round_2.5rem)]">
+          {/* Fundo `noite`, igual ao da seção: o fio de antisserrilhado do
+              canto arredondado some na emenda. */}
+          <Image
+            src={img("file-parmesao-vinho")}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 50vw, 100vw"
+            className="-z-20 object-cover opacity-30 mix-blend-luminosity"
+          />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-noite via-vinho-fundo/80 to-vinho-fundo/60" />
 
           <p className="absolute top-[7%] left-[8%] z-10 text-ambar md:top-[14%] md:right-[8%] md:left-auto md:text-right">
             <span className="block font-display text-2xl italic md:text-4xl">Vinho fino</span>

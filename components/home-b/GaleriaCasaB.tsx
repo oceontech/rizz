@@ -33,39 +33,73 @@ type Foto = {
   alt: string;
   /** Posição e tamanho na grade (classes do Tailwind). */
   classe: string;
+  /** Só no desktop: surge durante a rolagem, depois que a cena prende. */
+  surge?: boolean;
 };
 
-/** Fotos do álbum do restaurante; o salão no centro continua o mesmo. */
+/**
+ * Fotos do álbum do restaurante. No desktop ficam mais espalhadas, até as
+ * bordas, e quatro a mais surgem enquanto o salão se abre.
+ */
 const PRATOS: Foto[] = [
   {
     chave: "risoto-camarao-aspargos",
     alt: "Risoto de camarão com aspargos",
-    classe: "left-[3%] top-[8%] w-[30vw] md:left-[6%] md:top-[10%] md:w-[15vw]",
+    classe: "left-[3%] top-[8%] w-[30vw] md:left-[3%] md:top-[6%] md:w-[13vw]",
   },
   {
     chave: "file-creme-funghi-risoto-brie",
     alt: "Filé mignon ao creme de funghi com risoto de brie trufado",
-    classe: "right-[4%] top-[5%] w-[27vw] md:right-[8%] md:top-[6%] md:w-[13vw]",
+    classe:
+      "right-[4%] top-[5%] w-[27vw] md:right-[4%] md:top-[4%] md:w-[12vw]",
   },
   {
     chave: "espaguete-carbonara",
     alt: "Espaguete à carbonara",
-    classe: "left-[-6%] top-[40%] w-[26vw] md:left-[12%] md:top-[44%] md:w-[11vw]",
+    classe:
+      "left-[-6%] top-[40%] w-[26vw] md:left-[16%] md:top-[46%] md:w-[10vw]",
   },
   {
     chave: "salmao-funghi-risoto-brie",
     alt: "Salmão ao creme de funghi com risoto de brie trufado",
-    classe: "right-[-5%] top-[42%] w-[28vw] md:right-[13%] md:top-[40%] md:w-[12vw]",
+    classe:
+      "right-[-5%] top-[42%] w-[28vw] md:right-[17%] md:top-[52%] md:w-[10vw]",
   },
   {
     chave: "risoto-costela-rucula",
     alt: "Risoto de costela bovina com rúcula e redução de balsâmico",
-    classe: "bottom-[6%] left-[6%] w-[28vw] md:bottom-[7%] md:left-[4%] md:w-[14vw]",
+    classe:
+      "bottom-[6%] left-[6%] w-[28vw] md:bottom-[4%] md:left-[2%] md:w-[12vw]",
   },
   {
     chave: "brigadeiro-colher",
     alt: "Brigadeiro artesanal de colher",
-    classe: "bottom-[4%] right-[5%] w-[30vw] md:bottom-[5%] md:right-[5%] md:w-[15vw]",
+    classe:
+      "bottom-[4%] right-[5%] w-[30vw] md:bottom-[3%] md:right-[3%] md:w-[13vw]",
+  },
+  {
+    chave: "burrata-cogumelos-trufados",
+    alt: "Burrata com confit de cogumelos trufados",
+    classe: "hidden md:block md:left-[21%] md:top-[5%] md:w-[8.5vw]",
+    surge: true,
+  },
+  {
+    chave: "polenta-ragu-cogumelos",
+    alt: "Polenta cremosa com ragu de cogumelos",
+    classe: "hidden md:block md:right-[21%] md:top-[9%] md:w-[8.5vw]",
+    surge: true,
+  },
+  {
+    chave: "tilapia-milanesa-risoto-funghi",
+    alt: "Tilápia à milanesa com risoto de funghi",
+    classe: "hidden md:block md:left-[24%] md:bottom-[3%] md:w-[8vw]",
+    surge: true,
+  },
+  {
+    chave: "pudim",
+    alt: "Pudim da casa",
+    classe: "hidden md:block md:right-[24%] md:bottom-[5%] md:w-[8vw]",
+    surge: true,
   },
 ];
 
@@ -88,7 +122,12 @@ export default function GaleriaCasaB() {
       const pratos = gsap.utils.toArray<HTMLElement>("[data-prato]", no);
       // Entrada e rolagem animam camadas diferentes: se as duas mexessem no
       // mesmo `y`, a rolagem gravaria o ponto de partida no meio da entrada.
-      const pousos = gsap.utils.toArray<HTMLElement>("[data-prato-pouso]", no);
+      const pousos = gsap.utils.toArray<HTMLElement>(
+        "[data-prato-pouso]:not([data-surge])",
+        no,
+      );
+      const surgem = gsap.utils.toArray<HTMLElement>("[data-surge]", no);
+      const flutuam = gsap.utils.toArray<HTMLElement>("[data-flutua]", no);
       const titulo = no.querySelector<HTMLElement>("[data-titulo]");
       const legenda = no.querySelector<HTMLElement>("[data-legenda]");
       if (!salao || !salaoFoto || !titulo || !legenda) return;
@@ -110,6 +149,25 @@ export default function GaleriaCasaB() {
             gsap.set(titulo, { autoAlpha: 1, scale: 1 });
             return;
           }
+
+          // Flutuação contínua, cada foto no seu ritmo: a cena respira mesmo
+          // parada. Camada própria, para não disputar `y` com entrada e fuga.
+          flutuam.forEach((el, i) => {
+            gsap.fromTo(
+              el,
+              { y: -8, rotate: i % 2 ? -1.2 : 1.2 },
+              {
+                y: 10,
+                rotate: i % 2 ? 1.2 : -1.2,
+                duration: 3.2 + (i % 4) * 0.6,
+                ease: "sine.inOut",
+                repeat: -1,
+                yoyo: true,
+                delay: (i % 3) * 0.4,
+              },
+            );
+          });
+          gsap.set(surgem, { autoAlpha: 0, scale: 0.5 });
 
           // Entrada: os pratos pousam na grade antes de a cena prender.
           gsap.fromTo(
@@ -160,10 +218,30 @@ export default function GaleriaCasaB() {
           tl.fromTo(
             salao,
             { clipPath: larga ? JANELA.larga : JANELA.estreita },
-            { clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 1, ease: "power2.inOut" },
+            {
+              clipPath: "inset(0% 0% 0% 0% round 0px)",
+              duration: 1,
+              ease: "power2.inOut",
+            },
             0,
           )
-            .fromTo(salaoFoto, { scale: 1.35 }, { scale: 1, duration: 1, ease: "power2.inOut" }, 0)
+            .to(
+              surgem,
+              {
+                autoAlpha: 1,
+                scale: 1,
+                duration: 0.22,
+                stagger: 0.05,
+                ease: "back.out(1.6)",
+              },
+              0.04,
+            )
+            .fromTo(
+              salaoFoto,
+              { scale: 1.35 },
+              { scale: 1, duration: 1, ease: "power2.inOut" },
+              0,
+            )
             .to(
               pratos,
               {
@@ -214,14 +292,29 @@ export default function GaleriaCasaB() {
           className="absolute inset-0 will-change-[clip-path]"
           style={{ clipPath: JANELA.estreita }}
         >
-          <Image
+          {/* Celular: o salão vertical. Desktop: foto horizontal do ambiente
+              interno, em resolução cheia — a vertical ficava esticada e mole
+              em tela larga. */}
+          <div
             data-salao-foto
-            src={img("salao-claraboia")}
-            alt="Salão do Rizz com claraboia e taças de vinho"
-            placeholder="blur"
-            sizes="100vw"
-            className="size-full object-cover will-change-transform"
-          />
+            className="relative size-full will-change-transform"
+          >
+            <Image
+              src={img("salao-claraboia")}
+              alt="Salão do Rizz com claraboia e taças de vinho"
+              placeholder="blur"
+              fill
+              sizes="100vw"
+              className="object-cover md:hidden"
+            />
+            <Image
+              src="/hero/hero-2.webp"
+              alt="Entrada do salão do Rizz, com arcos de tijolo e lustre"
+              fill
+              sizes="100vw"
+              className="hidden object-cover md:block"
+            />
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-noite/80 via-noite/10 to-noite/30" />
         </div>
 
@@ -231,17 +324,20 @@ export default function GaleriaCasaB() {
             data-prato
             className={`absolute aspect-[3/4] will-change-transform ${p.classe}`}
           >
-            <div
-              data-prato-pouso
-              className="size-full overflow-hidden rounded-xl shadow-[0_20px_60px_rgb(0_0_0/0.45)]"
-            >
-              <Image
-                src={img(p.chave)}
-                alt={p.alt}
-                placeholder="blur"
-                sizes="(min-width: 768px) 16vw, 32vw"
-                className="size-full object-cover"
-              />
+            <div data-flutua className="size-full">
+              <div
+                data-prato-pouso
+                data-surge={p.surge || undefined}
+                className="size-full overflow-hidden rounded-xl shadow-[0_20px_60px_rgb(0_0_0/0.45)]"
+              >
+                <Image
+                  src={img(p.chave)}
+                  alt={p.alt}
+                  placeholder="blur"
+                  sizes="(min-width: 768px) 16vw, 32vw"
+                  className="size-full object-cover"
+                />
+              </div>
             </div>
           </div>
         ))}

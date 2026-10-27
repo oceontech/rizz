@@ -4,7 +4,6 @@ import Destaques from "@/components/home/Destaques";
 import IntroCamarao from "@/components/home/IntroCamarao";
 import Marquee from "@/components/home/Marquee";
 import PratoAssinatura from "@/components/home/PratoAssinatura";
-import Visite from "@/components/home/Visite";
 import AvaliacoesB from "@/components/home-b/AvaliacoesB";
 import CozinhaB from "@/components/home-b/CozinhaB";
 import { instrument, pinyon } from "@/components/home-b/fontes";
@@ -16,6 +15,7 @@ import MosaicoB from "@/components/home-b/MosaicoB";
 import MuralB from "@/components/home-b/MuralB";
 import ReservaB from "@/components/home-b/ReservaB";
 import VinhoDaCasa from "@/components/home-b/VinhoDaCasa";
+import VisiteB from "@/components/home-b/VisiteB";
 import { executivoDoSite, homeDoSite } from "@/lib/dados";
 
 /**
@@ -58,7 +58,7 @@ export default async function HomeB() {
       <MuralB />
       <AvaliacoesB />
       <ReservaB />
-      <Visite fundo="bg-noite" />
+      <VisiteB />
     </div>
   );
 }

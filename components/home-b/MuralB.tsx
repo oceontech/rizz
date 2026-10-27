@@ -9,10 +9,10 @@ import VideoB from "./VideoB";
 const FOTOS: { chave: ImgKey; nome: string; alta?: boolean; video?: string }[] =
   [
     {
-      chave: "ancho-acafrao-madeira",
-      nome: "Carne na chapa servida com risoto de açafrão",
+      chave: "ancho-talharim-parma",
+      nome: "Carne e talharim sendo preparados e servidos",
       alta: true,
-      video: "grelha",
+      video: "massa",
     },
     { chave: "salada-rizz", nome: "Salada Rizz" },
     {
@@ -46,7 +46,7 @@ const FOTOS: { chave: ImgKey; nome: string; alta?: boolean; video?: string }[] =
 export default function MuralB() {
   return (
     <section aria-labelledby="mural-b" className="bg-noite">
-      <ul className="grid auto-rows-[56vw] grid-flow-dense grid-cols-2 md:auto-rows-[24vw] md:grid-cols-4">
+      <ul className="grid [&>li]:-m-[0.5px] auto-rows-[56vw] grid-flow-dense grid-cols-2 md:auto-rows-[24vw] md:grid-cols-4">
         <li className="col-span-2 flex flex-col items-center justify-center gap-6 bg-vinho px-6 text-center md:col-span-1 md:row-span-2">
           <h2
             id="mural-b"
@@ -73,7 +73,7 @@ export default function MuralB() {
               <VideoB
                 nome={f.video}
                 rotulo={f.nome}
-                className="absolute inset-0 size-full object-cover"
+                className="absolute -inset-px h-[calc(100%+2px)] w-[calc(100%+2px)] object-cover"
               />
             ) : (
               <Image

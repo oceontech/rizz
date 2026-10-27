@@ -8,6 +8,8 @@ import type { ExecutivoDados } from "@/lib/dados";
 import { img } from "@/lib/images";
 import { whatsappLink } from "@/lib/site";
 
+import Textura from "./Textura";
+
 /**
  * Executivo da versão B: cartaz amarelo, como o do vinho.
  *
@@ -26,7 +28,8 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
           foto encostada na borda, o recorte por raio deixava um fio claro de
           antisserrilhado no canto. */}
       <div className="mx-auto grid max-w-[90rem] bg-ouro-claro text-vinho [clip-path:inset(0_round_2rem)] md:grid-cols-2 md:[clip-path:inset(0_round_2.5rem)]">
-        <div className="flex flex-col px-6 py-12 md:px-14 md:py-16">
+        <div className="relative isolate flex flex-col px-6 py-12 md:px-14 md:py-16">
+          <Textura />
           <div className="flex flex-wrap items-center gap-3">
             <p className="eyebrow text-vinho">Almoço executivo</p>
             <BadgeExecutivo claro executivo={executivo} />

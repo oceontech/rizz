@@ -48,6 +48,12 @@ export default function MosaicoB() {
     const observador = new IntersectionObserver(
       ([entrada]) => {
         if (!entrada.isIntersecting) return;
+        // No desktop o mosaico é montado com três clipes (ver abaixo); o
+        // arquivo vertical só serve ao celular.
+        if (window.matchMedia("(min-width: 768px)").matches) {
+          observador.disconnect();
+          return;
+        }
         video.poster = "/videos/mosaico-poster.jpg";
         video.src = "/videos/mosaico.mp4";
         video.load();
@@ -180,9 +186,16 @@ export default function MosaicoB() {
           className="absolute inset-0 will-change-[clip-path,filter,opacity] motion-reduce:relative motion-reduce:mx-auto motion-reduce:mt-12 motion-reduce:aspect-[9/16] motion-reduce:max-w-sm"
         >
           <div data-filme className="size-full will-change-transform">
+            {/* Desktop: três clipes lado a lado, de cores e cenas diferentes
+                (vinho, açafrão, chapa), no lugar do vídeo vertical esticado. */}
+            <div className="hidden size-full grid-cols-3 md:grid">
+              <VideoB nome="vinho" className="size-full object-cover" />
+              <VideoB nome="acafrao" className="size-full object-cover" />
+              <VideoB nome="grelha" className="size-full object-cover" />
+            </div>
             <video
               ref={videoRef}
-              className="size-full object-cover"
+              className="size-full object-cover md:hidden"
               muted
               loop
               playsInline

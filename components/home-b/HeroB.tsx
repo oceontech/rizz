@@ -12,7 +12,8 @@ import { site } from "@/lib/site";
 
 /**
  * Hero da versão B: igual ao da A (vídeo em tela cheia, sem moldura), só com
- * a chamada em letras misturadas — itálico e caixa alta no amarelo da B.
+ * o bloco de texto centralizado e a chamada no letreiro da B (cursiva +
+ * serifada alta).
  *
  * Hero: o vídeo ocupa a tela inteira, sem moldura.
  *
@@ -108,86 +109,71 @@ export default function HeroB() {
 
   return (
     <div ref={raiz} className="relative h-[190svh]">
-      <section className="sticky top-0 flex h-[100svh] min-h-[34rem] items-end overflow-hidden">
+      <section className="sticky top-0 flex h-[100svh] min-h-[34rem] items-end justify-center overflow-hidden md:items-center">
         <div className="absolute inset-0 -z-10">
           {/* Fotos com zoom no desktop, vídeo no celular — ver HeroFundo. */}
           <div data-cena className="size-full will-change-transform">
             <HeroFundo />
           </div>
 
-          {/* Véu de contraste: sólido onde o texto vive, limpo lá em cima. */}
-          <div data-veu className="absolute inset-0 bg-[linear-gradient(to_top,rgb(43_7_16/0.97)_0%,rgb(43_7_16/0.95)_36%,rgb(43_7_16/0.84)_52%,rgb(43_7_16/0.52)_68%,rgb(43_7_16/0.22)_84%,rgb(43_7_16/0.45)_100%)]" />
+          {/* Véu: no celular pesa embaixo, onde fica o texto; no desktop, com
+              o bloco no centro, escurece por igual e mais no meio, para o
+              letreiro não brigar com a placa "Rizz" das fotos. */}
+          <div
+            data-veu
+            className="absolute inset-0 bg-[linear-gradient(to_top,rgb(43_7_16/0.97)_0%,rgb(43_7_16/0.92)_38%,rgb(43_7_16/0.6)_60%,rgb(43_7_16/0.25)_82%,rgb(43_7_16/0.45)_100%)] md:bg-[radial-gradient(ellipse_60%_70%_at_50%_52%,rgb(43_7_16/0.86)_0%,rgb(43_7_16/0.72)_55%,rgb(43_7_16/0.55)_100%)]"
+          />
 
-          {/* Dissolve para a seção seguinte. Termina em vinho SÓLIDO e passa
-              um pouco da borda: o fundo mora numa camada própria (escala e
-              zoom), e sem isso sobrava uma linha de 1px dele na emenda. */}
           <div
             className="absolute inset-x-0 -bottom-2"
             style={{
               height: "calc(26svh + 0.5rem)",
-              background:
-                "linear-gradient(to bottom, rgb(43 7 16 / 0), rgb(43 7 16) 82%, rgb(43 7 16))",
+              background: "linear-gradient(to bottom, rgb(43 7 16 / 0), rgb(43 7 16) 82%, rgb(43 7 16))",
             }}
           />
         </div>
 
-        {/* pb generoso no mobile: a bottom nav cobre os últimos ~72px e a
-            linha de horário ficava atrás dela. */}
-        <div data-sai className="wrap pb-24 md:pb-24">
-          <p
-            data-entra
-            className="eyebrow text-ambar text-shadow-cena"
-          >
-            {site.endereco.cidade}, {site.endereco.uf}
+        {/* pb generoso no mobile: a bottom nav cobre os últimos ~72px. */}
+        <div data-sai className="wrap flex flex-col items-center pb-24 text-center md:pt-16 md:pb-0">
+          <p data-entra className="eyebrow text-ambar text-shadow-cena">
+            {site.endereco.cidade} · {site.endereco.uf}
           </p>
 
-          <h1 data-entra className="mt-4 md:mt-5">
-            <span className="sr-only">
-              {site.nome}. Restaurante em Espírito Santo do Pinhal.
-            </span>
+          <h1 data-entra className="mt-5 md:mt-6">
+            <span className="sr-only">{site.nome}. Restaurante em Espírito Santo do Pinhal.</span>
             <Logo
               variante="branca"
               decorativo
               priority
-              sizes="(min-width: 860px) 19rem, 48vw"
-              className="h-auto w-[min(48vw,12rem)] md:w-[19rem]"
+              sizes="(min-width: 860px) 16rem, 44vw"
+              className="h-auto w-[min(44vw,11rem)] md:w-[16rem]"
             />
           </h1>
 
-          <p data-entra className="mt-5 flex flex-col leading-none text-shadow-cena md:mt-7">
-            <span className="font-display text-[1.75rem] text-creme italic md:text-[2.75rem]">Especialidade em</span>
-            <span className="mt-1 font-sans text-[2.75rem] font-semibold tracking-[-0.03em] text-ouro-claro uppercase md:text-[4.25rem]">
+          {/* Letreiro da B: cursiva encostando na serifada alta. */}
+          <p data-entra className="mt-5 flex flex-col items-center md:mt-8">
+            <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[2.5rem] leading-none text-creme md:text-[3.5rem]">
+              Especialidade em
+            </span>
+            <span className="font-[family-name:var(--font-instrument)] text-[5rem] leading-[0.9] tracking-[0.01em] text-ouro-claro uppercase [text-shadow:0_6px_40px_rgb(0_0_0/0.45)] md:text-[8.5rem]">
               Risotos
             </span>
           </p>
 
-          <p data-entra className="mt-3 max-w-[32ch] text-sm leading-relaxed text-creme/80 md:max-w-md md:text-base">
+          <p data-entra className="mt-4 max-w-[30ch] text-sm leading-relaxed text-creme/80 md:mt-5 md:max-w-md md:text-base">
             Cozinha contemporânea e vinhos para acompanhar seu almoço ou jantar.
           </p>
 
-          {/* Compactos para caber lado a lado em 390px — empilhados eles
-              comiam altura e a coluna ficava desalinhada. */}
-          <div
-            data-entra
-            className="mt-6 flex flex-wrap items-center gap-2.5 md:mt-9 md:gap-3"
-          >
-            <BotaoLink
-              href="/cardapio"
-              variante="ambar"
-              className="md:h-14 md:px-8 md:text-xs"
-            >
+          <div data-entra className="mt-6 flex flex-wrap items-center justify-center gap-2.5 md:mt-8 md:gap-3">
+            <BotaoLink href="/cardapio" variante="ambar" className="md:h-14 md:px-8 md:text-xs">
               Ver cardápio
             </BotaoLink>
-            <BotaoLink
-              href="/reservas"
-              variante="contorno"
-              className="md:h-14 md:px-8 md:text-xs"
-            >
+            <BotaoLink href="/reservas" variante="contorno" className="md:h-14 md:px-8 md:text-xs">
               Reservar mesa
             </BotaoLink>
           </div>
 
-          <div data-entra className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 md:mt-7">
+          <div data-entra className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:mt-7">
             <IndicadorAbertura />
             <a href="#visite" className="text-xs text-creme/75 underline underline-offset-4 hover:text-ambar">
               Horários e endereço

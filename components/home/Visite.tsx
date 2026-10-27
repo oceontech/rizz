@@ -10,10 +10,9 @@ import { faixa, horarios } from "@/lib/hours";
 import { img } from "@/lib/images";
 import { enderecoLinha, site, whatsappLink } from "@/lib/site";
 
-/** `fundo`: a versão B da home usa um só tom escuro em todas as seções. */
-export default function Visite({ fundo = "bg-noite-2" }: { fundo?: string }) {
+export default function Visite() {
   return (
-    <section id="visite" className={`scroll-mt-24 ${fundo} py-24 md:py-32`}>
+    <section id="visite" className="scroll-mt-24 bg-noite-2 py-24 md:py-32">
       <div className="wrap">
         <div className="grid gap-16 md:grid-cols-2 md:gap-20">
           <div>
