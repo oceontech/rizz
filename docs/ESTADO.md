@@ -71,6 +71,8 @@ Passo a passo:
 - Chaves do Google Places (`GOOGLE_PLACES_API_KEY`, `GOOGLE_PLACE_ID`) não configuradas.
 - Confirmar com a casa o preço do menu executivo (R$ 75,90 × 72,90), o preço do Brownie e se segunda-feira é mesmo fechada (`lib/hours.ts`; as reservas seguem esses horários).
 - Carta de vinhos sem PDF/link (`cartaVinhosUrl` em `lib/site.ts`).
+- Rodízio de risotos (`lib/rodizio.ts`): dias e etapas vêm do vídeo do restaurante (abr/2026: quartas e quintas no jantar; arancini, seis risotos à vontade, sobremesa da semana). Falta confirmar o valor; enquanto isso o site manda consultar pelo WhatsApp. O aviso "hoje/amanhã tem rodízio" usa o horário do jantar de `lib/hours.ts`.
+- Versão B da home (`/b`): as avaliações são textos de exemplo marcados como tal; trocar por avaliações reais antes de levar a seção para `/`.
 
 ### Repositório
 - `cardápios/` (PDFs do cardápio impresso de 2026, material de referência) fica fora do git, no `.gitignore`.

@@ -14,6 +14,7 @@ import MosaicoB from "@/components/home-b/MosaicoB";
 import MuralB from "@/components/home-b/MuralB";
 import PratoAssinaturaB from "@/components/home-b/PratoAssinaturaB";
 import ReservaB from "@/components/home-b/ReservaB";
+import RodizioB from "@/components/home-b/RodizioB";
 import VinhoDaCasa from "@/components/home-b/VinhoDaCasa";
 import VisiteB from "@/components/home-b/VisiteB";
 import { executivoDoSite, homeDoSite } from "@/lib/dados";
@@ -51,6 +52,7 @@ export default async function HomeB() {
         maisPedido && <PratoAssinaturaB prato={maisPedido} />
       )}
       {home.destaques.length > 0 && <Destaques pratos={home.destaques} letreiro />}
+      <RodizioB />
       <GaleriaB />
       <VinhoDaCasa />
       <MosaicoB />

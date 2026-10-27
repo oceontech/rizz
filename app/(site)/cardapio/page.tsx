@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import MenuClient from "@/components/menu/MenuClient";
+import { CartaoRodizio } from "@/components/rodizio/AvisoRodizio";
 import Reveal from "@/components/motion/Reveal";
 import RevealScrub from "@/components/motion/RevealScrub";
 import BadgeExecutivo from "@/components/ui/BadgeExecutivo";
@@ -136,6 +137,11 @@ export default async function CardapioPage() {
               {site.cartaVinhosUrl ? "Carta de vinhos" : "Consultar vinhos"} →
             </Link>
           </div>
+        </Reveal>
+
+        {/* Rodízio de risotos: muda sozinho para "hoje", "amanhã" ou o próximo dia. */}
+        <Reveal delay={0.14}>
+          <CartaoRodizio className="mt-10 md:mt-12" />
         </Reveal>
       </header>
 

@@ -1,8 +1,7 @@
 "use client";
 
-import { Volume2, VolumeX } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
 import SeloRotativo from "@/components/brand/SeloRotativo";
 import { BotaoLink } from "@/components/ui/Botao";
@@ -14,102 +13,9 @@ import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 import { fotoDoPrato } from "@/lib/images";
 
 import VideoB from "./VideoB";
+import VideoComSom from "./VideoComSom";
 
 type Prato = NonNullable<HomeDoSite["maisPedido"]>;
-
-/**
- * Vídeo da apresentação do prato, o único da página com som.
- *
- * Ao entrar na tela ele tenta tocar já com som e pausa ao sair. Os
- * navegadores só deixam um vídeo tocar sozinho com som depois que a pessoa
- * interagiu com a página (um toque ou clique; rolar não conta). Se o som for
- * bloqueado, ele toca mudo e liga o som no primeiro toque na página, ou no
- * botão.
- */
-function Apresentacao() {
-  const ref = useRef<HTMLVideoElement>(null);
-  const visivel = useRef(false);
-  const [mudo, setMudo] = useState(true);
-
-  useEffect(() => {
-    const video = ref.current;
-    if (!video) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const tocar = async () => {
-      if (!video.src) video.src = "/videos/b/camarao-apresentacao.mp4";
-      try {
-        video.muted = false;
-        await video.play();
-        setMudo(false);
-      } catch {
-        video.muted = true;
-        setMudo(true);
-        void video.play().catch(() => {});
-      }
-    };
-
-    const observador = new IntersectionObserver(
-      ([e]) => {
-        visivel.current = e.isIntersecting;
-        if (e.isIntersecting) void tocar();
-        else video.pause();
-      },
-      { threshold: 0.45 },
-    );
-    observador.observe(video);
-
-    // Primeiro toque na página: se o vídeo está à vista e mudo, liga o som.
-    const aoInteragir = () => {
-      if (visivel.current && video.muted) {
-        video.muted = false;
-        setMudo(false);
-      }
-    };
-    window.addEventListener("pointerdown", aoInteragir);
-    window.addEventListener("keydown", aoInteragir);
-
-    return () => {
-      observador.disconnect();
-      window.removeEventListener("pointerdown", aoInteragir);
-      window.removeEventListener("keydown", aoInteragir);
-    };
-  }, []);
-
-  function alternarSom() {
-    const video = ref.current;
-    if (!video) return;
-    video.muted = !mudo;
-    if (mudo) void video.play().catch(() => {});
-    setMudo(!mudo);
-  }
-
-  return (
-    <div className="relative aspect-[9/16] overflow-hidden bg-noite">
-      <video
-        ref={ref}
-        poster="/videos/b/camarao-apresentacao.jpg"
-        muted
-        loop
-        playsInline
-        preload="none"
-        aria-label="O prato apresentado no salão do Rizz"
-        className="absolute inset-0 size-full object-cover"
-      />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 to-transparent" />
-      <button
-        type="button"
-        onClick={alternarSom}
-        aria-pressed={!mudo}
-        aria-label={mudo ? "Ligar o som" : "Desligar o som"}
-        className="absolute bottom-5 left-5 flex items-center gap-2.5 rounded-full bg-creme/95 py-2.5 pr-4 pl-3 text-xs font-medium tracking-[0.08em] text-tinta uppercase shadow-[0_10px_30px_rgb(0_0_0/0.35)] transition-colors hover:bg-white"
-      >
-        {mudo ? <VolumeX className="size-4" /> : <Volume2 className="size-4 text-vinho" />}
-        {mudo ? "Ligar o som" : "Som ligado"}
-      </button>
-    </div>
-  );
-}
 
 function Texto({ prato }: { prato: Prato }) {
   return (
@@ -250,7 +156,7 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
 
         {/* Apresentação + salão */}
         <div data-entrada-prato className="relative order-3 md:col-span-4 md:pl-10 lg:pl-16">
-          <Apresentacao />
+          <VideoComSom nome="camarao-apresentacao" rotulo="O prato apresentado no salão do Rizz" somAutomatico />
           <div
             data-profundidade="24"
             className="absolute -top-10 -left-8 hidden w-[44%] overflow-hidden rounded-full md:block shadow-[0_24px_50px_rgb(43_7_16/0.35)] ring-[6px] ring-white md:-top-14 md:-left-2 md:w-[40%] lg:left-2"

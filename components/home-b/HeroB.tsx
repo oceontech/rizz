@@ -7,6 +7,7 @@ import { useBoot } from "@/components/motion/Boot";
 import Logo from "@/components/brand/Logo";
 import HeroFundo from "@/components/home/HeroFundo";
 import { BotaoLink } from "@/components/ui/Botao";
+import { SeloRodizio } from "@/components/rodizio/AvisoRodizio";
 import IndicadorAbertura from "@/components/ui/StatusAbertura";
 import { site } from "@/lib/site";
 
@@ -171,6 +172,11 @@ export default function HeroB() {
             <BotaoLink href="/reservas" variante="contorno" className="md:h-14 md:px-8 md:text-xs">
               Reservar mesa
             </BotaoLink>
+          </div>
+
+          {/* Só aparece quando o rodízio de risotos é hoje ou amanhã. */}
+          <div data-entra className="mt-5 empty:hidden md:mt-6">
+            <SeloRodizio />
           </div>
 
           <div data-entra className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:mt-7">
