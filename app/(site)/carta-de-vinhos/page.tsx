@@ -69,7 +69,7 @@ export default function CartaDeVinhosPage() {
                 </p>
                 <div className="mt-5">
                   <BotaoLink href={whatsappLink("Olá! Gostaria de saber sobre o vinho Rizz Syrah.")} variante="vinho">
-                    Perguntar<span className="hidden sm:inline">&nbsp;pelo WhatsApp</span>
+                    Perguntar<span className="-ml-2 hidden sm:inline">&nbsp;pelo WhatsApp</span>
                   </BotaoLink>
                 </div>
               </div>

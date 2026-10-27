@@ -9,10 +9,10 @@ const RUIDO =
 export default function Textura() {
   return (
     <>
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-45 mix-blend-multiply" style={{ backgroundImage: RUIDO }} />
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit] opacity-45 mix-blend-multiply" style={{ backgroundImage: RUIDO }} />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
+        className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
         style={{
           background:
             "radial-gradient(ellipse 70% 45% at 50% 28%, rgb(255 248 220 / 0.38), transparent 70%), radial-gradient(ellipse at center, transparent 55%, rgb(112 1 42 / 0.16) 100%)",
