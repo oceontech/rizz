@@ -13,9 +13,11 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
  *   vídeo tocar sozinho com som depois que a pessoa interagiu com a página
  *   (um toque ou clique; rolar não conta). Se o som for bloqueado, ele toca
  *   mudo e liga o som no primeiro toque na página.
- * - Com `final`, no celular, faltando 2 segundos para acabar, o vídeo dá lugar
- *   a esse conteúdo (fotos e preço do prato), com um botão para rever. No
- *   desktop o texto já está ao lado, então lá o vídeo segue em loop.
+ * - Com `final`, no celular, o vídeo toca uma vez só. Faltando 2 segundos,
+ *   esse conteúdo (as fotos do prato) entra por cima, mas o vídeo segue
+ *   tocando por baixo até o fim, para a fala não ser cortada. Depois de
+ *   terminado, voltar à seção mantém as fotos (sem recomeçar sozinho); o
+ *   botão "Rever" toca de novo. No desktop o vídeo segue em loop.
  */
 export default function VideoComSom({
   nome,
@@ -35,6 +37,7 @@ export default function VideoComSom({
   const visivel = useRef(false);
   const pausadoPelaPessoa = useRef(false);
   const comFinal = useRef(false);
+  const terminou = useRef(false);
   const [mudo, setMudo] = useState(true);
   const [tocando, setTocando] = useState(false);
   const [noFinal, setNoFinal] = useState(false);
@@ -47,7 +50,7 @@ export default function VideoComSom({
     video.loop = !comFinal.current;
 
     const tocar = async () => {
-      if (pausadoPelaPessoa.current) return;
+      if (pausadoPelaPessoa.current || terminou.current) return;
       if (!video.src) video.src = `/videos/b/${nome}.mp4`;
       if (!somAutomatico) {
         void video.play().catch(() => {});
@@ -94,10 +97,8 @@ export default function VideoComSom({
   function aoAvancar() {
     const video = ref.current;
     if (!video || !comFinal.current || noFinal || !video.duration) return;
-    if (video.duration - video.currentTime <= 2) {
-      setNoFinal(true);
-      video.pause();
-    }
+    // Só a imagem muda: o áudio continua até o fim do arquivo.
+    if (video.duration - video.currentTime <= 2) setNoFinal(true);
   }
 
   function alternarReproducao() {
@@ -129,6 +130,7 @@ export default function VideoComSom({
     const video = ref.current;
     if (!video) return;
     setNoFinal(false);
+    terminou.current = false;
     pausadoPelaPessoa.current = false;
     video.currentTime = 0;
     void video.play().catch(() => {});
@@ -147,6 +149,10 @@ export default function VideoComSom({
         onPlay={() => setTocando(true)}
         onPause={() => setTocando(false)}
         onTimeUpdate={aoAvancar}
+        onEnded={() => {
+          terminou.current = true;
+          setNoFinal(true);
+        }}
         onClick={alternarReproducao}
         className="absolute inset-0 size-full cursor-pointer object-cover"
       />
@@ -164,7 +170,7 @@ export default function VideoComSom({
         </button>
       )}
 
-      <div className={`absolute bottom-5 ${posicaoBotao} flex items-center gap-2`}>
+      <div className={`absolute bottom-5 ${posicaoBotao} flex items-center gap-2 transition-opacity ${noFinal ? "pointer-events-none opacity-0 md:pointer-events-auto md:opacity-100" : ""}`}>
         <button
           type="button"
           onClick={alternarReproducao}
@@ -195,9 +201,9 @@ export default function VideoComSom({
           <button
             type="button"
             onClick={rever}
-            className="absolute top-4 right-4 flex h-9 items-center gap-2 rounded-full bg-black/45 px-3.5 text-xs font-medium tracking-[0.08em] text-white uppercase backdrop-blur-sm"
+            className="absolute bottom-5 left-1/2 flex h-10 -translate-x-1/2 items-center gap-2 rounded-full bg-creme/95 px-4 text-xs font-medium tracking-[0.08em] whitespace-nowrap text-tinta uppercase shadow-[0_10px_30px_rgb(0_0_0/0.35)]"
           >
-            <RotateCcw className="size-3.5" /> Rever
+            <RotateCcw className="size-3.5" /> Rever a apresentação
           </button>
         </div>
       )}

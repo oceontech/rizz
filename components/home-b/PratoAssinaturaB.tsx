@@ -17,9 +17,9 @@ import VideoComSom from "./VideoComSom";
 type Prato = NonNullable<HomeDoSite["maisPedido"]>;
 
 /**
- * O que entra no lugar do vídeo, no celular, quando ele termina: as fotos do
- * prato se revezando devagar (com leve aproximação), o nome, o texto e o
- * preço.
+ * O que entra por cima do vídeo, no celular, quando ele está acabando: as
+ * fotos do prato se revezando devagar (com leve aproximação), o nome e o
+ * preço. A descrição e o botão do cardápio ficam logo abaixo do vídeo.
  */
 function FinalPrato({ prato }: { prato: Prato }) {
   const foto = fotoDoPrato(prato);
@@ -45,14 +45,10 @@ function FinalPrato({ prato }: { prato: Prato }) {
         />
       ))}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10" />
-      <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+      <div className="absolute inset-x-0 bottom-20 px-6 text-white">
         <p className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-4xl leading-none text-ambar">{prato.chamada}</p>
         <p className="font-[family-name:var(--font-instrument)] text-[3.25rem] leading-[0.9] tracking-[0.01em] uppercase">{prato.titulo}</p>
-        <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/80">{prato.texto}</p>
-        <div className="mt-5 flex items-center justify-between gap-4">
-          <Preco valor={prato.preco} className="text-4xl leading-none text-ouro-claro [&>span]:opacity-100" />
-          <BotaoLink href={`/cardapio#${prato.categoriaSlug}`}>Ver no cardápio</BotaoLink>
-        </div>
+        <Preco valor={prato.preco} className="mt-3 text-3xl leading-none text-ouro-claro [&>span]:opacity-100" />
       </div>
     </div>
   );
@@ -164,8 +160,9 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
   return (
     <section ref={raiz} aria-labelledby="prato-b" className="relative overflow-hidden bg-white pt-20 pb-28 text-tinta md:py-28">
       <div className="mx-auto grid max-w-[100rem] gap-12 px-5 md:grid-cols-12 md:items-center md:gap-6 md:px-8 lg:gap-10">
-        {/* Celular: o texto vem primeiro. */}
-        <div data-entrada-prato className="order-1 md:order-2 md:col-span-4 md:pl-10 lg:pl-14">
+        {/* Celular: o vídeo vem primeiro e o texto logo abaixo, então quem rola
+            antes do fim já encontra preço e botão. */}
+        <div data-entrada-prato className="order-2 md:order-2 md:col-span-4 md:pl-10 lg:pl-14">
           <Texto prato={prato} />
         </div>
 
@@ -195,7 +192,7 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
         </div>
 
         {/* Apresentação. No celular, no fim do vídeo entram as fotos e o preço. */}
-        <div data-entrada-prato className="relative order-3 md:col-span-4 md:pl-10 lg:pl-16">
+        <div data-entrada-prato className="relative order-1 md:order-3 md:col-span-4 md:pl-10 lg:pl-16">
           <VideoComSom
             nome="camarao-apresentacao"
             rotulo="O prato apresentado no salão do Rizz"
