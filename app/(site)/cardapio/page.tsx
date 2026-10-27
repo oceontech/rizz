@@ -44,7 +44,7 @@ export default async function CardapioPage() {
               href="/carta-de-vinhos"
               className="text-[0.6875rem] uppercase tracking-[0.14em] text-vinho underline-offset-4 transition-colors hover:text-ambar hover:underline"
             >
-              {site.cartaVinhosUrl ? "Carta de vinhos" : "Consultar vinhos"} →
+              Carta de vinhos →
             </Link>
           </div>
         </Reveal>
