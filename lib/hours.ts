@@ -128,6 +128,47 @@ export function executivoDisponivel(base = new Date()) {
   return ehDiaUtil && minutos >= paraMinutos("11:00") && minutos < paraMinutos("14:30");
 }
 
+export type StatusExecutivo = {
+  disponivel: boolean;
+  /** "Disponível agora" · "Hoje, a partir das 11h" · "Volta amanhã" … */
+  rotulo: string;
+  detalhe: string;
+};
+
+/**
+ * Situação do executivo para o cartão do cardápio. Mesma janela de
+ * `executivoDisponivel` (terça a sexta, 11h às 14h30; segunda a casa fecha).
+ */
+export function statusDoExecutivo(base = new Date()): StatusExecutivo {
+  const { dia, minutos } = agoraNoRestaurante(base);
+  const inicio = paraMinutos("11:00");
+  const fim = paraMinutos("14:30");
+  const ehDia = (d: number) => d >= 2 && d <= 5;
+
+  if (ehDia(dia) && minutos >= inicio && minutos < fim) {
+    const falta = fim - minutos;
+    return {
+      disponivel: true,
+      rotulo: "Disponível agora",
+      detalhe: falta <= 45 ? `Últimos ${falta} minutos · até 14h30` : "Servido até 14h30",
+    };
+  }
+  if (ehDia(dia) && minutos < inicio) {
+    return { disponivel: false, rotulo: "Hoje tem executivo", detalhe: "A partir das 11h, até 14h30" };
+  }
+  for (let i = 1; i <= 7; i++) {
+    const d = (dia + i) % 7;
+    if (ehDia(d)) {
+      return {
+        disponivel: false,
+        rotulo: i === 1 ? "Volta amanhã" : `Volta ${diaDe(d).nome.toLowerCase()}`,
+        detalhe: "Das 11h às 14h30",
+      };
+    }
+  }
+  return { disponivel: false, rotulo: "Consulte a equipe", detalhe: "" };
+}
+
 /** Formato "11:00 – 14:30" para exibição. */
 export function faixa(s?: Servico) {
   return s ? `${s.inicio} às ${s.fim}` : null;

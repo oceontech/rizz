@@ -6,7 +6,23 @@ import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 
 /** O próprio vídeo avança e retrocede com o scroll, sem reprodução automática. */
 /** Abertura em vídeo do camarão; a home só a usa quando o mais pedido é o camarão. */
-export default function IntroCamarao({ nome, children }: { nome: string; children: ReactNode }) {
+/**
+ * `fadeTopo`: cor da seção de cima. Com ela, o topo do vídeo se dissolve
+ * nessa cor, sem a emenda reta entre as duas seções (usado na versão B, que
+ * chega aqui vinda do papel creme).
+ */
+export default function IntroCamarao({
+  nome,
+  children,
+  fadeTopo,
+  letreiro = false,
+}: {
+  nome: string;
+  children: ReactNode;
+  fadeTopo?: string;
+  /** Chamada no par de fontes da versão B. */
+  letreiro?: boolean;
+}) {
   const raiz = useRef<HTMLDivElement>(null);
   const cenaRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -196,6 +212,12 @@ export default function IntroCamarao({ nome, children }: { nome: string; childre
               disablePictureInPicture
               tabIndex={-1}
             />
+            {fadeTopo && (
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-[28%]"
+                style={{ background: `linear-gradient(to bottom, ${fadeTopo} 0%, ${fadeTopo} 12%, transparent 100%)` }}
+              />
+            )}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[25%] bg-[linear-gradient(to_bottom,rgb(255_255_255/0)_0%,rgb(255_255_255/0.65)_45%,#fff_90%,#fff_100%)]" />
           </div>
         </div>
@@ -205,9 +227,16 @@ export default function IntroCamarao({ nome, children }: { nome: string; childre
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 z-20 hidden h-[100svh] flex-col items-center justify-center gap-5 bg-white px-6 text-center"
         >
-          <p data-chamada-texto className="font-display text-display font-medium italic leading-tight text-vinho">
-            O mais pedido!
-          </p>
+          {letreiro ? (
+            <p data-chamada-texto className="flex flex-col items-center text-vinho">
+              <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(3rem,9vw,6rem)] leading-none text-ambar">O mais</span>
+              <span className="font-[family-name:var(--font-instrument)] text-[clamp(4.5rem,15vw,10rem)] leading-[0.9] tracking-[0.01em] uppercase">pedido</span>
+            </p>
+          ) : (
+            <p data-chamada-texto className="font-display text-display font-medium italic leading-tight text-vinho">
+              O mais pedido!
+            </p>
+          )}
           <p data-chamada-texto className="max-w-[30ch] font-sans text-base font-light leading-relaxed text-tinta/80 md:text-xl">
             {nome}
           </p>

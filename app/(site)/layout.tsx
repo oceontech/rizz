@@ -18,6 +18,7 @@ import { SelosProvider } from "@/components/ui/Selos";
 import { resumoAvaliacoes } from "@/data/reviews";
 import { avisoDoSite, promocoesDoSite, selosDoSite } from "@/lib/dados";
 import { openingHoursSpecification } from "@/lib/hours";
+import { instrument, pinyon } from "@/lib/fontes";
 import { site } from "@/lib/site";
 
 /**
@@ -125,7 +126,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
-      className={`${cormorant.variable} ${jost.variable} h-full${avisoAtivo ? " com-aviso" : ""}`}
+      className={`${cormorant.variable} ${jost.variable} ${instrument.variable} ${pinyon.variable} h-full${avisoAtivo ? " com-aviso" : ""}`}
     >
       <body className="min-h-full">
         <BootProvider>

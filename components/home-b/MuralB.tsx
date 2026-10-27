@@ -1,0 +1,93 @@
+import Image from "next/image";
+
+import { BotaoLink } from "@/components/ui/Botao";
+import { img, type ImgKey } from "@/lib/images";
+
+import VideoB from "./VideoB";
+
+/** `alta` ocupa duas linhas da grade; com `video`, o ladrilho toca o clipe. */
+const FOTOS: { chave: ImgKey; nome: string; alta?: boolean; video?: string }[] =
+  [
+    {
+      chave: "ancho-talharim-parma",
+      nome: "Carne e talharim sendo preparados e servidos",
+      alta: true,
+      video: "massa",
+    },
+    { chave: "salada-rizz", nome: "Salada Rizz" },
+    {
+      chave: "polenta-ragu-cogumelos",
+      nome: "Polenta cremosa com ragu de cogumelos",
+    },
+    {
+      chave: "steak-milanesa-risoto-brie",
+      nome: "Steak Red Angus à milanesa com risoto de brie",
+    },
+    {
+      chave: "risoto-cogumelos",
+      nome: "Risoto de cogumelos com gorgonzola e alho-poró",
+      alta: true,
+    },
+    {
+      chave: "arancini-parmesao",
+      nome: "Arancini de parmesão com fonduta cremosa",
+    },
+    {
+      chave: "file-mostarda-risoto-aspargos",
+      nome: "Filé mignon ao molho mostarda Dijon com risoto de aspargos",
+    },
+    { chave: "pudim", nome: "Pudim da casa" },
+  ];
+
+/**
+ * Mural da versão B: fotos coladas umas nas outras, de ponta a ponta da tela,
+ * sem vão nem moldura. Um ladrilho vinho com o título entra na própria grade.
+ */
+export default function MuralB() {
+  return (
+    <section aria-labelledby="mural-b" className="bg-noite">
+      <ul className="grid [&>li]:-m-px auto-rows-[56vw] grid-flow-dense grid-cols-2 md:auto-rows-[24vw] md:grid-cols-4">
+        <li className="col-span-2 flex flex-col items-center justify-center gap-6 bg-vinho px-6 text-center md:col-span-1 md:row-span-2">
+          <h2
+            id="mural-b"
+            className="flex flex-col items-center leading-[0.9] not-italic"
+          >
+            <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.75rem,5vw,4.25rem)] text-creme">
+              A mesa
+            </span>
+            <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(3.75rem,6.5vw,6rem)] text-ouro-claro">
+              do Rizz
+            </span>
+          </h2>
+          <BotaoLink href="/cardapio" variante="contorno">
+            Ver o cardápio
+          </BotaoLink>
+        </li>
+
+        {FOTOS.map((f) => (
+          <li
+            key={f.chave}
+            className={`group relative overflow-hidden ${f.alta ? "row-span-2" : ""}`}
+          >
+            {f.video ? (
+              <VideoB
+                nome={f.video}
+                rotulo={f.nome}
+                className="absolute -inset-px h-[calc(100%+2px)] w-[calc(100%+2px)] object-cover"
+              />
+            ) : (
+              <Image
+                src={img(f.chave)}
+                alt={f.nome}
+                fill
+                placeholder="blur"
+                sizes="(min-width: 768px) 25vw, 50vw"
+                className="object-cover transition-transform duration-700 ease-[var(--ease-rizz)] group-hover:scale-[1.05]"
+              />
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

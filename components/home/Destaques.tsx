@@ -20,7 +20,8 @@ import { fotoDoPrato } from "@/lib/images";
  * o gesto vira travelling de câmera. No mobile isso seria sequestrar o scroll
  * num aparelho onde arrastar de lado já é natural, então lá é snap nativo.
  */
-export default function Destaques({ pratos }: { pratos: PratoDaHome[] }) {
+/** `letreiro`: título no par de fontes da versão B (cursiva + serifada alta). */
+export default function Destaques({ pratos, letreiro = false }: { pratos: PratoDaHome[]; letreiro?: boolean }) {
   const raiz = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -104,9 +105,16 @@ export default function Destaques({ pratos }: { pratos: PratoDaHome[] }) {
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <p className="eyebrow text-ambar">Do cardápio</p>
-              <RevealScrub className="mt-4 text-titulo text-creme">
-                Uma seleção do cardápio
-              </RevealScrub>
+              {letreiro ? (
+                <h2 className="mt-4 flex flex-col items-start text-creme not-italic">
+                  <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.4rem,5vw,3.75rem)] leading-none">Uma seleção</span>
+                  <span className="font-[family-name:var(--font-instrument)] text-[clamp(3.5rem,8vw,6.5rem)] leading-[0.9] tracking-[0.01em] text-ouro-claro uppercase">do cardápio</span>
+                </h2>
+              ) : (
+                <RevealScrub className="mt-4 text-titulo text-creme">
+                  Uma seleção do cardápio
+                </RevealScrub>
+              )}
             </div>
 
             <BotaoLink href="/cardapio" variante="contorno">

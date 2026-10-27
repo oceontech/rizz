@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 
 import { CONDICOES, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { ListaSelos, useSelos } from "@/components/ui/Selos";
@@ -38,7 +38,7 @@ function Linha({
   const esgotado = item.disponivel === false;
 
   return (
-    <li data-linha className={`border-b border-tinta/10 py-4 last:border-0 ${esgotado ? "opacity-55" : ""}`}>
+    <li data-linha className={`border-b border-tinta/12 py-5 last:border-0 ${esgotado ? "opacity-55" : ""}`}>
       <div className="flex items-baseline gap-3">
         {item.foto && (
           <div className="relative size-14 shrink-0 self-center overflow-hidden rounded-full border border-ouro/40 md:size-16">
@@ -46,7 +46,7 @@ function Linha({
           </div>
         )}
         <div className="min-w-0 grow">
-          <h3 className="text-[1.0625rem] leading-snug text-vinho md:text-lg">
+          <h3 className="font-sans text-[1.0625rem] leading-snug font-medium text-tinta md:text-[1.1875rem]">
             {item.nome}
             {esgotado && (
               <span className="ml-2 inline-block translate-y-[-2px] rounded-full border border-vinho/30 px-2 py-0.5 align-middle font-sans text-[0.5625rem] font-medium uppercase not-italic tracking-[0.16em] text-vinho/80">
@@ -55,7 +55,7 @@ function Linha({
             )}
           </h3>
           {item.descricao && (
-            <p className="mt-1 text-[0.9375rem] italic leading-snug text-tinta/65">
+            <p className="mt-1 text-[0.9375rem] leading-snug text-tinta/75 md:text-base">
               {item.descricao}
             </p>
           )}
@@ -63,13 +63,13 @@ function Linha({
 
         <span
           aria-hidden
-          className="mb-1.5 hidden h-px grow border-b border-dotted border-tinta/20 sm:block"
+          className="mb-1.5 hidden h-px grow border-b border-dotted border-tinta/30 sm:block"
         />
 
         {!esgotado && (
           <Preco
             valor={item.preco}
-            className="shrink-0 text-[1.0625rem] text-vinho md:text-lg"
+            className="shrink-0 text-lg text-vinho md:text-xl [&>span]:opacity-75"
           />
         )}
       </div>
@@ -85,7 +85,18 @@ function Linha({
   );
 }
 
-export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
+/**
+ * `extra`: seção que vem depois das categorias (o menu executivo), com aba
+ * própria e destacada. Fica dentro deste bloco para as abas continuarem
+ * grudadas no topo enquanto ela está na tela.
+ */
+export default function MenuClient({
+  cardapio,
+  extra,
+}: {
+  cardapio: Categoria[];
+  extra?: { slug: string; nome: string; conteudo: ReactNode };
+}) {
   const [badges, setBadges] = useState<Badge[]>([]);
   // Filtros: só os selos que aparecem em algum prato do cardápio publicado.
   const { lista: todosOsSelos } = useSelos();
@@ -138,6 +149,9 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
       .filter((cat) => cat.itens.length > 0);
   }, [cardapio, badges, faixa, busca]);
 
+  // Seções acompanhadas pelas abas: as categorias filtradas e a extra.
+  const secoes = useMemo(() => [...filtrado.map((c) => c.slug), ...(extra ? [extra.slug] : [])], [filtrado, extra]);
+
   const total = filtrado.reduce((soma, c) => soma + c.itens.length, 0);
   const filtrando =
     badges.length > 0 || faixa !== "todas" || busca.trim() !== "";
@@ -161,8 +175,8 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
       const faixa = gsap.utils.clamp(0, 1);
 
       const medir = () => {
-        inicios = filtrado.map((cat) => {
-          const el = document.getElementById(cat.slug);
+        inicios = secoes.map((slug) => {
+          const el = document.getElementById(slug);
           return el ? el.getBoundingClientRect().top + window.scrollY : 0;
         });
       };
@@ -210,7 +224,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
 
         const pref = preferida.current;
         if (pref) {
-          const iPref = filtrado.findIndex((c) => c.slug === pref.slug);
+          const iPref = secoes.indexOf(pref.slug);
           if (y >= max - 2 && iPref >= 0) {
             pref.noFim = true;
             i = iPref;
@@ -221,7 +235,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
           }
         }
 
-        const slug = filtrado[i]?.slug;
+        const slug = secoes[i];
         if (!slug || slug === atual) return;
         atual = slug;
         setAtiva(slug);
@@ -267,7 +281,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
         delete raizDoc.dataset.abasPresas;
       };
     },
-    { scope: raiz, dependencies: [filtrado], revertOnUpdate: true },
+    { scope: raiz, dependencies: [secoes], revertOnUpdate: true },
   );
 
   // As linhas entram em cascata quando a categoria aparece.
@@ -338,16 +352,35 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
                   window.history.replaceState(null, "", `#${cat.slug}`);
                 }}
                 aria-current={atual ? "true" : undefined}
-                className={`relative shrink-0 rounded-full px-4 py-2 text-[0.6875rem] uppercase tracking-[0.14em] transition-colors duration-300 ${
+                className={`relative shrink-0 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] transition-colors duration-300 ${
                   atual
                     ? "text-creme"
-                    : "text-tinta/60 hover:text-vinho"
+                    : "text-tinta/80 hover:text-vinho"
                 }`}
               >
                 {cat.nome}
               </a>
             );
           })}
+          {extra && (
+            <a
+              data-aba={extra.slug}
+              href={`#${extra.slug}`}
+              onClick={(e) => {
+                e.preventDefault();
+                preferida.current = { slug: extra.slug, noFim: false };
+                scrollToTarget(`#${extra.slug}`, 56);
+                window.history.replaceState(null, "", `#${extra.slug}`);
+              }}
+              aria-current={ativa === extra.slug ? "true" : undefined}
+              className={`relative ml-2 flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-colors duration-300 ${
+                ativa === extra.slug ? "border-transparent text-creme" : "border-ambar bg-ambar/15 text-vinho hover:bg-ambar/25"
+              }`}
+            >
+              <span className="relative size-1.5 rounded-full bg-ambar" aria-hidden />
+              {extra.nome}
+            </a>
+          )}
         </div>
       </div>
 
@@ -371,7 +404,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar prato, bebida ou ingrediente"
-            className="h-12 w-full border-b border-tinta/20 bg-transparent pl-7 text-[0.9375rem] text-vinho placeholder:text-tinta/35 focus:border-vinho focus:outline-none"
+            className="h-12 w-full border-b border-tinta/30 bg-transparent pl-7 text-base text-tinta placeholder:text-tinta/55 focus:border-vinho focus:outline-none"
           />
         </label>
 
@@ -384,10 +417,10 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
                 type="button"
                 onClick={() => alternarBadge(selo.id)}
                 aria-pressed={on}
-                className={`flex h-9 items-center gap-2 rounded-full border pl-1.5 pr-4 text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-300 ${
+                className={`flex h-9 items-center gap-2 rounded-full border pl-1.5 pr-4 text-xs uppercase tracking-[0.1em] transition-colors duration-300 ${
                   on
                     ? "border-vinho bg-vinho text-creme"
-                    : "border-tinta/20 text-tinta/65 hover:border-vinho/50 hover:text-vinho"
+                    : "border-tinta/30 text-tinta/85 hover:border-vinho/60 hover:text-vinho"
                 }`}
               >
                 <SeloSvg selo={selo} tamanho={22} animar atraso={i * 0.07} titulo={false} />
@@ -406,10 +439,10 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
                 type="button"
                 onClick={() => setFaixa(on ? "todas" : f.id)}
                 aria-pressed={on}
-                className={`h-9 rounded-full border px-4 text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-300 ${
+                className={`h-9 rounded-full border px-4 text-xs uppercase tracking-[0.1em] transition-colors duration-300 ${
                   on
                     ? "border-vinho bg-vinho text-creme"
-                    : "border-tinta/20 text-tinta/65 hover:border-vinho/50 hover:text-vinho"
+                    : "border-tinta/30 text-tinta/85 hover:border-vinho/60 hover:text-vinho"
                 }`}
               >
                 {f.rotulo}
@@ -425,7 +458,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
                 setFaixa("todas");
                 setBusca("");
               }}
-              className="h-9 px-3 text-[0.6875rem] uppercase tracking-[0.12em] text-tinta/50 underline underline-offset-4 transition-colors hover:text-vinho"
+              className="h-9 px-3 text-xs uppercase tracking-[0.1em] text-tinta/70 underline underline-offset-4 transition-colors hover:text-vinho"
             >
               Limpar filtros e busca
             </button>
@@ -433,7 +466,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
         </div>
 
         <p
-          className="text-[0.6875rem] uppercase tracking-[0.14em] text-tinta/45"
+          className="text-xs uppercase tracking-[0.14em] text-tinta/65"
           role="status"
           aria-live="polite"
         >
@@ -463,11 +496,11 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
                 )}
 
                 <header>
-                  <h2 className="font-display text-[2.25rem] text-vinho md:text-[3rem]">
+                  <h2 className="font-[family-name:var(--font-instrument)] text-[2.75rem] leading-[0.95] tracking-[0.01em] text-vinho uppercase not-italic md:text-[4rem]">
                     {cat.nome}
                   </h2>
                   {cat.descricao && (
-                    <p className="mt-2 max-w-prose text-sm italic text-tinta/55">
+                    <p className="mt-2 max-w-prose text-base text-tinta/70">
                       {cat.descricao}
                     </p>
                   )}
@@ -479,7 +512,7 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
                     {grupos.map((g) => (
                       <div key={g ?? "geral"}>
                         {g && (
-                          <h3 className="mt-8 text-center text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-vinho/70">
+                          <h3 className="mt-8 text-center text-xs font-semibold uppercase tracking-[0.2em] text-vinho">
                             {g}
                           </h3>
                         )}
@@ -504,6 +537,12 @@ export default function MenuClient({ cardapio }: { cardapio: Categoria[] }) {
             );
           })}
         </div>
+      )}
+
+      {extra && (
+        <section id={extra.slug} className="mt-24 scroll-mt-36 md:mt-32">
+          {extra.conteudo}
+        </section>
       )}
     </div>
   );

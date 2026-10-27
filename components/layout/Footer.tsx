@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useRef } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
@@ -39,8 +40,9 @@ export default function Footer() {
   useGSAP(
     () => {
       const no = raiz.current;
-      const marca = no?.querySelector("[data-marca-rodape]");
-      if (!no || !marca) return;
+      // Dois logos: na coluna da esquerda (desktop) e centralizado (celular).
+      const marca = no?.querySelectorAll("[data-marca-rodape]");
+      if (!no || !marca?.length) return;
 
       const mm = gsap.matchMedia();
 
@@ -72,11 +74,21 @@ export default function Footer() {
     { scope: raiz },
   );
 
+  // A versão B da home (/b) usa um só tom escuro, sem a faixa mais clara.
+  const versaoB = usePathname() === "/b";
+
   return (
-    <footer ref={raiz} className="border-t border-creme/10 bg-noite-2">
+    <footer ref={raiz} className={`border-t border-creme/10 ${versaoB ? "bg-noite" : "bg-noite-2"}`}>
       <div className="wrap pt-16 md:pt-24">
         <div className="grid gap-12 md:grid-cols-[1.1fr_1fr_1fr]">
           <div>
+            <Logo
+              data-marca-rodape
+              variante="branca"
+              decorativo
+              sizes="240px"
+              className="mb-8 hidden h-auto w-[11rem] opacity-80 md:block"
+            />
             <p className="max-w-xs font-display text-xl italic leading-snug text-creme/85">
               Cozinha contemporânea e especialidade em risotos, em Espírito Santo do Pinhal.
             </p>
@@ -169,7 +181,7 @@ export default function Footer() {
         </div>
 
         {/* Assinatura de fechamento, em escala de rodapé. */}
-        <div className="mt-16 flex justify-center">
+        <div className="mt-16 flex justify-center md:hidden">
           <Logo
             data-marca-rodape
             variante="branca"
