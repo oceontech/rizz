@@ -37,26 +37,32 @@ const Q = {
  * baixa que as colunas, que deslizam por dentro sem mostrar o fundo.
  */
 const DESKTOP: Quadro[][] = [
-  [Q.videoSalmao, Q.salmaoTrufado, Q.carpaccio, Q.brownie, Q.costela, Q.burrata],
-  [Q.camarao, Q.ancho, Q.arancini, Q.videoMolho, Q.pistache, Q.polenta],
-  [Q.formaggio, Q.burrata, Q.pesto, Q.salmaoTrufado, Q.carpaccio, Q.ancho],
-  [Q.pistache, Q.polenta, Q.videoArrozNegro, Q.costela, Q.camarao, Q.formaggio],
+  [Q.videoSalmao, Q.salmaoTrufado, Q.carpaccio, Q.brownie, Q.costela, Q.burrata, Q.pesto],
+  [Q.camarao, Q.ancho, Q.arancini, Q.videoMolho, Q.pistache, Q.polenta, Q.formaggio],
+  [Q.formaggio, Q.burrata, Q.pesto, Q.salmaoTrufado, Q.carpaccio, Q.ancho, Q.arancini],
+  [Q.pistache, Q.polenta, Q.videoArrozNegro, Q.costela, Q.camarao, Q.brownie, Q.salmaoTrufado],
 ];
 
 const CELULAR: Quadro[][] = [
-  [Q.videoSalmao, Q.camarao, Q.formaggio, Q.carpaccio, Q.videoMolho, Q.brownie],
-  [Q.salmaoTrufado, Q.ancho, Q.videoArrozNegro, Q.pistache, Q.burrata, Q.pesto],
+  [Q.videoSalmao, Q.camarao, Q.formaggio, Q.carpaccio, Q.videoMolho, Q.brownie, Q.costela],
+  [Q.salmaoTrufado, Q.ancho, Q.videoArrozNegro, Q.pistache, Q.burrata, Q.pesto, Q.polenta],
 ];
 
-/** Deslocamento de cada coluna ao longo da rolagem, em % da própria altura. */
-const VELOCIDADES = [-14, 10, -20, 6];
+/**
+ * Quanto cada coluna sobe ao longo da rolagem (% da própria altura) e onde
+ * ela começa. As colunas nascem desencontradas no topo da parede, sem
+ * degradê, e sobem em velocidades diferentes: o desencontro muda com a
+ * rolagem.
+ */
+const VELOCIDADES = [-8, -16, -11, -20];
+const INICIO = ["mt-0", "mt-20 md:mt-40", "md:mt-16", "md:mt-56"];
 
 function Coluna({ quadros, indice }: { quadros: Quadro[]; indice: number }) {
   return (
     // -mr-px: as colunas se sobrepõem 1px. Cada uma anda com transform
     // próprio e tem largura fracionada; sem a sobra, o fundo aparecia num fio
     // vertical entre elas.
-    <div data-coluna={indice} className="-mr-px flex min-w-0 flex-1 flex-col will-change-transform last:mr-0">
+    <div data-coluna={indice} className={`-mr-px flex min-w-0 flex-1 flex-col will-change-transform last:mr-0 ${INICIO[indice]}`}>
       {quadros.map((q, i) => (
         // -mt-px: as fotos encostam sem o fio de antisserrilhado entre elas.
         <figure key={`${q.chave}-${i}`} className={`group relative -mt-px overflow-hidden ${q.formato}`}>
@@ -102,11 +108,13 @@ export default function GaleriaB() {
           const v = VELOCIDADES[Number(col.dataset.coluna) % VELOCIDADES.length];
           gsap.fromTo(
             col,
-            { yPercent: v < 0 ? 0 : -v },
+            { yPercent: 0 },
             {
-              yPercent: v < 0 ? v : 0,
+              yPercent: v,
               ease: "none",
-              scrollTrigger: { trigger: no, start: "top bottom", end: "bottom top", scrub: 0.5 },
+              // Só começa a andar com a seção no topo: na chegada o desencontro
+              // das colunas aparece inteiro.
+              scrollTrigger: { trigger: no, start: "top top", end: "bottom top", scrub: 0.5 },
             },
           );
         });
@@ -145,7 +153,6 @@ export default function GaleriaB() {
             <Coluna key={i} quadros={c} indice={i} />
           ))}
         </div>
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-noite to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[45svh] items-end justify-center bg-gradient-to-t from-noite via-noite/80 to-transparent pb-20">
           <div className="pointer-events-auto">
             <BotaoLink href="/cardapio" tamanho="lg">

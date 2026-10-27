@@ -94,9 +94,6 @@ export default function VisiteB() {
               tabIndex={-1}
               className="pointer-events-none absolute inset-0 size-full border-0 [filter:invert(0.92)_hue-rotate(180deg)_saturate(0.35)_brightness(0.85)_sepia(0.25)]"
             />
-            {/* Tinge de vinho e escurece as bordas. */}
-            <div className="pointer-events-none absolute inset-0 bg-vinho-fundo/25 mix-blend-multiply" />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgb(43_7_16/0.75)_100%)]" />
 
             {/* Marcador no centro = coordenada do restaurante. */}
             <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full">
