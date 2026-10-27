@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import SeloRotativo from "@/components/brand/SeloRotativo";
 import { BotaoLink } from "@/components/ui/Botao";
 import Preco from "@/components/ui/Preco";
 import { ListaSelos } from "@/components/ui/Selos";
@@ -16,6 +15,48 @@ import VideoB from "./VideoB";
 import VideoComSom from "./VideoComSom";
 
 type Prato = NonNullable<HomeDoSite["maisPedido"]>;
+
+/**
+ * O que entra no lugar do vídeo, no celular, quando ele termina: as fotos do
+ * prato se revezando devagar (com leve aproximação), o nome, o texto e o
+ * preço.
+ */
+function FinalPrato({ prato }: { prato: Prato }) {
+  const foto = fotoDoPrato(prato);
+  const fotos = [foto, camaraoMesa].filter((f): f is NonNullable<typeof f> => Boolean(f));
+  const [atual, setAtual] = useState(0);
+
+  useEffect(() => {
+    if (fotos.length < 2) return;
+    const id = setInterval(() => setAtual((a) => (a + 1) % fotos.length), 3800);
+    return () => clearInterval(id);
+  }, [fotos.length]);
+
+  return (
+    <div className="absolute inset-0 bg-noite">
+      {fotos.map((f, i) => (
+        <Image
+          key={i}
+          src={f}
+          alt=""
+          fill
+          sizes="100vw"
+          className={`object-cover transition-[opacity,transform] duration-[4000ms] ease-out ${i === atual ? "scale-110 opacity-100" : "scale-100 opacity-0"}`}
+        />
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10" />
+      <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+        <p className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-4xl leading-none text-ambar">{prato.chamada}</p>
+        <p className="font-[family-name:var(--font-instrument)] text-[3.25rem] leading-[0.9] tracking-[0.01em] uppercase">{prato.titulo}</p>
+        <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/80">{prato.texto}</p>
+        <div className="mt-5 flex items-center justify-between gap-4">
+          <Preco valor={prato.preco} className="text-4xl leading-none text-ouro-claro [&>span]:opacity-100" />
+          <BotaoLink href={`/cardapio#${prato.categoriaSlug}`}>Ver no cardápio</BotaoLink>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Texto({ prato }: { prato: Prato }) {
   return (
@@ -151,25 +192,16 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
               )}
             </div>
           </div>
-          <SeloRotativo texto="O MAIS PEDIDO · RIZZ CUCINA & VINO ·" className="absolute -top-10 -left-2 size-28 md:-top-12 md:left-2 md:size-32" />
         </div>
 
-        {/* Apresentação + salão */}
+        {/* Apresentação. No celular, no fim do vídeo entram as fotos e o preço. */}
         <div data-entrada-prato className="relative order-3 md:col-span-4 md:pl-10 lg:pl-16">
-          <VideoComSom nome="camarao-apresentacao" rotulo="O prato apresentado no salão do Rizz" somAutomatico />
-          <div
-            data-profundidade="24"
-            className="absolute -top-10 -left-8 hidden w-[44%] overflow-hidden rounded-full md:block shadow-[0_24px_50px_rgb(43_7_16/0.35)] ring-[6px] ring-white md:-top-14 md:-left-2 md:w-[40%] lg:left-2"
-          >
-            <div className="relative aspect-square">
-              <VideoB nome="camarao-salao" rotulo="O salão do Rizz e o cardápio, até o prato chegar à mesa" className="absolute inset-0 size-full object-cover" />
-            </div>
-          </div>
-          <div data-profundidade="10" className="absolute -right-6 -bottom-14 hidden w-[34%] shadow-[0_24px_50px_rgb(43_7_16/0.3)] lg:block">
-            <div className="relative aspect-[3/4] overflow-hidden">
-              <Image src={camaraoMesa} alt="Camarão rosa empanado com risoto e creme, servido à mesa" fill placeholder="blur" sizes="12vw" className="object-cover" />
-            </div>
-          </div>
+          <VideoComSom
+            nome="camarao-apresentacao"
+            rotulo="O prato apresentado no salão do Rizz"
+            somAutomatico
+            final={<FinalPrato prato={prato} />}
+          />
         </div>
       </div>
     </section>

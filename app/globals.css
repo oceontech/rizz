@@ -376,3 +376,15 @@
     transform: rotate(360deg);
   }
 }
+
+/* Faixa de brilho que atravessa o selo do rodízio. A maior parte do ciclo
+   ela fica fora, à direita: passa, some, e volta só depois de uma pausa. */
+@keyframes brilho {
+  0% {
+    transform: translateX(0) skewX(-12deg);
+  }
+  45%,
+  100% {
+    transform: translateX(400%) skewX(-12deg);
+  }
+}

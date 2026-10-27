@@ -4,7 +4,6 @@ import { useRef } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 import { useBoot } from "@/components/motion/Boot";
-import Logo from "@/components/brand/Logo";
 import HeroFundo from "@/components/home/HeroFundo";
 import { BotaoLink } from "@/components/ui/Botao";
 import { SeloRodizio } from "@/components/rodizio/AvisoRodizio";
@@ -140,26 +139,22 @@ export default function HeroB() {
             {site.endereco.cidade} · {site.endereco.uf}
           </p>
 
-          <h1 data-entra className="mt-5 md:mt-6">
-            <span className="sr-only">{site.nome}. Restaurante em Espírito Santo do Pinhal.</span>
-            <Logo
-              variante="branca"
-              decorativo
-              priority
-              sizes="(min-width: 860px) 16rem, 44vw"
-              className="h-auto w-[min(44vw,11rem)] md:w-[16rem]"
-            />
-          </h1>
+          {/* Rodízio em destaque, acima da chamada; só hoje ou amanhã. */}
+          <div data-entra className="mt-6 empty:hidden">
+            <SeloRodizio destaque />
+          </div>
 
-          {/* Letreiro da B: cursiva encostando na serifada alta. */}
-          <p data-entra className="mt-5 flex flex-col items-center md:mt-8">
+          {/* Sem o logo: o header já mostra a marca. O nome segue no h1 para
+              leitores de tela e buscadores. */}
+          <h1 data-entra className="mt-6 flex flex-col items-center not-italic md:mt-8">
+            <span className="sr-only">{site.nome}, restaurante em Espírito Santo do Pinhal. </span>
             <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[2.5rem] leading-none text-creme md:text-[3.5rem]">
               Especialidade em
             </span>
             <span className="font-[family-name:var(--font-instrument)] text-[5rem] leading-[0.9] tracking-[0.01em] text-ouro-claro uppercase [text-shadow:0_6px_40px_rgb(0_0_0/0.45)] md:text-[8.5rem]">
               Risotos
             </span>
-          </p>
+          </h1>
 
           <p data-entra className="mt-4 max-w-[30ch] text-sm leading-relaxed text-creme/80 md:mt-5 md:max-w-md md:text-base">
             Cozinha contemporânea e vinhos para acompanhar seu almoço ou jantar.
@@ -172,11 +167,6 @@ export default function HeroB() {
             <BotaoLink href="/reservas" variante="contorno" className="md:h-14 md:px-8 md:text-xs">
               Reservar mesa
             </BotaoLink>
-          </div>
-
-          {/* Só aparece quando o rodízio de risotos é hoje ou amanhã. */}
-          <div data-entra className="mt-5 empty:hidden md:mt-6">
-            <SeloRodizio />
           </div>
 
           <div data-entra className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:mt-7">

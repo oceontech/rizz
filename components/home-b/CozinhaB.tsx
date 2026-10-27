@@ -84,17 +84,14 @@ export default function CozinhaB() {
                       className={`absolute -bottom-6 max-w-[15rem] rotate-[-3deg] bg-creme-2 px-4 py-3 text-[0.8125rem] leading-snug shadow-[0_14px_30px_rgb(58_18_25/0.18)] ${invertido ? "-left-2 md:-left-8" : "-right-2 md:-right-8"}`}
                     >
                       <span className="eyebrow block text-[0.625rem] text-vinho">No prato</span>
-                      <span className="mt-1 block font-[family-name:var(--font-pinyon)] text-[1.35rem] leading-snug text-tinta">{c.prato}</span>
+                      <span className="mt-1.5 block text-[0.9375rem] leading-snug font-medium text-tinta">{c.prato}</span>
                     </p>
                   </Reveal>
                 </div>
 
                 <div className={`md:col-span-6 ${invertido ? "md:order-1 md:col-start-1" : "md:col-start-7"}`}>
                   <Reveal>
-                    <span aria-hidden className="block font-[family-name:var(--font-pinyon)] text-[clamp(4.5rem,11vw,8rem)] leading-none text-vinho/25">
-                      {c.numero}
-                    </span>
-                    <h3 className="-mt-2 font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(2.75rem,5.4vw,4.75rem)] leading-[0.92] text-vinho md:-mt-4">{c.destaque.replace(/\.$/, "")}</h3>
+                    <h3 className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(2.75rem,5.4vw,4.75rem)] leading-[0.92] text-vinho">{c.destaque.replace(/\.$/, "")}</h3>
                     <p className="mt-5 max-w-lg text-lg leading-relaxed text-tinta/80">{c.texto}</p>
                   </Reveal>
                 </div>

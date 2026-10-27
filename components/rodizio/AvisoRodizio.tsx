@@ -37,10 +37,37 @@ function Ponto({ vivo }: { vivo: boolean }) {
  * Selo compacto, para fundos escuros (hero). Só aparece quando o rodízio é
  * hoje ou amanhã: nos outros dias ele seria ruído na primeira dobra.
  */
-export function SeloRodizio({ href = "#rodizio", className = "" }: { href?: string; className?: string }) {
+export function SeloRodizio({
+  href = "#rodizio",
+  className = "",
+  destaque = false,
+}: {
+  href?: string;
+  className?: string;
+  /** Pílula âmbar cheia, com brilho passando: para não se confundir com o horário. */
+  destaque?: boolean;
+}) {
   const status = useRodizio();
   if (!status || status.fase === "proximo") return null;
   const vivo = status.fase === "agora" || status.fase === "hoje";
+
+  if (destaque) {
+    return (
+      <Link
+        href={href}
+        className={`group relative inline-flex items-center gap-3 overflow-hidden rounded-full bg-ambar py-2.5 pr-5 pl-4 text-noite shadow-[0_10px_40px_rgb(232_137_12/0.45)] transition-transform hover:scale-[1.03] ${className}`}
+      >
+        <span aria-hidden className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 animate-[brilho_3.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/45 to-transparent motion-reduce:hidden" />
+        <span className="relative flex size-2">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-noite/50 motion-reduce:animate-none" />
+          <span className="relative inline-flex size-2 rounded-full bg-noite" />
+        </span>
+        <span className="relative text-xs font-semibold tracking-[0.14em] uppercase">{status.rotulo}</span>
+        <span className="relative hidden text-xs font-medium text-noite/70 sm:inline">· {status.detalhe}</span>
+        <span aria-hidden className="relative transition-transform group-hover:translate-x-0.5">→</span>
+      </Link>
+    );
+  }
 
   return (
     <Link
