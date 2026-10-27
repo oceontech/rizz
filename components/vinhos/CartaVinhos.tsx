@@ -21,39 +21,40 @@ const UVAS_EM_DESTAQUE = 7;
 
 const sem = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-function Rotulo({ vinho, taca }: { vinho: Vinho; taca: boolean }) {
+/** `claro`: rótulo sobre fundo creme (a seção Gran Reserva). */
+function Rotulo({ vinho, taca, claro = false }: { vinho: Vinho; taca: boolean; claro?: boolean }) {
   const temNotas = vinho.notas.length > 0;
 
   const cabeca = (
     <div className="flex items-start gap-3.5">
-      <span aria-hidden className={`mt-[0.45rem] size-2.5 shrink-0 rounded-full ring-2 ring-white/10 ${corDo(vinho.tipo)}`} />
+      <span aria-hidden className={`mt-[0.45rem] size-2.5 shrink-0 rounded-full ring-2 ${claro ? "ring-tinta/10" : "ring-white/10"} ${corDo(vinho.tipo)}`} />
       <div className="min-w-0 grow">
-        <p className="text-[1.0625rem] leading-snug font-medium text-creme">{vinho.nome}</p>
+        <p className={`text-[1.0625rem] leading-snug font-medium ${claro ? "text-tinta" : "text-creme"}`}>{vinho.nome}</p>
         {vinho.uvas.length > 0 && (
-          <p className="mt-1 text-[0.8125rem] tracking-wide text-creme/60">{vinho.uvas.join(" · ")}</p>
+          <p className={`mt-1 text-[0.8125rem] tracking-wide ${claro ? "text-tinta/65" : "text-creme/60"}`}>{vinho.uvas.join(" · ")}</p>
         )}
       </div>
       <div className="shrink-0 text-right">
-        <Preco valor={vinho.preco} className="text-lg text-ouro-claro [&>span]:opacity-80" />
+        <Preco valor={vinho.preco} className={`text-lg ${claro ? "text-vinho" : "text-ouro-claro"} [&>span]:opacity-80`} />
         {taca && <span className="block text-[0.6875rem] tracking-[0.12em] text-creme/50 uppercase">a taça</span>}
       </div>
     </div>
   );
 
-  if (!temNotas) return <li className="border-b border-creme/10 py-4 last:border-0">{cabeca}</li>;
+  if (!temNotas) return <li className={`border-b py-4 last:border-0 ${claro ? "border-tinta/12" : "border-creme/10"}`}>{cabeca}</li>;
 
   return (
-    <li className="border-b border-creme/10 last:border-0">
+    <li className={`border-b last:border-0 ${claro ? "border-tinta/12" : "border-creme/10"}`}>
       <details className="group py-4">
         <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
           {cabeca}
-          <span className="mt-2 ml-6 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.12em] text-ambar uppercase">
+          <span className={`mt-2 ml-6 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.12em] uppercase ${claro ? "text-vinho" : "text-ambar"}`}>
             <span className="group-open:hidden">Notas do rótulo</span>
             <span className="hidden group-open:inline">Fechar</span>
             <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
           </span>
         </summary>
-        <div className="mt-3 ml-6 space-y-2.5 border-l border-ambar/40 pl-4 text-[0.9375rem] leading-relaxed text-creme/75">
+        <div className={`mt-3 ml-6 space-y-2.5 border-l pl-4 text-[0.9375rem] leading-relaxed ${claro ? "border-vinho/30 text-tinta/80" : "border-ambar/40 text-creme/75"}`}>
           {vinho.notas.map((p, i) => (
             <p key={i}>{p}</p>
           ))}
@@ -206,7 +207,7 @@ export default function CartaVinhos({ secoes }: { secoes: SecaoCarta[] }) {
               <section
                 key={s.slug}
                 id={`vinhos-${s.slug}`}
-                className={`scroll-mt-40 ${destaque ? "-mx-[1.375rem] bg-vinho-fundo px-[1.375rem] py-10 md:mx-0 md:rounded-3xl md:px-10 md:py-12" : ""}`}
+                className={`scroll-mt-40 ${destaque ? "-mx-[1.375rem] bg-creme text-tinta px-[1.375rem] py-10 md:mx-0 md:rounded-3xl md:px-10 md:py-12" : ""}`}
               >
                 <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
                   <h2 className="flex flex-col items-start not-italic">
@@ -215,21 +216,21 @@ export default function CartaVinhos({ secoes }: { secoes: SecaoCarta[] }) {
                         de guarda
                       </span>
                     )}
-                    <span className="font-[family-name:var(--font-instrument)] text-[2.75rem] leading-[0.95] tracking-[0.01em] text-creme uppercase md:text-[4rem]">
+                    <span className={`font-[family-name:var(--font-instrument)] text-[2.75rem] leading-[0.95] tracking-[0.01em] uppercase md:text-[4rem] ${destaque ? "text-vinho" : "text-creme"}`}>
                       {s.titulo}
                     </span>
                   </h2>
-                  <p className="pb-1 text-sm text-creme/60">
+                  <p className={`pb-1 text-sm ${destaque ? "text-tinta/60" : "text-creme/60"}`}>
                     {s.itens.length} {s.itens.length === 1 ? "rótulo" : "rótulos"}
                   </p>
                 </header>
                 {s.nota && <p className="mt-3 text-base text-creme/75">{s.nota}</p>}
-                <div className="mt-5 h-px bg-ouro/40" />
+                <div className={`mt-5 h-px ${destaque ? "bg-ouro/70" : "bg-ouro/40"}`} />
 
                 {/* Duas colunas a partir do desktop largo; no celular, lista. */}
                 <ul className="mt-1 lg:columns-2 lg:gap-14 [&>li]:break-inside-avoid">
                   {s.itens.map((v) => (
-                    <Rotulo key={v.id} vinho={v} taca={s.slug === "taca"} />
+                    <Rotulo key={v.id} vinho={v} taca={s.slug === "taca"} claro={destaque} />
                   ))}
                 </ul>
               </section>
