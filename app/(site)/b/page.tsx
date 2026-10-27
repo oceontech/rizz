@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Destaques from "@/components/home/Destaques";
 import IntroCamarao from "@/components/home/IntroCamarao";
 import Marquee from "@/components/home/Marquee";
-import PratoAssinatura from "@/components/home/PratoAssinatura";
 import AvaliacoesB from "@/components/home-b/AvaliacoesB";
 import CozinhaB from "@/components/home-b/CozinhaB";
 import { instrument, pinyon } from "@/components/home-b/fontes";
@@ -13,6 +12,7 @@ import GaleriaCasaB from "@/components/home-b/GaleriaCasaB";
 import HeroB from "@/components/home-b/HeroB";
 import MosaicoB from "@/components/home-b/MosaicoB";
 import MuralB from "@/components/home-b/MuralB";
+import PratoAssinaturaB from "@/components/home-b/PratoAssinaturaB";
 import ReservaB from "@/components/home-b/ReservaB";
 import VinhoDaCasa from "@/components/home-b/VinhoDaCasa";
 import VisiteB from "@/components/home-b/VisiteB";
@@ -45,10 +45,10 @@ export default async function HomeB() {
       <CozinhaB />
       {maisPedido?.id === "camarao-empanado" ? (
         <IntroCamarao nome={maisPedido.nome} fadeTopo="var(--color-creme)">
-          <PratoAssinatura prato={maisPedido} entradaPeloVideo />
+          <PratoAssinaturaB prato={maisPedido} entradaPeloVideo />
         </IntroCamarao>
       ) : (
-        maisPedido && <PratoAssinatura prato={maisPedido} />
+        maisPedido && <PratoAssinaturaB prato={maisPedido} />
       )}
       {home.destaques.length > 0 && <Destaques pratos={home.destaques} />}
       <GaleriaB />

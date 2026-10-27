@@ -95,7 +95,8 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
           </div>
         </div>
 
-        <div className="flex flex-col">
+        {/* -ml-px: a coluna de fotos encosta 1px no painel amarelo, sem fio entre os dois. */}
+        <div className="flex flex-col md:-ml-px">
           <div className="relative min-h-[22rem] grow">
             <Image
               src={img("mesa-executivo")}
@@ -116,8 +117,8 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
                     <Image src={img(p.img!)} alt={p.nome} fill sizes="(min-width: 768px) 15vw, 160px" className="object-cover" />
                   </div>
                   <div className="py-3 pr-5 md:absolute md:inset-x-0 md:bottom-0 md:bg-gradient-to-t md:from-black/85 md:via-black/45 md:to-transparent md:p-5 md:pt-20">
-                    <p className="text-[1.0625rem] leading-snug text-tinta md:text-lg md:text-white">{p.nome}</p>
-                    {confirmado && <Preco valor={p.preco} className="mt-1.5 text-2xl text-vinho md:text-[1.75rem] md:text-ouro-claro" />}
+                    <p className="text-[1.0625rem] leading-tight text-tinta md:text-lg md:leading-[1.2] md:text-white">{p.nome}</p>
+                    {confirmado && <Preco valor={p.preco} className="mt-1.5 text-2xl text-vinho md:text-[1.75rem] md:text-ouro-claro [&>span]:opacity-100" />}
                   </div>
                 </li>
               ))}
