@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 
-import AvaliacoesResumo from "@/components/home/AvaliacoesResumo";
 import Destaques from "@/components/home/Destaques";
 import IntroCamarao from "@/components/home/IntroCamarao";
 import Marquee from "@/components/home/Marquee";
 import PratoAssinatura from "@/components/home/PratoAssinatura";
 import Visite from "@/components/home/Visite";
-import ConviteReserva from "@/components/home-b/ConviteReserva";
+import AvaliacoesB from "@/components/home-b/AvaliacoesB";
 import CozinhaB from "@/components/home-b/CozinhaB";
+import { instrument, pinyon } from "@/components/home-b/fontes";
 import ExecutivoB from "@/components/home-b/ExecutivoB";
 import GaleriaB from "@/components/home-b/GaleriaB";
 import GaleriaCasaB from "@/components/home-b/GaleriaCasaB";
 import HeroB from "@/components/home-b/HeroB";
 import MosaicoB from "@/components/home-b/MosaicoB";
 import MuralB from "@/components/home-b/MuralB";
+import ReservaB from "@/components/home-b/ReservaB";
 import VinhoDaCasa from "@/components/home-b/VinhoDaCasa";
 import { executivoDoSite, homeDoSite } from "@/lib/dados";
 
@@ -36,13 +37,14 @@ export default async function HomeB() {
   const { maisPedido } = home;
 
   return (
-    <>
+    // As fontes da B entram por variável CSS só nesta página.
+    <div className={`${instrument.variable} ${pinyon.variable}`}>
       <HeroB />
       <GaleriaCasaB />
       <Marquee amarela />
       <CozinhaB />
       {maisPedido?.id === "camarao-empanado" ? (
-        <IntroCamarao nome={maisPedido.nome}>
+        <IntroCamarao nome={maisPedido.nome} fadeTopo="var(--color-creme)">
           <PratoAssinatura prato={maisPedido} entradaPeloVideo />
         </IntroCamarao>
       ) : (
@@ -54,9 +56,9 @@ export default async function HomeB() {
       <MosaicoB />
       {executivo.ativo && <ExecutivoB executivo={executivo} />}
       <MuralB />
-      <AvaliacoesResumo />
-      <ConviteReserva />
+      <AvaliacoesB />
+      <ReservaB />
       <Visite fundo="bg-noite" />
-    </>
+    </div>
   );
 }

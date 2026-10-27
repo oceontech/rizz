@@ -7,26 +7,24 @@ import { BotaoLink } from "@/components/ui/Botao";
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 import { img, type ImgKey } from "@/lib/images";
 
+import VideoB from "./VideoB";
+
 type Foto = { chave: ImgKey; nome: string };
 
-/** As três da tira, como numa cabine de fotos. */
-const TIRA: Foto[] = [
-  { chave: "burrata-cogumelos-trufados", nome: "Burrata com confit de cogumelos trufados" },
-  { chave: "arancini-salmao-trufado", nome: "Arancini de salmão trufado" },
-  { chave: "risoto-trufado-brie", nome: "Risoto de alho negro trufado com funghi e brie" },
-];
-
 /**
- * Fotos coladas umas nas outras, sem moldura nem vão: uma faixa contínua.
+ * Fotos e vídeos colados uns nos outros, sem moldura nem vão: uma faixa
+ * contínua. Com `video`, o quadro toca o clipe do álbum em vez da foto.
  * `larga` alterna a largura para a faixa não virar uma fileira de cards.
  */
-const FAIXA: (Foto & { larga?: boolean })[] = [
+const FAIXA: (Foto & { larga?: boolean; video?: string })[] = [
   { chave: "risoto-salmao-trufado", nome: "Risoto de salmão trufado com limão siciliano", larga: true },
+  { chave: "salmao-funghi-risoto-brie", nome: "Salmão ao creme de funghi", video: "salmao-funghi" },
   { chave: "risoto-camarao", nome: "Risoto de camarão" },
   { chave: "ancho-talharim-parma", nome: "Ancho Red Angus com talharim na fonduta de parmesão", larga: true },
   { chave: "salmao-pistache-risoto-limao", nome: "Salmão na farofa de pistache com risoto de limão siciliano" },
   { chave: "massa-formaggio-file", nome: "Massa ao formaggio com crispy de parma e filé mignon", larga: true },
   { chave: "carpaccio-salada", nome: "Carpaccio bovino com salada" },
+  { chave: "peixe-arroz-negro", nome: "Camarões com arroz negro", video: "camarao-arroz-negro" },
   { chave: "camarao-pesto-pistache", nome: "Camarão rosa com massa ao pesto e farofa de pistache", larga: true },
   { chave: "brownie-frutas-vermelhas", nome: "Brownie com calda de frutas vermelhas e sorvete de creme" },
 ];
@@ -66,17 +64,6 @@ export default function GaleriaB() {
             invalidateOnRefresh: true,
           },
         });
-
-        // A tira balança de leve enquanto o trilho passa.
-        gsap.fromTo(
-          no.querySelector("[data-tira]"),
-          { rotate: -7 },
-          {
-            rotate: 2,
-            ease: "none",
-            scrollTrigger: { trigger: no, start: "top top", end: "40% bottom", scrub: true },
-          },
-        );
       });
 
       return () => mm.revert();
@@ -108,37 +95,20 @@ export default function GaleriaB() {
             </p>
           </div>
 
-          {/* Tira de cabine de fotos, no amarelo do cartaz do vinho. */}
-          <figure data-tira className="w-[46vw] shrink-0 origin-top rotate-[-4deg] bg-ouro-claro p-2.5 pb-4 shadow-[0_30px_70px_rgb(0_0_0/0.5)] md:w-[min(12rem,22svh)]">
-            <ul className="flex flex-col gap-2.5">
-              {TIRA.map((f) => (
-                <li key={f.chave} className="aspect-[4/5] overflow-hidden">
+          <ul className="flex h-[62svh] shrink-0 md:h-[70svh] [&>li+li]:-ml-px">
+            {FAIXA.map((f) => (
+              <li key={f.chave} className={`group relative h-full shrink-0 overflow-hidden ${f.larga ? "w-[72vw] md:w-[30rem]" : "w-[52vw] md:w-[21rem]"}`}>
+                {f.video ? (
+                  <VideoB nome={f.video} rotulo={f.nome} className="size-full object-cover" />
+                ) : (
                   <Image
                     src={img(f.chave)}
                     alt={f.nome}
                     placeholder="blur"
-                    sizes="(min-width: 768px) 240px, 46vw"
-                    className="size-full object-cover"
+                    sizes="(min-width: 768px) 480px, 72vw"
+                    className="size-full object-cover transition-transform duration-700 ease-[var(--ease-rizz)] group-hover:scale-[1.04]"
                   />
-                </li>
-              ))}
-            </ul>
-            <figcaption className="mt-3 flex flex-col items-center leading-none text-vinho">
-              <span className="font-display text-2xl italic">Os</span>
-              <span className="font-sans text-xl font-semibold tracking-[-0.02em] uppercase">trufados</span>
-            </figcaption>
-          </figure>
-
-          <ul className="flex h-[62svh] shrink-0 md:h-[70svh]">
-            {FAIXA.map((f) => (
-              <li key={f.chave} className={`group relative h-full shrink-0 overflow-hidden ${f.larga ? "w-[72vw] md:w-[30rem]" : "w-[52vw] md:w-[21rem]"}`}>
-                <Image
-                  src={img(f.chave)}
-                  alt={f.nome}
-                  placeholder="blur"
-                  sizes="(min-width: 768px) 480px, 72vw"
-                  className="size-full object-cover transition-transform duration-700 ease-[var(--ease-rizz)] group-hover:scale-[1.04]"
-                />
+                )}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-noite/85 to-transparent px-5 pt-16 pb-5">
                   <p className="font-display text-lg leading-snug text-creme italic">{f.nome}</p>
                 </div>

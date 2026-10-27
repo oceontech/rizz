@@ -6,10 +6,13 @@ import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 import { BotaoLink } from "@/components/ui/Botao";
 import { site } from "@/lib/site";
 
+import Letreiro from "./Letreiro";
+import VideoB from "./VideoB";
+
 /**
  * Versão B do mosaico: mesma cena, mas o que aparece por baixo do vídeo é um
- * cartaz centralizado em letras misturadas, no amarelo da B, em vez de um
- * bloco de texto alinhado à esquerda num fundo vazio.
+ * cartaz centralizado (letreiro cursiva + serifada alta) sobre o salão em
+ * vídeo, em vez de um bloco de texto alinhado à esquerda num fundo vazio.
  *
  * Cena em três tempos, toda atrelada à rolagem:
  *
@@ -146,22 +149,17 @@ export default function MosaicoB() {
         {/* Camada revelada: vive ATRÁS do vídeo o tempo todo. */}
         <div
           data-revelado
-          className="absolute inset-0 flex items-center motion-reduce:relative motion-reduce:inset-auto"
+          className="absolute inset-0 isolate flex items-center motion-reduce:relative motion-reduce:inset-auto"
         >
+          {/* Fundo do cartaz: o salão em vídeo, bem escurecido. */}
+          <VideoB nome="salao" className="absolute inset-0 -z-20 size-full object-cover" />
+          <div className="absolute inset-0 -z-10 bg-noite/65" />
+          <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-t from-noite to-transparent" />
+
           <div className="wrap flex flex-col items-center text-center">
-            <p className="eyebrow text-ambar">
-              {site.endereco.cidade} · {site.endereco.uf}
-            </p>
+            <Letreiro cursiva="Venha conhecer" titulo="o Rizz" linha={`${site.endereco.cidade} · ${site.endereco.uf}`} />
 
-            <h2 className="mt-8 flex flex-col items-center leading-[0.9] not-italic">
-              <span className="font-display text-[clamp(3rem,9vw,7rem)] text-creme italic">Venha</span>
-              <span className="font-sans text-[clamp(3.25rem,12vw,9rem)] font-semibold tracking-[-0.04em] text-ouro-claro uppercase">
-                conhecer
-              </span>
-              <span className="font-display text-[clamp(3rem,9vw,7rem)] text-creme italic">o Rizz</span>
-            </h2>
-
-            <p className="mt-8 max-w-sm leading-relaxed text-creme/70">
+            <p className="mt-8 max-w-sm leading-relaxed text-creme/80">
               Almoço e jantar. No Instagram, você acompanha as novidades do restaurante.
             </p>
 

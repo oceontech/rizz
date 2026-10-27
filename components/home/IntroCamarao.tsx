@@ -6,7 +6,12 @@ import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 
 /** O próprio vídeo avança e retrocede com o scroll, sem reprodução automática. */
 /** Abertura em vídeo do camarão; a home só a usa quando o mais pedido é o camarão. */
-export default function IntroCamarao({ nome, children }: { nome: string; children: ReactNode }) {
+/**
+ * `fadeTopo`: cor da seção de cima. Com ela, o topo do vídeo se dissolve
+ * nessa cor, sem a emenda reta entre as duas seções (usado na versão B, que
+ * chega aqui vinda do papel creme).
+ */
+export default function IntroCamarao({ nome, children, fadeTopo }: { nome: string; children: ReactNode; fadeTopo?: string }) {
   const raiz = useRef<HTMLDivElement>(null);
   const cenaRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -196,6 +201,12 @@ export default function IntroCamarao({ nome, children }: { nome: string; childre
               disablePictureInPicture
               tabIndex={-1}
             />
+            {fadeTopo && (
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-[28%]"
+                style={{ background: `linear-gradient(to bottom, ${fadeTopo} 0%, ${fadeTopo} 12%, transparent 100%)` }}
+              />
+            )}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[25%] bg-[linear-gradient(to_bottom,rgb(255_255_255/0)_0%,rgb(255_255_255/0.65)_45%,#fff_90%,#fff_100%)]" />
           </div>
         </div>

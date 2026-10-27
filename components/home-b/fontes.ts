@@ -1,0 +1,20 @@
+import { Instrument_Serif, Pinyon_Script } from "next/font/google";
+
+/**
+ * Fontes só da versão B, no estilo do cartaz de referência ("Celebrate /
+ * CORPORATE"): uma cursiva que encosta por cima de uma serifada alta e
+ * estreita em caixa alta. Ficam fora do layout do site, carregadas só em /b.
+ */
+export const instrument = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-instrument",
+  display: "swap",
+});
+
+export const pinyon = Pinyon_Script({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-pinyon",
+  display: "swap",
+});

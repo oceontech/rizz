@@ -6,8 +6,9 @@ import { useRef } from "react";
 import { BotaoLink } from "@/components/ui/Botao";
 import garrafa from "@/assets/img/vinho-rizz-syrah.webp";
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
-import { img } from "@/lib/images";
 import { whatsappLink } from "@/lib/site";
+
+import VideoB from "./VideoB";
 
 /**
  * O vinho com o nome da casa, em formato de cartaz: painel dourado com o
@@ -61,7 +62,7 @@ export default function VinhoDaCasa() {
     <section ref={raiz} aria-labelledby="vinho-da-casa" className="bg-noite py-6 md:py-10">
       <div className="mx-auto grid max-w-[90rem] gap-3 px-3 md:grid-cols-2 md:px-6">
         {/* Painel do nome */}
-        <div className="flex min-h-[66svh] flex-col items-center justify-between rounded-[2rem] bg-ouro-claro md:min-h-[78svh] px-6 py-12 text-center text-vinho md:rounded-[2.5rem] md:py-16">
+        <div className="flex min-h-[66svh] flex-col items-center justify-between bg-ouro-claro [clip-path:inset(0_round_2rem)] md:[clip-path:inset(0_round_2.5rem)] md:min-h-[78svh] px-6 py-12 text-center text-vinho md:py-16">
           <p className="eyebrow text-vinho">O vinho da casa</p>
 
           <h2 id="vinho-da-casa" className="flex flex-col items-center not-italic">
@@ -94,15 +95,11 @@ export default function VinhoDaCasa() {
         </div>
 
         {/* Cena da garrafa */}
-        <div className="relative isolate flex min-h-[78svh] items-center justify-center overflow-hidden rounded-[2rem] bg-vinho-fundo md:rounded-[2.5rem]">
-          <Image
-            src={img("file-parmesao-vinho")}
-            alt=""
-            fill
-            sizes="(min-width: 768px) 50vw, 100vw"
-            className="-z-10 object-cover opacity-25 mix-blend-luminosity"
-          />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-noite via-vinho-fundo/85 to-vinho-fundo/65" />
+        <div className="relative isolate flex min-h-[78svh] items-center justify-center bg-vinho-fundo [clip-path:inset(0_round_2rem)] md:[clip-path:inset(0_round_2.5rem)]">
+          {/* O clipe do álbum com a garrafa, a taça e o risoto, bem escuro e
+              desfocado: é cenário, quem aparece é a garrafa recortada. */}
+          <VideoB nome="vinho" className="absolute inset-0 -z-20 size-full scale-110 object-cover blur-[3px]" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-noite via-vinho-fundo/85 to-vinho-fundo/70" />
 
           <p className="absolute top-[7%] left-[8%] z-10 text-ambar md:top-[14%] md:right-[8%] md:left-auto md:text-right">
             <span className="block font-display text-2xl italic md:text-4xl">Vinho fino</span>

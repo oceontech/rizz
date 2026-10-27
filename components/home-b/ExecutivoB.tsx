@@ -22,7 +22,10 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
 
   return (
     <section id="executivo" aria-labelledby="executivo-b" className="scroll-mt-24 bg-noite px-3 py-6 md:px-6 md:py-10">
-      <div className="mx-auto grid max-w-[90rem] overflow-hidden rounded-[2rem] bg-ouro-claro text-vinho md:grid-cols-2 md:rounded-[2.5rem]">
+      {/* Canto arredondado por clip-path, não por overflow + border-radius: com
+          foto encostada na borda, o recorte por raio deixava um fio claro de
+          antisserrilhado no canto. */}
+      <div className="mx-auto grid max-w-[90rem] bg-ouro-claro text-vinho [clip-path:inset(0_round_2rem)] md:grid-cols-2 md:[clip-path:inset(0_round_2.5rem)]">
         <div className="flex flex-col px-6 py-12 md:px-14 md:py-16">
           <div className="flex flex-wrap items-center gap-3">
             <p className="eyebrow text-vinho">Almoço executivo</p>
@@ -101,18 +104,18 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
             />
           </div>
           {fotos.length > 0 && (
-            <ul className="grid grid-cols-3">
+            // Celular: linhas com foto quadrada e texto grande ao lado.
+            // Desktop: três quadros colados, com o texto por cima da foto.
+            <ul className="grid bg-vinho md:grid-cols-3">
               {fotos.map((p) => (
-                <li key={p.id} className="relative aspect-[3/4]">
-                  <Image src={img(p.img!)} alt={p.nome} fill sizes="(min-width: 768px) 15vw, 33vw" className="object-cover" />
-                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-noite/85 to-transparent p-2.5 pt-10 text-[0.75rem] leading-snug text-creme md:p-3.5 md:text-[0.8125rem]">
-                    {p.nome}
-                    {confirmado && (
-                      <span className="mt-1 block">
-                        <Preco valor={p.preco} className="text-sm text-ouro-claro" />
-                      </span>
-                    )}
-                  </span>
+                <li key={p.id} className="relative flex items-center gap-4 md:block md:aspect-[3/4]">
+                  <div className="relative size-28 shrink-0 md:absolute md:inset-0 md:size-auto">
+                    <Image src={img(p.img!)} alt={p.nome} fill sizes="(min-width: 768px) 15vw, 112px" className="object-cover" />
+                  </div>
+                  <div className="py-3 pr-5 md:absolute md:inset-x-0 md:bottom-0 md:bg-gradient-to-t md:from-noite/90 md:via-noite/60 md:to-transparent md:p-4 md:pt-16">
+                    <p className="text-base leading-snug text-creme md:text-[0.9375rem]">{p.nome}</p>
+                    {confirmado && <Preco valor={p.preco} className="mt-1.5 text-2xl text-ouro-claro md:text-xl" />}
+                  </div>
                 </li>
               ))}
             </ul>
