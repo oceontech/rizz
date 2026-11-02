@@ -19,12 +19,14 @@ import VideoComSom from "./VideoComSom";
  *
  * À esquerda o letreiro, o status e as três etapas; à direita o vídeo do
  * restaurante explicando o rodízio (som pelo botão) com as fotos dos
- * risotos sobrepostas.
+ * risotos sobrepostas. No celular as fotos ficam num bloco logo abaixo do
+ * vídeo, e a página desce até elas quando o vídeo acaba.
  */
 export default function RodizioB() {
   const raiz = useRef<HTMLElement>(null);
   const status = useRodizio();
   const vivo = status?.fase === "agora" || status?.fase === "hoje";
+  const fotosRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
@@ -49,9 +51,12 @@ export default function RodizioB() {
   );
 
   return (
-    <section ref={raiz} id="rodizio" aria-labelledby="rodizio-b" className="relative scroll-mt-24 overflow-hidden bg-noite pt-24 pb-28 text-creme md:pt-32 md:pb-24">
-      {/* Brilho âmbar atrás do letreiro, mais forte quando é dia de rodízio. */}
-      <div aria-hidden className={`pointer-events-none absolute top-10 -left-40 size-[40rem] rounded-full bg-ambar blur-[140px] transition-opacity duration-1000 ${vivo ? "opacity-20" : "opacity-10"}`} />
+    <section ref={raiz} id="rodizio" aria-labelledby="rodizio-b" className="relative scroll-mt-24 overflow-x-clip bg-noite pt-24 pb-28 text-creme md:pt-32 md:pb-24">
+      {/* Brilho âmbar atrás do letreiro, mais forte quando é dia de rodízio.
+          Sobe até o fundo da seção de cima (o recorte é só horizontal), para
+          não marcar uma linha reta na emenda. Fica abaixo do conteúdo dela:
+          o palco do Destaques tem z-index próprio. */}
+      <div aria-hidden className={`pointer-events-none absolute -top-56 -left-40 size-[44rem] rounded-full bg-ambar blur-[140px] transition-opacity duration-1000 ${vivo ? "opacity-20" : "opacity-10"}`} />
 
       <div className="relative mx-auto grid max-w-[100rem] gap-16 px-5 md:grid-cols-12 md:items-center md:gap-10 md:px-8">
         <div className="md:col-span-6 lg:col-span-6 lg:pl-10">
@@ -106,8 +111,8 @@ export default function RodizioB() {
 
         {/* Vídeo e fotos */}
         <div className="relative mx-auto w-full max-w-sm md:col-span-5 md:col-start-8 md:max-w-[calc((100svh-8rem)*9/16)] lg:col-span-4 lg:col-start-8">
-          <VideoComSom nome="rodizio" posicaoBotao="left-5 md:left-auto md:right-5" rotulo="O rodízio de risotos explicado no restaurante: arancini, seis risotos e a sobremesa da semana" />
-          <div data-profundidade="16" className="absolute -right-6 -bottom-12 w-[58%] shadow-[0_30px_60px_rgb(0_0_0/0.5)] md:right-auto md:-bottom-16 md:-left-[22%] md:w-[66%]">
+          <VideoComSom nome="rodizio" seguinte={fotosRef} posicaoBotao="left-5 md:left-auto md:right-5" rotulo="O rodízio de risotos explicado no restaurante: arancini, seis risotos e a sobremesa da semana" />
+          <div data-profundidade="16" className="absolute hidden shadow-[0_30px_60px_rgb(0_0_0/0.5)] md:right-auto md:block md:-bottom-16 md:-left-[22%] md:w-[66%]">
             <div className="relative aspect-[4/3] overflow-hidden">
               <Image src={mesa} alt="Os risotos do rodízio em potinhos coloridos, com arancini ao centro" fill placeholder="blur" sizes="(min-width: 768px) 28vw, 60vw" className="object-cover" />
             </div>
@@ -116,6 +121,16 @@ export default function RodizioB() {
             <div className="relative aspect-[3/4] overflow-hidden">
               <Image src={colheres} alt="Risotos servidos em petisqueiras de cerâmica coloridas" fill placeholder="blur" sizes="14vw" className="object-cover" />
             </div>
+          </div>
+        </div>
+
+        {/* Celular: as fotos abaixo do vídeo, sem cobrir a fala. */}
+        <div ref={fotosRef} className="grid scroll-mt-24 grid-cols-[3fr_2fr] gap-3 md:hidden">
+          <div className="relative aspect-[4/5] overflow-hidden">
+            <Image src={mesa} alt="Os risotos do rodízio em potinhos coloridos, com arancini ao centro" fill placeholder="blur" sizes="60vw" className="object-cover" />
+          </div>
+          <div className="relative mt-10 aspect-[3/4] self-start overflow-hidden">
+            <Image src={colheres} alt="Risotos servidos em petisqueiras de cerâmica coloridas" fill placeholder="blur" sizes="40vw" className="object-cover" />
           </div>
         </div>
       </div>

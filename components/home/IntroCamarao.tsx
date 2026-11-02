@@ -192,8 +192,9 @@ export default function IntroCamarao({
     { scope: raiz },
   );
 
+  // `z-[1]`: o brilho do rodízio sobe até a seção de cima e não pode cobrir esta.
   return (
-    <div ref={raiz} data-camarao-transicao className="relative -mb-px w-full bg-white">
+    <div ref={raiz} data-camarao-transicao className="relative z-[1] -mb-px w-full bg-white">
       <div ref={cenaRef} className="relative min-h-[100svh] w-full bg-white">
         <div ref={conteudoRef} data-camarao-conteudo>{children}</div>
         <div ref={camadaRef} data-camarao-video aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 hidden bg-white">

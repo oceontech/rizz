@@ -1,56 +1,72 @@
 "use client";
 
-import { Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { useEffect, useRef, useState, type RefObject } from "react";
+
+import { scrollToTarget } from "@/lib/scroll";
 
 /**
  * Vídeo com fala, em /videos/b/<nome>.mp4 (pôster .jpg de mesmo nome).
  *
- * - Toca ao entrar na tela e pausa ao sair. Se a pessoa pausou, ele não volta
- *   a tocar sozinho.
- * - Tocar no vídeo pausa ou retoma; o botão liga e desliga o som.
+ * - Toca quando está de fato à vista e pausa quando sai. "À vista" é mais do
+ *   que estar na área da tela: o vídeo do camarão fica dentro da cena presa
+ *   do IntroCamarao, invisível (opacidade 0) enquanto o vídeo da abertura
+ *   corre. Só o IntersectionObserver não enxerga isso, e o som começava por
+ *   cima da abertura. Por isso cada rolagem confere a opacidade e a
+ *   visibilidade dos ancestrais.
+ * - Se a pessoa pausou, ele não volta a tocar sozinho.
  * - Com `somAutomatico`, tenta tocar já com som. Os navegadores só deixam um
  *   vídeo tocar sozinho com som depois que a pessoa interagiu com a página
  *   (um toque ou clique; rolar não conta). Se o som for bloqueado, ele toca
  *   mudo e liga o som no primeiro toque na página.
- * - Com `final`, no celular, o vídeo toca uma vez só. Faltando 2 segundos,
- *   esse conteúdo (as fotos do prato) entra por cima, mas o vídeo segue
- *   tocando por baixo até o fim, para a fala não ser cortada. Depois de
- *   terminado, voltar à seção mantém as fotos (sem recomeçar sozinho); o
- *   botão "Rever" toca de novo. No desktop o vídeo segue em loop.
+ * - Com `seguinte`, no celular, o vídeo toca uma vez só e, ao terminar, a
+ *   página rola sozinha até esse bloco (as fotos logo abaixo). Se a pessoa já
+ *   rolou antes do fim, o vídeo saiu da tela, pausou e nada acontece. Voltar
+ *   à seção depois do fim não recomeça sozinho; o play recomeça. No desktop
+ *   o vídeo segue em loop.
  */
 export default function VideoComSom({
   nome,
   rotulo,
   somAutomatico = false,
   posicaoBotao = "left-5",
-  final,
+  seguinte,
 }: {
   nome: string;
   rotulo: string;
   somAutomatico?: boolean;
   /** Classes de posição do botão de som, para fugir de peças sobrepostas. */
   posicaoBotao?: string;
-  final?: ReactNode;
+  /** Bloco para onde a página rola quando o vídeo acaba (só no celular). */
+  seguinte?: RefObject<HTMLElement | null>;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const visivel = useRef(false);
   const pausadoPelaPessoa = useRef(false);
-  const comFinal = useRef(false);
+  const umaVez = useRef(false);
   const terminou = useRef(false);
   const [mudo, setMudo] = useState(true);
   const [tocando, setTocando] = useState(false);
-  const [noFinal, setNoFinal] = useState(false);
 
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    comFinal.current = Boolean(final) && !window.matchMedia("(min-width: 768px)").matches;
-    video.loop = !comFinal.current;
+    umaVez.current = Boolean(seguinte) && !window.matchMedia("(min-width: 768px)").matches;
+    video.loop = !umaVez.current;
+
+    /** Na tela e sem ancestral transparente ou escondido. */
+    const aVista = () => {
+      if (!visivel.current) return false;
+      if (getComputedStyle(video).visibility === "hidden") return false;
+      for (let el: HTMLElement | null = video; el && el !== document.body; el = el.parentElement) {
+        if (Number(getComputedStyle(el).opacity) < 0.6) return false;
+      }
+      return true;
+    };
 
     const tocar = async () => {
-      if (pausadoPelaPessoa.current || terminou.current) return;
+      if (pausadoPelaPessoa.current || terminou.current || !video.paused) return;
       if (!video.src) video.src = `/videos/b/${nome}.mp4`;
       if (!somAutomatico) {
         void video.play().catch(() => {});
@@ -67,19 +83,33 @@ export default function VideoComSom({
       }
     };
 
+    const avaliar = () => {
+      if (aVista()) void tocar();
+      else if (!video.paused) video.pause();
+    };
+
+    let quadro = 0;
+    const aoRolar = () => {
+      if (quadro) return;
+      quadro = requestAnimationFrame(() => {
+        quadro = 0;
+        avaliar();
+      });
+    };
+
     const observador = new IntersectionObserver(
       ([e]) => {
         visivel.current = e.isIntersecting;
-        if (e.isIntersecting) void tocar();
-        else video.pause();
+        avaliar();
       },
       { threshold: 0.45 },
     );
     observador.observe(video);
+    window.addEventListener("scroll", aoRolar, { passive: true });
 
     // Primeiro toque na página: se o vídeo está à vista e mudo, liga o som.
     const aoInteragir = () => {
-      if (somAutomatico && visivel.current && video.muted && !pausadoPelaPessoa.current) {
+      if (somAutomatico && aVista() && video.muted && !pausadoPelaPessoa.current) {
         video.muted = false;
         setMudo(false);
       }
@@ -89,16 +119,18 @@ export default function VideoComSom({
 
     return () => {
       observador.disconnect();
+      cancelAnimationFrame(quadro);
+      window.removeEventListener("scroll", aoRolar);
       window.removeEventListener("pointerdown", aoInteragir);
       window.removeEventListener("keydown", aoInteragir);
     };
-  }, [nome, somAutomatico, final]);
+  }, [nome, somAutomatico, seguinte]);
 
-  function aoAvancar() {
-    const video = ref.current;
-    if (!video || !comFinal.current || noFinal || !video.duration) return;
-    // Só a imagem muda: o áudio continua até o fim do arquivo.
-    if (video.duration - video.currentTime <= 2) setNoFinal(true);
+  function aoTerminar() {
+    terminou.current = true;
+    const alvo = seguinte?.current;
+    // Só rola se a pessoa ainda está assistindo.
+    if (umaVez.current && alvo && visivel.current) scrollToTarget(alvo, 16);
   }
 
   function alternarReproducao() {
@@ -107,6 +139,7 @@ export default function VideoComSom({
     if (!video.src) video.src = `/videos/b/${nome}.mp4`;
     if (video.paused) {
       pausadoPelaPessoa.current = false;
+      terminou.current = false;
       void video.play().catch(() => {});
     } else {
       pausadoPelaPessoa.current = true;
@@ -119,21 +152,12 @@ export default function VideoComSom({
     if (!video) return;
     if (!video.src) video.src = `/videos/b/${nome}.mp4`;
     video.muted = !mudo;
-    if (mudo) {
+    if (mudo && video.paused) {
       pausadoPelaPessoa.current = false;
+      terminou.current = false;
       void video.play().catch(() => {});
     }
     setMudo(!mudo);
-  }
-
-  function rever() {
-    const video = ref.current;
-    if (!video) return;
-    setNoFinal(false);
-    terminou.current = false;
-    pausadoPelaPessoa.current = false;
-    video.currentTime = 0;
-    void video.play().catch(() => {});
   }
 
   return (
@@ -148,18 +172,14 @@ export default function VideoComSom({
         aria-label={rotulo}
         onPlay={() => setTocando(true)}
         onPause={() => setTocando(false)}
-        onTimeUpdate={aoAvancar}
-        onEnded={() => {
-          terminou.current = true;
-          setNoFinal(true);
-        }}
+        onEnded={aoTerminar}
         onClick={alternarReproducao}
         className="absolute inset-0 size-full cursor-pointer object-cover"
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 to-transparent" />
 
-      {/* Pausado: ícone de play no centro, que também é clicável. */}
-      {!tocando && !noFinal && (
+      {/* Pausado ou terminado: ícone de play no centro, que também é clicável. */}
+      {!tocando && (
         <button
           type="button"
           onClick={alternarReproducao}
@@ -170,7 +190,7 @@ export default function VideoComSom({
         </button>
       )}
 
-      <div className={`absolute bottom-5 ${posicaoBotao} flex items-center gap-2 transition-opacity ${noFinal ? "pointer-events-none opacity-0 md:pointer-events-auto md:opacity-100" : ""}`}>
+      <div className={`absolute bottom-5 ${posicaoBotao} flex items-center gap-2`}>
         <button
           type="button"
           onClick={alternarReproducao}
@@ -190,23 +210,6 @@ export default function VideoComSom({
           {mudo ? "Ligar o som" : "Som ligado"}
         </button>
       </div>
-
-      {/* Final (celular): o conteúdo entra por cima do vídeo. */}
-      {final && (
-        <div
-          aria-hidden={!noFinal}
-          className={`absolute inset-0 transition-[opacity,transform] duration-700 ease-[var(--ease-rizz)] md:hidden ${noFinal ? "opacity-100" : "pointer-events-none scale-105 opacity-0"}`}
-        >
-          {noFinal && final}
-          <button
-            type="button"
-            onClick={rever}
-            className="absolute bottom-5 left-1/2 flex h-10 -translate-x-1/2 items-center gap-2 rounded-full bg-creme/95 px-4 text-xs font-medium tracking-[0.08em] whitespace-nowrap text-tinta uppercase shadow-[0_10px_30px_rgb(0_0_0/0.35)]"
-          >
-            <RotateCcw className="size-3.5" /> Rever a apresentação
-          </button>
-        </div>
-      )}
     </div>
   );
 }

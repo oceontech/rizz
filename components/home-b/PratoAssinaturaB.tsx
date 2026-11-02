@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
 import { BotaoLink } from "@/components/ui/Botao";
 import Preco from "@/components/ui/Preco";
@@ -17,11 +17,11 @@ import VideoComSom from "./VideoComSom";
 type Prato = NonNullable<HomeDoSite["maisPedido"]>;
 
 /**
- * O que entra por cima do vídeo, no celular, quando ele está acabando: as
- * fotos do prato se revezando devagar (com leve aproximação), o nome e o
- * preço. A descrição e o botão do cardápio ficam logo abaixo do vídeo.
+ * Celular: logo abaixo do vídeo, as fotos do prato se revezando devagar (com
+ * leve aproximação). Quando o vídeo acaba, a página rola sozinha até aqui;
+ * nome, preço e botão do cardápio vêm logo em seguida, no texto.
  */
-function FinalPrato({ prato }: { prato: Prato }) {
+function FotosPrato({ prato, ref }: { prato: Prato; ref: RefObject<HTMLDivElement | null> }) {
   const foto = fotoDoPrato(prato);
   const fotos = [foto, camaraoMesa].filter((f): f is NonNullable<typeof f> => Boolean(f));
   const [atual, setAtual] = useState(0);
@@ -33,23 +33,17 @@ function FinalPrato({ prato }: { prato: Prato }) {
   }, [fotos.length]);
 
   return (
-    <div className="absolute inset-0 bg-noite">
+    <div ref={ref} className="relative order-2 aspect-[4/5] overflow-hidden bg-noite md:hidden">
       {fotos.map((f, i) => (
         <Image
           key={i}
           src={f}
-          alt=""
+          alt={i === 0 ? `${prato.titulo}. ${prato.texto}` : ""}
           fill
           sizes="100vw"
           className={`object-cover transition-[opacity,transform] duration-[4000ms] ease-out ${i === atual ? "scale-110 opacity-100" : "scale-100 opacity-0"}`}
         />
       ))}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10" />
-      <div className="absolute inset-x-0 bottom-20 px-6 text-white">
-        <p className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-4xl leading-none text-ambar">{prato.chamada}</p>
-        <p className="font-[family-name:var(--font-instrument)] text-[3.25rem] leading-[0.9] tracking-[0.01em] uppercase">{prato.titulo}</p>
-        <Preco valor={prato.preco} className="mt-3 text-3xl leading-none text-ouro-claro [&>span]:opacity-100" />
-      </div>
     </div>
   );
 }
@@ -106,6 +100,7 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
   const raiz = useRef<HTMLElement>(null);
   const foto = fotoDoPrato(prato);
   const camarao = prato.id === "camarao-empanado";
+  const fotosRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
@@ -133,7 +128,7 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
 
   if (!camarao) {
     return (
-      <section ref={raiz} aria-labelledby="prato-b" className="relative overflow-hidden bg-white py-24 text-tinta md:py-32">
+      <section ref={raiz} aria-labelledby="prato-b" className="relative z-[1] overflow-hidden bg-white py-24 text-tinta md:py-32">
         <div className="wrap grid items-center gap-14 md:grid-cols-12 md:gap-8">
           <div data-entrada-prato className={`relative aspect-[4/5] md:col-span-6`}>
             {foto ? (
@@ -160,9 +155,8 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
   return (
     <section ref={raiz} aria-labelledby="prato-b" className="relative overflow-hidden bg-white pt-20 pb-28 text-tinta md:py-28">
       <div className="mx-auto grid max-w-[100rem] gap-12 px-5 md:grid-cols-12 md:items-center md:gap-6 md:px-8 lg:gap-10">
-        {/* Celular: o vídeo vem primeiro e o texto logo abaixo, então quem rola
-            antes do fim já encontra preço e botão. */}
-        <div data-entrada-prato className="order-2 md:order-2 md:col-span-4 md:pl-10 lg:pl-14">
+        {/* Celular: o vídeo, as fotos e o texto, um abaixo do outro. */}
+        <div data-entrada-prato className="order-3 md:order-2 md:col-span-4 md:pl-10 lg:pl-14">
           <Texto prato={prato} />
         </div>
 
@@ -191,7 +185,7 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
           </div>
         </div>
 
-        {/* Apresentação. No celular, no fim do vídeo entram as fotos e o preço. */}
+        {/* Apresentação. No celular, ao fim do vídeo a página desce até as fotos. */}
         <div data-entrada-prato className="relative order-1 md:order-3 md:col-span-4 md:pl-10 lg:pl-16">
           {/* Teto pela altura da tela: em notebook (largo e baixo) o vídeo em
               pé, medido pela largura da coluna, passava da tela. */}
@@ -200,10 +194,12 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
               nome="camarao-apresentacao"
               rotulo="O prato apresentado no salão do Rizz"
               somAutomatico
-              final={<FinalPrato prato={prato} />}
+              seguinte={fotosRef}
             />
           </div>
         </div>
+
+        <FotosPrato prato={prato} ref={fotosRef} />
       </div>
     </section>
   );
