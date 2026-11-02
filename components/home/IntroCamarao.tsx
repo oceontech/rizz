@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useRef, type ReactNode } from "react";
 
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
@@ -42,14 +43,33 @@ export default function IntroCamarao({
 
       const mm = gsap.matchMedia();
 
-      mm.add(CONDICOES, (contexto) => {
+      mm.add({ ...CONDICOES, celular: "(max-width: 767px)" }, (contexto) => {
         if (contexto.conditions?.parado) return;
+        const celular = Boolean(contexto.conditions?.celular);
 
         gsap.set(camada, { display: "block", autoAlpha: 1 });
         gsap.set(conteudo, { autoAlpha: 0 });
         gsap.set(chamada, { display: "flex", autoAlpha: 0 });
         const textos = chamada.querySelectorAll("[data-chamada-texto]");
-        const entradas = conteudo.querySelectorAll("[data-entrada-prato]");
+        /**
+         * Na ordem em que aparecem na tela, e só os visíveis. Na ordem do
+         * código, o celular animava primeiro o texto (que lá fica abaixo da
+         * dobra) e o preparo (oculto no celular), e o vídeo, que é o que a
+         * pessoa vê, entrava por último: a tela ficava branca por umas três
+         * roladas.
+         */
+        const entradas = Array.from(conteudo.querySelectorAll<HTMLElement>("[data-entrada-prato]"))
+          .filter((el) => el.getClientRects().length > 0)
+          .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top || a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+
+        /**
+         * Celular: a mesma sequência, mais curta. A chamada fica menos tempo,
+         * o prato entra logo depois e a trava acaba antes (2 telas em vez de
+         * 3). No desktop a linha do tempo segue a de antes.
+         */
+        const t = celular
+          ? { fica: 1.1, saem: 0.24, chamadaSai: 1.22, conteudo: 1.26, entradas: 1.3, passo: 0.08, fim: 1.62, telas: 2 }
+          : { fica: 1.2, saem: 0.34, chamadaSai: 1.42, conteudo: 1.5, entradas: 1.6, passo: 0.14, fim: 2.28, telas: 3 };
 
         const quadro = { progresso: 0 };
 
@@ -79,7 +99,7 @@ export default function IntroCamarao({
          * cena ainda presa — o usuário rolava sem ver nada mudar e achava
          * que tinha travado.
          *
-         * Linha do tempo (unidades):
+         * Linha do tempo no desktop (unidades; o celular usa a versão curta em `t`):
          *   0    → 1     vídeo
          *   0.86 → 1.10  chamada entra
          *   1.10 → 1.20  chamada fica (respiro curto)
@@ -94,7 +114,7 @@ export default function IntroCamarao({
           scrollTrigger: {
             trigger: no,
             start: "top top",
-            end: () => `+=${Math.round(Math.max(1500, document.documentElement.clientHeight * 3))}`,
+            end: () => `+=${Math.round(Math.max(celular ? 1100 : 1500, document.documentElement.clientHeight * t.telas))}`,
             pin: cena,
             pinSpacing: true,
             anticipatePin: 1,
@@ -134,21 +154,22 @@ export default function IntroCamarao({
               y: -30,
               opacity: 0,
               filter: "blur(8px)",
-              duration: 0.34,
+              duration: t.saem,
               stagger: 0.07,
               ease: "power2.inOut",
             },
-            1.2,
+            t.fica,
           )
-          .to(chamada, { autoAlpha: 0, duration: 0.24, ease: "power1.inOut" }, 1.42)
-          .to(conteudo, { autoAlpha: 1, duration: 0.45, ease: "power1.inOut" }, 1.5)
+          .to(chamada, { autoAlpha: 0, duration: 0.24, ease: "power1.inOut" }, t.chamadaSai)
+          .to(conteudo, { autoAlpha: 1, duration: celular ? 0.25 : 0.45, ease: "power1.inOut" }, t.conteudo)
           .fromTo(
             entradas,
-            { y: 56, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.5, stagger: 0.14, ease: "power3.out" },
-            1.6,
-          )
-          .to({}, { duration: 0.04 });
+            { y: celular ? 36 : 56, opacity: 0 },
+            { y: 0, opacity: 1, duration: celular ? 0.3 : 0.5, stagger: t.passo, ease: "power3.out" },
+            t.entradas,
+          );
+        // Respiro final até o fim da trava.
+        timeline.to({}, { duration: Math.max(0.04, t.fim - timeline.duration()) });
 
         // Carrega a mídia ao se aproximar, sem competir com o vídeo do hero.
         const observador = new IntersectionObserver(
@@ -240,6 +261,12 @@ export default function IntroCamarao({
           )}
           <p data-chamada-texto className="max-w-[30ch] font-sans text-base font-light leading-relaxed text-tinta/80 md:text-xl">
             {nome}
+          </p>
+          {/* Sem isto, parada na chamada, a pessoa não sabia que era para
+              continuar rolando. */}
+          <p data-chamada-texto className="mt-4 flex flex-col items-center gap-1 text-[0.6875rem] font-medium tracking-[0.24em] text-vinho/70 uppercase">
+            Role para ver
+            <ChevronDown aria-hidden className="size-5 animate-bounce motion-reduce:animate-none" />
           </p>
         </div>
       </div>

@@ -78,7 +78,8 @@ export default function Footer() {
   const naHome = usePathname() === "/";
 
   return (
-    <footer ref={raiz} className={`border-t border-creme/10 ${naHome ? "bg-noite" : "bg-noite-2"}`}>
+    // `data-header-escuro`: no cardápio, o header vira vidro escuro sobre o rodapé.
+    <footer ref={raiz} data-header-escuro className={`border-t border-creme/10 ${naHome ? "bg-noite" : "bg-noite-2"}`}>
       <div className="wrap pt-16 md:pt-24">
         <div className="grid gap-12 md:grid-cols-[1.1fr_1fr_1fr]">
           <div>

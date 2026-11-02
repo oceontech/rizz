@@ -19,12 +19,13 @@ const links = [
   { href: "/reservas", rotulo: "Reservas" },
 ];
 
-type Modo = "transparente" | "solido" | "vidro";
+type Modo = "transparente" | "solido" | "vidro" | "vidroEscuro";
 
 const fundoPorModo: Record<Modo, string> = {
   transparente: "bg-transparent",
   solido: "bg-noite/90 backdrop-blur-xl",
   vidro: "vidro",
+  vidroEscuro: "vidro-escuro",
 };
 
 /**
@@ -32,6 +33,9 @@ const fundoPorModo: Record<Modo, string> = {
  *
  * - **vidro** — só no cardápio: vidro transparente, logo vinho e botão só
  *   com borda e texto vinho;
+ * - **vidroEscuro** — o mesmo vidro em vinho escuro, com logo e textos
+ *   claros, enquanto o header do cardápio está sobre uma seção marcada com
+ *   `data-header-escuro` (o fecho com o vídeo do salão);
  * - **transparente** — na home, enquanto o hero está por baixo;
  * - **solido** — vinho, na home depois do hero e nas demais páginas.
  *
@@ -56,8 +60,13 @@ export default function Header({ aviso = null }: { aviso?: AvisoHeader }) {
   const [passouHero, setPassouHero] = useState({ rota: "", valor: false });
   const alemDoHero = passouHero.rota === pathname && passouHero.valor;
 
+  const [sobreEscuro, setSobreEscuro] = useState({ rota: "", valor: false });
+  const escuroAqui = sobreEscuro.rota === pathname && sobreEscuro.valor;
+
   const modo: Modo = noCardapio
-    ? "vidro"
+    ? escuroAqui
+      ? "vidroEscuro"
+      : "vidro"
     : naHome && !alemDoHero
       ? "transparente"
       : "solido";
@@ -73,6 +82,27 @@ export default function Header({ aviso = null }: { aviso?: AvisoHeader }) {
     });
     return () => gatilho.kill();
   }, { dependencies: [naHome], revertOnUpdate: true });
+
+  // Cardápio: seções escuras marcadas com `data-header-escuro` trocam o vidro
+  // claro pelo escuro enquanto passam por baixo do header.
+  useGSAP(() => {
+    if (!noCardapio) return;
+    const rota = pathname;
+    // O estado olha todas juntas: com duas seções escuras coladas (o fecho e
+    // o rodapé), a saída de uma e a entrada da outra chegam no mesmo quadro.
+    const atualizar = () => setSobreEscuro({ rota, valor: gatilhos.some((g) => g.isActive) });
+    const gatilhos: ScrollTrigger[] = Array.from(document.querySelectorAll<HTMLElement>("[data-header-escuro]")).map((secao) =>
+      ScrollTrigger.create({
+        trigger: secao,
+        // Troca quando a seção chega à base do header (metade da altura dele).
+        start: () => `top ${(raiz.current?.offsetHeight ?? 64) / 2}px`,
+        end: () => `bottom ${(raiz.current?.offsetHeight ?? 64) / 2}px`,
+        invalidateOnRefresh: true,
+        onToggle: atualizar,
+      }),
+    );
+    return () => gatilhos.forEach((g) => g.kill());
+  }, { dependencies: [noCardapio, pathname], revertOnUpdate: true });
 
   useGSAP(
     () => {

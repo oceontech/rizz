@@ -28,8 +28,24 @@ export default function VinhoDaCasa() {
       if (!no) return;
       const mm = gsap.matchMedia();
 
-      mm.add(CONDICOES, (contexto) => {
+      mm.add({ ...CONDICOES, desktop: "(min-width: 768px)" }, (contexto) => {
         if (contexto.conditions?.parado) return;
+        const desktop = Boolean(contexto.conditions?.desktop);
+
+        /**
+         * "Vinho fino / Tinto seco": movimento bem visível, preso à rolagem.
+         * As duas linhas chegam de fora, cada uma do seu lado e no seu ritmo,
+         * e se alinham quando o painel chega ao meio da tela. No celular o
+         * rótulo fica à esquerda, então entra pela esquerda; no desktop, à
+         * direita, e entra pela direita.
+         */
+        const [fino, seco] = no.querySelectorAll<HTMLElement>("[data-rotulo-vinho]");
+        const lado = desktop ? 1 : -1;
+        const rotulo = { trigger: fino?.parentElement, start: "top 95%", end: "top 35%", scrub: 0.5 };
+        if (fino && seco) {
+          gsap.fromTo(fino, { x: 110 * lado, opacity: 0 }, { x: 0, opacity: 1, ease: "power2.out", scrollTrigger: rotulo });
+          gsap.fromTo(seco, { x: -150 * lado, opacity: 0, letterSpacing: "0.18em" }, { x: 0, opacity: 1, letterSpacing: "0.01em", ease: "power2.out", scrollTrigger: rotulo });
+        }
 
         gsap.fromTo(
           no.querySelector("[data-garrafa]"),
@@ -117,8 +133,8 @@ export default function VinhoDaCasa() {
           <div className="absolute inset-0 -z-10 bg-gradient-to-t from-noite via-vinho-fundo/80 to-vinho-fundo/60" />
 
           <p className="absolute top-[7%] left-[8%] z-10 text-ambar md:top-[14%] md:right-[8%] md:left-auto md:text-right">
-            <span className="relative z-10 -mb-[0.1em] block font-[family-name:var(--font-pinyon)] text-3xl leading-none md:text-5xl">Vinho fino</span>
-            <span className="block font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-4xl leading-[0.9] md:text-6xl">Tinto seco</span>
+            <span data-rotulo-vinho className="relative z-10 -mb-[0.1em] block font-[family-name:var(--font-pinyon)] text-3xl leading-none md:text-5xl">Vinho fino</span>
+            <span data-rotulo-vinho className="block font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-4xl leading-[0.9] md:text-6xl">Tinto seco</span>
           </p>
 
           <div data-garrafa className="relative mt-[10svh] h-[58svh] w-auto md:mt-0 md:h-[66svh]">

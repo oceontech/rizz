@@ -133,8 +133,6 @@ export default function Destaques({ pratos, letreiro = false }: { pratos: PratoD
             largo no mobile). */}
         <ul
           data-trilho
-          data-anima="cascata"
-          data-anima-so="mobile"
           className="no-scrollbar relative mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 md:mt-10 md:gap-7 md:overflow-visible md:px-12"
         >
           {pratos.map((item, i) => {
