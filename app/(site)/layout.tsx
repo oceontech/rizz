@@ -19,7 +19,7 @@ import { resumoAvaliacoes } from "@/data/reviews";
 import { avisoDoSite, promocoesDoSite, selosDoSite } from "@/lib/dados";
 import ConteudoSite from "@/components/ConteudoSite";
 import { carregarConteudo } from "@/lib/conteudo-servidor";
-import { openingHoursSpecification } from "@/lib/hours";
+import { openingHoursSpecification, specialOpeningHoursSpecification } from "@/lib/hours";
 import { instrument, pinyon } from "@/lib/fontes";
 import { site } from "@/lib/site";
 
@@ -119,6 +119,7 @@ const dadosEstruturados = () => ({
   },
   sameAs: [site.redes.instagram, site.redes.facebook],
   openingHoursSpecification: openingHoursSpecification(),
+  specialOpeningHoursSpecification: specialOpeningHoursSpecification(),
 });
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

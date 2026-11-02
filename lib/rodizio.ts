@@ -1,4 +1,4 @@
-import { agoraNoRestaurante, diaDe, horarios } from "@/lib/hours";
+import { agoraNoRestaurante, diaDaSemanaISO, diaDe, diaNaData, hojeNoRestaurante, horarios, somarDiasISO } from "@/lib/hours";
 
 /**
  * Rodízio de risotos.
@@ -40,10 +40,17 @@ const nomeDoDia = (dia: number) => diaDe(dia).nome.toLowerCase();
  * de `lib/hours.ts`, então muda junto se o horário do restaurante mudar.
  */
 export function statusDoRodizio(base = new Date()): StatusRodizio {
-  const { dia, minutos: agora } = agoraNoRestaurante(base);
-  const jantarHoje = diaDe(dia).jantar;
+  const { minutos: agora } = agoraNoRestaurante(base);
+  const hoje = hojeNoRestaurante(base);
+  /** Jantar de rodízio na data: dia do rodízio e com jantar (datas especiais valem). */
+  const jantarDe = (iso: string) => {
+    if (!rodizio.dias.includes(diaDaSemanaISO(iso))) return null;
+    const d = diaNaData(iso);
+    return d.fechado ? null : (d.jantar ?? null);
+  };
 
-  if (rodizio.dias.includes(dia) && jantarHoje) {
+  const jantarHoje = jantarDe(hoje);
+  if (jantarHoje) {
     const inicio = minutos(jantarHoje.inicio);
     const fim = minutos(jantarHoje.fim);
     if (agora >= inicio && agora < fim) {
@@ -54,17 +61,17 @@ export function statusDoRodizio(base = new Date()): StatusRodizio {
     }
   }
 
-  const amanha = (dia + 1) % 7;
-  const jantarAmanha = diaDe(amanha).jantar;
-  if (rodizio.dias.includes(amanha) && jantarAmanha) {
-    return { fase: "amanha", rotulo: "Amanhã tem rodízio de risotos", detalhe: `${diaDe(amanha).nome}, a partir das ${jantarAmanha.inicio}` };
+  const amanha = somarDiasISO(hoje, 1);
+  const jantarAmanha = jantarDe(amanha);
+  if (jantarAmanha) {
+    return { fase: "amanha", rotulo: "Amanhã tem rodízio de risotos", detalhe: `${diaDe(diaDaSemanaISO(amanha)).nome}, a partir das ${jantarAmanha.inicio}` };
   }
 
-  for (let i = 2; i <= 7; i++) {
-    const d = (dia + i) % 7;
-    const jantar = diaDe(d).jantar;
-    if (rodizio.dias.includes(d) && jantar) {
-      return { fase: "proximo", rotulo: "Rodízio de risotos", detalhe: `Próximo: ${nomeDoDia(d)}, a partir das ${jantar.inicio}` };
+  for (let i = 2; i <= 14; i++) {
+    const data = somarDiasISO(hoje, i);
+    const jantar = jantarDe(data);
+    if (jantar) {
+      return { fase: "proximo", rotulo: "Rodízio de risotos", detalhe: `Próximo: ${nomeDoDia(diaDaSemanaISO(data))}, a partir das ${jantar.inicio}` };
     }
   }
 

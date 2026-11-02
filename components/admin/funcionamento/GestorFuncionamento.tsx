@@ -12,6 +12,8 @@ import type { ConteudoSiteConfig } from "@/lib/conteudo";
 import type { DiaOperacao, Servico } from "@/lib/hours";
 import { cn } from "@/lib/utils";
 
+import DatasEspeciais from "./DatasEspeciais";
+
 const PADRAO = { almoco: { inicio: "11:00", fim: "15:00" }, jantar: { inicio: "18:30", fim: "22:30" } };
 /** Domingo por último, como a semana é lida no restaurante. */
 const ORDEM = [2, 3, 4, 5, 6, 0, 1];
@@ -285,6 +287,7 @@ export default function GestorFuncionamento({ conteudo }: { conteudo: ConteudoSi
       <Cabecalho titulo="Horários e contato" descricao="O que mudar aqui vale para o site inteiro assim que salvar." />
       <div className="flex flex-col gap-5">
         <Horarios inicial={conteudo.horarios} />
+        <DatasEspeciais inicial={conteudo.datasEspeciais} horarios={conteudo.horarios} />
         <Rodizio inicial={conteudo.rodizio} horarios={conteudo.horarios} />
         <Contato inicial={conteudo.contato} />
       </div>

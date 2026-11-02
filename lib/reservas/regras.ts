@@ -6,7 +6,7 @@
  * mesmo tempo, e cada reserva ocupa lugares pela permanência média. A mesa
  * fica a cargo da equipe (campo livre, que aceita junções como "12+13").
  */
-import { diaDe, type Servico } from "@/lib/hours";
+import { diaNaData, type Servico } from "@/lib/hours";
 
 export type Turno = "almoco" | "jantar";
 
@@ -91,7 +91,8 @@ export function somarDias(iso: string, n: number) {
 }
 
 export function turnosDoDia(iso: string): { turno: Turno; faixa: Servico }[] {
-  const dia = diaDe(diaDaSemana(iso));
+  // Pela data: uma data especial (feriado, evento) passa por cima da semana.
+  const dia = diaNaData(iso);
   if (dia.fechado) return [];
   return (
     [

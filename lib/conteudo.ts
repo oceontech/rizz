@@ -1,4 +1,4 @@
-import { horarios, type DiaOperacao } from "@/lib/hours";
+import { datasEspeciais, horarios, type DataEspecial, type DiaOperacao } from "@/lib/hours";
 import { rodizio } from "@/lib/rodizio";
 import { atualizarEnderecoLinha, site } from "@/lib/site";
 
@@ -38,6 +38,8 @@ export type RodizioConfig = {
 
 export type ConteudoSiteConfig = {
   horarios: DiaOperacao[];
+  /** Feriados e datas fora do padrão; passam por cima da semana. */
+  datasEspeciais: DataEspecial[];
   rodizio: RodizioConfig;
   contato: ContatoConfig;
 };
@@ -47,6 +49,7 @@ const copiar = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 /** Fotografia dos valores do código, tirada antes de qualquer alteração. */
 export const CONTEUDO_PADRAO: ConteudoSiteConfig = {
   horarios: copiar(horarios),
+  datasEspeciais: [],
   rodizio: copiar({ dias: rodizio.dias, etapas: rodizio.etapas }),
   contato: {
     telefone: site.telefone,
@@ -70,6 +73,7 @@ export function telefoneParaLink(telefone: string) {
 /** Atualiza os objetos do site no lugar. Idempotente e barato. */
 export function aplicarConteudo(c: ConteudoSiteConfig) {
   horarios.splice(0, horarios.length, ...copiar(c.horarios).sort((a, b) => a.dia - b.dia));
+  datasEspeciais.splice(0, datasEspeciais.length, ...copiar(c.datasEspeciais ?? []));
 
   const r = rodizio as { dias: number[]; etapas: { titulo: string; texto: string }[] };
   r.dias = [...c.rodizio.dias].sort((a, b) => a - b);
