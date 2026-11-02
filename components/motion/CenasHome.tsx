@@ -11,18 +11,23 @@ import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
  *   data-anima="cascata"    filhos diretos entram um depois do outro
  *   data-anima-contar       no letreiro: o número do título conta até o valor
  *   data-anima-magnetico    botão que acompanha o cursor (só desktop)
- *   data-anima-so="mobile"  só no celular (ex.: listas presas no desktop)
+ *   data-anima-so="desktop" só no desktop (ex.: lista que no celular vira faixa lateral)
  *
  * Desktop e celular têm coreografias diferentes, porque o layout muda:
  *
- * - DESKTOP (tela larga, cursor): mais cenográfico. A cursiva se escreve da
- *   esquerda para a direita e a serifada sobe letra a letra, saindo de um
- *   leve desfoque. As fotos abrem de baixo para cima como cortina, com o
- *   zoom assentando por dentro. Botões principais são magnéticos.
+ * Tudo é SUTIL de propósito (pedido do cliente, depois de uma primeira
+ * versão mais cenográfica): deslocamentos curtos, sem desfoque, durações
+ * abaixo de 1s.
+ *
+ * - DESKTOP (tela larga, cursor): a cursiva se escreve da esquerda para a
+ *   direita e a serifada sobe letra a letra, pouco. As fotos se abrem um
+ *   pouco das bordas para dentro, com o zoom assentando. Botões principais
+ *   acompanham levemente o cursor.
  * - CELULAR: mais curto e leve, porque a rolagem é rápida e o processador é
- *   menor. A cursiva também se escreve, mas a serifada entra inteira (sem
- *   dividir em letras). As fotos se abrem do centro para as bordas, que lê
- *   melhor em coluna única. Listas que rolam de lado entram da direita.
+ *   menor. A cursiva também se escreve; a serifada entra inteira.
+ * - Faixas que deslizam de lado (pratos, avaliações no celular) NÃO animam:
+ *   mover os cards dentro de um scroll com encaixe (scroll-snap) faz o
+ *   navegador recalcular o encaixe a cada quadro, e a faixa tremia.
  *
  * Regras que valem para os dois:
  * - Tudo roda uma vez só (`once`): voltar a rolagem não repete a entrada.
@@ -78,8 +83,8 @@ export default function CenasHome() {
           // do recorte final guardam os floreios da Pinyon, que saem da caixa.
           tl.fromTo(
             cursiva,
-            { clipPath: "inset(-30% 100% -40% -12%)", x: desktop ? -14 : -8 },
-            { clipPath: "inset(-30% -12% -40% -12%)", x: 0, duration: desktop ? 1.15 : 0.85, ease: "power2.inOut" },
+            { clipPath: "inset(-30% 100% -40% -12%)" },
+            { clipPath: "inset(-30% -12% -40% -12%)", duration: desktop ? 0.95 : 0.75, ease: "power2.inOut" },
             0,
           );
 
@@ -91,20 +96,20 @@ export default function CenasHome() {
             splits.push(split);
             tl.fromTo(
               split.chars,
-              { yPercent: 55, opacity: 0, filter: "blur(10px)" },
-              { yPercent: 0, opacity: 1, filter: "blur(0px)", duration: 0.9, stagger: { each: 0.035, from: "start" } },
-              0.35,
+              { yPercent: 28, opacity: 0 },
+              { yPercent: 0, opacity: 1, duration: 0.6, stagger: 0.022 },
+              0.3,
             ).add(() => split.revert());
           } else {
             tl.fromTo(
               titulo,
-              { clipPath: "inset(0% -6% 100% -6%)", y: 28 },
-              { clipPath: "inset(-25% -6% -25% -6%)", y: 0, duration: 0.8 },
+              { opacity: 0, y: 14 },
+              { opacity: 1, y: 0, duration: 0.6 },
               0.25,
             );
           }
 
-          if (linha) tl.fromTo(linha, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.7 }, desktop ? 0.8 : 0.55);
+          if (linha) tl.fromTo(linha, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.6 }, desktop ? 0.6 : 0.5);
 
           // Número que conta (nota das avaliações): o valor final já está no HTML.
           if (contar) {
@@ -138,32 +143,33 @@ export default function CenasHome() {
 
         // ---------------------------------------------------------------- mídias
         const midias = alvos("midia");
+        const recorte = desktop ? "inset(5% 4% 5% 4%)" : "inset(4% 3% 4% 3%)";
         const abrir = (lote: HTMLElement[]) => {
           lote.forEach((el, i) => {
             const dentro = el.querySelector<HTMLElement>("img:not([aria-hidden]), video");
-            const atraso = i * (desktop ? 0.12 : 0.08);
+            const atraso = i * (desktop ? 0.08 : 0.06);
             gsap.fromTo(
               el,
-              { clipPath: desktop ? "inset(100% 0% 0% 0%)" : "inset(12% 10% 12% 10%)", opacity: desktop ? 1 : 0 },
+              { clipPath: recorte, opacity: 0 },
               {
                 clipPath: "inset(0% 0% 0% 0%)",
                 opacity: 1,
-                duration: desktop ? 1.3 : 0.95,
+                duration: desktop ? 0.95 : 0.75,
                 delay: atraso,
-                ease: desktop ? "expo.inOut" : "power3.out",
+                ease: "power2.out",
                 clearProps: "clipPath,opacity",
               },
             );
             if (dentro) {
               gsap.fromTo(
                 dentro,
-                { scale: desktop ? 1.22 : 1.1 },
-                { scale: 1, duration: desktop ? 1.6 : 1.1, delay: atraso, ease: "power3.out", clearProps: "transform" },
+                { scale: desktop ? 1.08 : 1.05 },
+                { scale: 1, duration: desktop ? 1.2 : 0.9, delay: atraso, ease: "power2.out", clearProps: "transform" },
               );
             }
           });
         };
-        gsap.set(midias, { clipPath: desktop ? "inset(100% 0% 0% 0%)" : "inset(12% 10% 12% 10%)", opacity: desktop ? 1 : 0 });
+        gsap.set(midias, { clipPath: recorte, opacity: 0 });
         // Em lote: fotos que entram juntas (mural, colunas) abrem em sequência.
         ScrollTrigger.batch(midias, { start: "top 90%", once: true, onEnter: (lote) => abrir(lote as HTMLElement[]) });
 
@@ -171,17 +177,17 @@ export default function CenasHome() {
         for (const lista of alvos("cascata")) {
           const filhos = Array.from(lista.children) as HTMLElement[];
           if (!filhos.length) continue;
-          const deLado = !desktop && getComputedStyle(lista).overflowX !== "visible";
+          // Faixa com rolagem lateral: não anima (ver o cabeçalho).
+          if (getComputedStyle(lista).overflowX !== "visible") continue;
           gsap.fromTo(
             filhos,
-            deLado ? { opacity: 0, x: 60 } : { opacity: 0, y: desktop ? 34 : 22 },
+            { opacity: 0, y: desktop ? 18 : 12 },
             {
               opacity: 1,
-              x: 0,
               y: 0,
-              duration: desktop ? 0.9 : 0.7,
-              ease: "power3.out",
-              stagger: desktop ? 0.09 : 0.07,
+              duration: desktop ? 0.7 : 0.6,
+              ease: "power2.out",
+              stagger: desktop ? 0.07 : 0.05,
               clearProps: "opacity,transform",
               scrollTrigger: { trigger: lista, start: "top 88%", once: true },
             },
@@ -196,8 +202,8 @@ export default function CenasHome() {
             const y = gsap.quickTo(el, "y", { duration: 0.5, ease: "power3.out" });
             const mover = (e: PointerEvent) => {
               const r = el.getBoundingClientRect();
-              x((e.clientX - (r.left + r.width / 2)) * 0.28);
-              y((e.clientY - (r.top + r.height / 2)) * 0.36);
+              x((e.clientX - (r.left + r.width / 2)) * 0.18);
+              y((e.clientY - (r.top + r.height / 2)) * 0.22);
             };
             const soltar = () => {
               x(0);

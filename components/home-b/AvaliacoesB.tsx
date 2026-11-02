@@ -45,7 +45,7 @@ export default async function AvaliacoesB() {
 
       {/* Celular: faixa com rolagem lateral; desktop: grade de três. */}
       {cartoes.length > 0 && (
-      <ul data-anima="cascata" className="no-scrollbar mt-14 flex snap-x snap-mandatory gap-4 overflow-x-auto px-[1.375rem] md:mx-auto md:grid md:max-w-[82rem] md:grid-cols-3 md:gap-5 md:overflow-visible md:px-12">
+      <ul data-anima="cascata" data-anima-so="desktop" className="no-scrollbar mt-14 flex snap-x snap-mandatory gap-4 overflow-x-auto px-[1.375rem] md:mx-auto md:grid md:max-w-[82rem] md:grid-cols-3 md:gap-5 md:overflow-visible md:px-12">
         {cartoes.map((c) => (
           <li key={c.id} className="flex w-[82vw] shrink-0 snap-center flex-col rounded-3xl bg-creme p-7 text-tinta md:w-auto">
             <Estrelas nota={c.nota} className="[&_svg]:size-4" />
