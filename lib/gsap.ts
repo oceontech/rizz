@@ -22,6 +22,9 @@ if (typeof window !== "undefined") {
     // ficam saltando.
     ignoreMobileResize: true,
     limitCallbacks: true,
+    // Sem o "load" do padrão: quem remede no load é o ScrollRefresh, e só se
+    // a altura da página mudou (ver o porquê lá).
+    autoRefreshEvents: "visibilitychange,DOMContentLoaded,resize",
   });
 
   // O Lenis dirige o relógio quando está ativo; sem lag smoothing o scrub

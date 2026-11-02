@@ -29,82 +29,82 @@ export default function HeroB() {
   const raiz = useRef<HTMLDivElement>(null);
   const { pronto } = useBoot();
 
+  /**
+   * Rolagem: criada UMA vez, sem depender da cortina. Antes estava no mesmo
+   * hook da entrada, que roda de novo quando a cortina sai; como o contexto
+   * anterior não era desfeito, ficavam duas animações de rolagem no hero, e
+   * a segunda nascia do zero no meio da primeira rolagem do celular: o vídeo
+   * voltava ao zoom inicial e corria atrás da posição (o "espasmo").
+   *
+   * A saída move o BLOCO inteiro (`data-sai`), não cada item da entrada, para
+   * as duas animações nunca disputarem os mesmos elementos.
+   */
   useGSAP(
     () => {
       const no = raiz.current;
       if (!no) return;
-
       const mm = gsap.matchMedia();
 
-      mm.add(CONDICOES, (contexto) => {
-        const parado = contexto.conditions?.parado;
-        const entrada = no.querySelectorAll("[data-entra]");
-        const veu = no.querySelector("[data-veu]");
-        const conteudo = no.querySelector("[data-sai]");
+      mm.add({ ...CONDICOES, toque: "(pointer: coarse)" }, (contexto) => {
+        if (contexto.conditions?.parado) return;
         const cena = no.querySelector("[data-cena]");
+        const conteudo = no.querySelector("[data-sai]");
 
-        if (parado) {
-          gsap.set(entrada, { opacity: 1, y: 0 });
-          gsap.set(veu, { opacity: 1 });
-          return;
-        }
-
-        /**
-         * Entrada, só depois que a cortina do preloader sai. O fundo já
-         * está rodando por baixo; primeiro o véu vinho encorpa, depois os
-         * conteúdos sobem um a um.
-         */
-        if (pronto) {
-          gsap
-            .timeline()
-            .fromTo(veu, { opacity: 0 }, { opacity: 1, duration: 1.4, ease: "power2.out" })
-            .fromTo(
-              entrada,
-              { opacity: 0, y: 70 },
-              {
-                opacity: 1,
-                y: 0,
-                duration: 1.2,
-                stagger: 0.12,
-                ease: "power3.out",
-              },
-              0.45,
-            );
-        } else {
-          gsap.set(entrada, { opacity: 0 });
-          gsap.set(veu, { opacity: 0 });
-        }
-
-        /**
-         * A saída na rolagem move o BLOCO inteiro (`data-sai`), não cada
-         * item: animando os mesmos elementos da entrada, o `fromTo` da
-         * rolagem acendia tudo na montagem e a entrada começava já visível.
-         */
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: no,
-            start: "top top",
-            end: "bottom bottom",
-            scrub: 0.6,
-          },
-        });
-
-        tl.fromTo(
-          cena,
-          { scale: 1, yPercent: 0, y: 0 },
-          { scale: 1.16, yPercent: 4, y: 0, ease: "none" },
-          0,
-        ).fromTo(
-          conteudo,
-          { opacity: 1, y: 0 },
-          { opacity: 0, y: -60, ease: "none" },
-          0.1,
-        );
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: no,
+              start: "top top",
+              end: "bottom bottom",
+              // No toque a rolagem já é nativa e com inércia; o atraso do
+              // scrub fazia a cena continuar andando depois do dedo parar.
+              scrub: contexto.conditions?.toque ? true : 0.6,
+            },
+          })
+          .fromTo(cena, { scale: 1, yPercent: 0 }, { scale: 1.16, yPercent: 4, ease: "none" }, 0)
+          .fromTo(conteudo, { opacity: 1, y: 0 }, { opacity: 0, y: -60, ease: "none" }, 0.1);
       });
 
       return () => mm.revert();
     },
-    { scope: raiz, dependencies: [pronto] },
+    { scope: raiz },
+  );
+
+  /**
+   * Entrada, só depois que a cortina do preloader sai. O fundo já está
+   * rodando por baixo; primeiro o véu vinho encorpa, depois os conteúdos
+   * sobem um a um.
+   */
+  useGSAP(
+    () => {
+      const no = raiz.current;
+      if (!no) return;
+      const entrada = no.querySelectorAll("[data-entra]");
+      const veu = no.querySelector("[data-veu]");
+      const mm = gsap.matchMedia();
+
+      mm.add(CONDICOES, (contexto) => {
+        // Quem já rolou (a cortina saiu tarde, rede lenta) vê o texto pronto:
+        // refazer a entrada no meio da rolagem fazia o bloco sumir e subir.
+        if (contexto.conditions?.parado || (pronto && window.scrollY > 0)) {
+          gsap.set(entrada, { opacity: 1, y: 0 });
+          gsap.set(veu, { opacity: 1 });
+          return;
+        }
+        if (!pronto) {
+          gsap.set(entrada, { opacity: 0 });
+          gsap.set(veu, { opacity: 0 });
+          return;
+        }
+        gsap
+          .timeline()
+          .fromTo(veu, { opacity: 0 }, { opacity: 1, duration: 1.4, ease: "power2.out" })
+          .fromTo(entrada, { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: 1.2, stagger: 0.12, ease: "power3.out" }, 0.45);
+      });
+
+      return () => mm.revert();
+    },
+    { scope: raiz, dependencies: [pronto], revertOnUpdate: true },
   );
 
   return (
