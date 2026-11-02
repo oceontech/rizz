@@ -2,7 +2,7 @@ import Reveal from "@/components/motion/Reveal";
 import { BotaoLink } from "@/components/ui/Botao";
 import IndicadorAbertura from "@/components/ui/StatusAbertura";
 
-import { faixa, horarios } from "@/lib/hours";
+import { faixa, horarios, proximasDatasEspeciais } from "@/lib/hours";
 import { enderecoLinha, site, whatsappLink } from "@/lib/site";
 
 import MapaAntecipado from "./MapaAntecipado";
@@ -62,6 +62,26 @@ export default function VisiteB() {
                 ))}
               </tbody>
             </table>
+
+          {/* Feriados e datas fora do padrão nas próximas semanas. */}
+          {proximasDatasEspeciais(new Date(), 45).length > 0 && (
+            <div className="mt-8 rounded-2xl border border-ambar/30 bg-ambar/[0.06] p-5">
+              <p className="eyebrow text-ambar">Datas especiais</p>
+              <ul className="mt-3 flex flex-col gap-2.5">
+                {proximasDatasEspeciais(new Date(), 45).map((e) => (
+                  <li key={e.data} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 text-[0.9375rem]">
+                    <span className="text-creme/90">
+                      <span className="tabular-nums">{e.data.slice(8)}/{e.data.slice(5, 7)}</span>
+                      <span className="text-creme/55"> · {e.motivo}</span>
+                    </span>
+                    <span className={e.fechado ? "text-creme/45" : "text-creme/90 tabular-nums"}>
+                      {e.fechado ? "Fechado" : [faixa(e.almoco), faixa(e.jantar)].filter(Boolean).join(" · ")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <dl className="mt-10 grid gap-6 sm:grid-cols-2">
             <div>

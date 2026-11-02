@@ -28,6 +28,43 @@ async function gravar(chave: string, valor: unknown) {
   revalidatePath("/", "layout");
 }
 
+const esquemaData = z.object({
+  data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Escolha a data."),
+  motivo: z.string().trim().min(2, "Escreva o motivo (aparece no site).").max(60),
+  fechado: z.boolean(),
+  almoco: servico,
+  jantar: servico,
+});
+
+/** Salva a lista inteira de datas especiais (as que já passaram saem). */
+export async function salvarDatasEspeciais(entrada: z.infer<typeof esquemaData>[]) {
+  return protegida(
+    async () => {
+      const lista = z.array(esquemaData).max(120).parse(entrada);
+      const ontem = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+      const vistas = new Set<string>();
+      const limpas = [];
+      for (const d of lista.sort((a, b) => a.data.localeCompare(b.data))) {
+        if (d.data < ontem) continue;
+        if (vistas.has(d.data)) throw new ErroAmigavel(`A data ${d.data.split("-").reverse().join("/")} está repetida.`);
+        vistas.add(d.data);
+        if (d.fechado) {
+          limpas.push({ data: d.data, motivo: d.motivo, fechado: true });
+          continue;
+        }
+        const quando = d.data.split("-").reverse().join("/");
+        if (!d.almoco && !d.jantar) throw new ErroAmigavel(`${quando}: marque almoço, jantar ou feche o dia.`);
+        for (const [nome, s] of [["almoço", d.almoco], ["jantar", d.jantar]] as const) {
+          if (s && minutos(s.inicio) >= minutos(s.fim)) throw new ErroAmigavel(`${quando}: o ${nome} precisa terminar depois de começar.`);
+        }
+        limpas.push({ data: d.data, motivo: d.motivo, fechado: false, almoco: d.almoco, jantar: d.jantar });
+      }
+      await gravar("datas_especiais", limpas);
+    },
+    { tags: [TAGS.config] },
+  );
+}
+
 const NOMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 export async function salvarHorarios(entrada: z.infer<typeof esquemaDia>[]) {

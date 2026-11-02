@@ -20,7 +20,59 @@ export const horarios: DiaOperacao[] = [
   { dia: 6, nome: "Sábado", nomeCurto: "Sáb", almoco: { inicio: "11:00", fim: "15:00" }, jantar: { inicio: "18:30", fim: "23:00" } },
 ];
 
+/**
+ * Data especial (feriado, evento, manutenção): vale só naquela data e passa
+ * por cima da semana padrão. Editada no painel (Horários e contato) e
+ * aplicada por lib/conteudo.ts, como os horários.
+ */
+export type DataEspecial = {
+  /** AAAA-MM-DD */
+  data: string;
+  /** "Feriado de Natal", "Evento fechado"… aparece no site. */
+  motivo: string;
+  fechado: boolean;
+  almoco?: Servico;
+  jantar?: Servico;
+};
+
+export const datasEspeciais: DataEspecial[] = [];
+
 const TZ = "America/Sao_Paulo";
+
+/** Data de hoje (AAAA-MM-DD) no fuso do restaurante. */
+export function hojeNoRestaurante(base = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(base);
+}
+
+/** Soma dias a uma data AAAA-MM-DD (sem fuso: conta em UTC). */
+export function somarDiasISO(iso: string, n: number) {
+  const [a, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(a, m - 1, d + n)).toISOString().slice(0, 10);
+}
+
+/** 0 = domingo … 6 = sábado. */
+export function diaDaSemanaISO(iso: string) {
+  const [a, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(a, m - 1, d)).getUTCDay();
+}
+
+export function dataEspecialDe(iso: string) {
+  return datasEspeciais.find((e) => e.data === iso) ?? null;
+}
+
+/**
+ * Horário de uma DATA: a data especial, se houver, senão o dia da semana.
+ * É o que reservas, "aberto agora", executivo e rodízio usam.
+ */
+export function diaNaData(iso: string): DiaOperacao & { especial: DataEspecial | null } {
+  const base = diaDe(diaDaSemanaISO(iso));
+  const especial = dataEspecialDe(iso);
+  if (!especial) return { ...base, especial: null };
+  const nomes = { dia: base.dia, nome: base.nome, nomeCurto: base.nomeCurto };
+  return especial.fechado
+    ? { ...nomes, fechado: true, especial }
+    : { ...nomes, almoco: especial.almoco, jantar: especial.jantar, especial };
+}
 
 /** Minutos desde a meia-noite e dia da semana no fuso do restaurante. */
 export function agoraNoRestaurante(base = new Date()) {
@@ -63,12 +115,16 @@ function abertura(d: DiaOperacao) {
   return (d.almoco ?? d.jantar)?.inicio ?? null;
 }
 
-/** Próximo dia aberto a partir de amanhã: "amanhã às 11:00" ou "qua às 18:30". */
-function proximaAbertura(dia: number) {
-  for (let i = 1; i <= 7; i++) {
-    const d = diaDe((dia + i) % 7);
+/** Próxima abertura a partir de amanhã: "amanhã às 11:00", "qua às 18:30" ou "dia 26/12 às 11:00". */
+function proximaAbertura(hoje: string) {
+  for (let i = 1; i <= 14; i++) {
+    const data = somarDiasISO(hoje, i);
+    const d = diaNaData(data);
     const hora = !d.fechado && abertura(d);
-    if (hora) return i === 1 ? `amanhã às ${hora}` : `${d.nomeCurto.toLowerCase()} às ${hora}`;
+    if (!hora) continue;
+    if (i === 1) return `amanhã às ${hora}`;
+    if (i <= 6) return `${d.nomeCurto.toLowerCase()} às ${hora}`;
+    return `dia ${data.slice(8)}/${data.slice(5, 7)} às ${hora}`;
   }
   return null;
 }
@@ -82,15 +138,17 @@ export type StatusAbertura = {
 };
 
 export function statusDeAbertura(base = new Date()): StatusAbertura {
-  const { dia, minutos } = agoraNoRestaurante(base);
-  const hoje = diaDe(dia);
+  const { minutos } = agoraNoRestaurante(base);
+  const data = hojeNoRestaurante(base);
+  const hoje = diaNaData(data);
 
   if (hoje.fechado) {
-    const proxima = proximaAbertura(dia);
+    const proxima = proximaAbertura(data);
     return {
       aberto: false,
       rotulo: "Fechado hoje",
-      detalhe: proxima ? `Reabre ${proxima}` : "Volta a abrir em breve",
+      // Na data especial, o motivo vem antes: "Feriado de Natal · Reabre amanhã às 11:00".
+      detalhe: [hoje.especial?.motivo, proxima ? `Reabre ${proxima}` : "Volta a abrir em breve"].filter(Boolean).join(" · "),
       servico: null,
     };
   }
@@ -123,7 +181,7 @@ export function statusDeAbertura(base = new Date()): StatusAbertura {
     }
   }
 
-  const proxima = proximaAbertura(dia);
+  const proxima = proximaAbertura(data);
   return {
     aberto: false,
     rotulo: "Fechado agora",
@@ -135,8 +193,14 @@ export function statusDeAbertura(base = new Date()): StatusAbertura {
 /** Menu executivo: segunda a sexta, 11h–14h30 (segunda o restaurante fecha). */
 export function executivoDisponivel(base = new Date()) {
   const { dia, minutos } = agoraNoRestaurante(base);
-  const ehDiaUtil = dia >= 2 && dia <= 5;
+  const ehDiaUtil = dia >= 2 && dia <= 5 && temAlmoco(hojeNoRestaurante(base));
   return ehDiaUtil && minutos >= paraMinutos("11:00") && minutos < paraMinutos("14:30");
+}
+
+/** A data tem almoço (não está fechada, nem só com jantar, por data especial). */
+function temAlmoco(iso: string) {
+  const d = diaNaData(iso);
+  return !d.fechado && Boolean(d.almoco);
 }
 
 export type StatusExecutivo = {
@@ -151,12 +215,17 @@ export type StatusExecutivo = {
  * `executivoDisponivel` (terça a sexta, 11h às 14h30; segunda a casa fecha).
  */
 export function statusDoExecutivo(base = new Date()): StatusExecutivo {
-  const { dia, minutos } = agoraNoRestaurante(base);
+  const { minutos } = agoraNoRestaurante(base);
+  const hoje = hojeNoRestaurante(base);
   const inicio = paraMinutos("11:00");
   const fim = paraMinutos("14:30");
-  const ehDia = (d: number) => d >= 2 && d <= 5;
+  // Terça a sexta, e só se a data tiver almoço (feriado fechado não tem executivo).
+  const ehData = (iso: string) => {
+    const d = diaDaSemanaISO(iso);
+    return d >= 2 && d <= 5 && temAlmoco(iso);
+  };
 
-  if (ehDia(dia) && minutos >= inicio && minutos < fim) {
+  if (ehData(hoje) && minutos >= inicio && minutos < fim) {
     const falta = fim - minutos;
     return {
       disponivel: true,
@@ -164,15 +233,15 @@ export function statusDoExecutivo(base = new Date()): StatusExecutivo {
       detalhe: falta <= 45 ? `Últimos ${falta} minutos · até 14h30` : "Servido até 14h30",
     };
   }
-  if (ehDia(dia) && minutos < inicio) {
+  if (ehData(hoje) && minutos < inicio) {
     return { disponivel: false, rotulo: "Hoje tem executivo", detalhe: "A partir das 11h, até 14h30" };
   }
-  for (let i = 1; i <= 7; i++) {
-    const d = (dia + i) % 7;
-    if (ehDia(d)) {
+  for (let i = 1; i <= 14; i++) {
+    const data = somarDiasISO(hoje, i);
+    if (ehData(data)) {
       return {
         disponivel: false,
-        rotulo: i === 1 ? "Volta amanhã" : `Volta ${diaDe(d).nome.toLowerCase()}`,
+        rotulo: i === 1 ? "Volta amanhã" : `Volta ${diaDe(diaDaSemanaISO(data)).nome.toLowerCase()}`,
         detalhe: "Das 11h às 14h30",
       };
     }
@@ -183,6 +252,22 @@ export function statusDoExecutivo(base = new Date()): StatusExecutivo {
 /** Formato "11:00 – 14:30" para exibição. */
 export function faixa(s?: Servico) {
   return s ? `${s.inicio} às ${s.fim}` : null;
+}
+
+/** Datas especiais de hoje em diante, em ordem (para o site e o painel). */
+export function proximasDatasEspeciais(base = new Date(), dias = 60) {
+  const hoje = hojeNoRestaurante(base);
+  const ate = somarDiasISO(hoje, dias);
+  return datasEspeciais.filter((e) => e.data >= hoje && e.data <= ate).sort((a, b) => a.data.localeCompare(b.data));
+}
+
+/** Datas especiais no formato de schema.org (é assim que o Google mostra feriados). */
+export function specialOpeningHoursSpecification() {
+  return proximasDatasEspeciais(new Date(), 120).flatMap((e) => {
+    const base = { "@type": "OpeningHoursSpecification", validFrom: e.data, validThrough: e.data };
+    if (e.fechado) return [{ ...base, opens: "00:00", closes: "00:00" }];
+    return ([e.almoco, e.jantar].filter(Boolean) as Servico[]).map((sv) => ({ ...base, opens: sv.inicio, closes: sv.fim }));
+  });
 }
 
 /** Usado no JSON-LD de schema.org/Restaurant. */

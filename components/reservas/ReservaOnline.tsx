@@ -25,7 +25,7 @@ import { Campo } from "@/components/sistema/formulario/campo";
 import { InputTelefone } from "@/components/sistema/inputs/input-telefone";
 import { AreaTexto, InputTexto } from "@/components/sistema/inputs/input-texto";
 import { TrocaDeEtapa } from "@/components/sistema/movimento";
-import { diaDe, horarios as expediente } from "@/lib/hours";
+import { diaNaData, horarios as expediente } from "@/lib/hours";
 import {
   dataPorExtenso,
   deMinutos,
@@ -73,12 +73,12 @@ function agendaLocal(): Agenda {
   const hoje = hojeSP();
   const ate = somarDias(hoje, 60);
   const fechados: string[] = [];
-  for (let d = hoje; d <= ate; d = somarDias(d, 1)) if (diaDe(diaDaSemana(d)).fechado) fechados.push(d);
+  for (let d = hoje; d <= ate; d = somarDias(d, 1)) if (diaNaData(d).fechado) fechados.push(d);
   return { ativo: false, maxPessoas: 12, hoje, ate, fechados };
 }
 
 function horariosLocais(dia: string): HorarioSite[] {
-  const d = diaDe(diaDaSemana(dia));
+  const d = diaNaData(dia);
   if (d.fechado) return [];
   const lista: HorarioSite[] = [];
   for (const turno of ["almoco", "jantar"] as const) {
