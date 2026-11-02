@@ -1,8 +1,11 @@
 import Reveal from "@/components/motion/Reveal";
 import { BotaoLink } from "@/components/ui/Botao";
 import IndicadorAbertura from "@/components/ui/StatusAbertura";
+
 import { faixa, horarios } from "@/lib/hours";
 import { enderecoLinha, site, whatsappLink } from "@/lib/site";
+
+import MapaAntecipado from "./MapaAntecipado";
 
 /**
  * Horários e endereço da versão B.
@@ -86,12 +89,9 @@ export default function VisiteB() {
 
         <Reveal className="md:col-span-7" delay={0.1}>
           <div className="relative isolate h-[26rem] bg-noite [clip-path:inset(0_round_1.75rem)] md:h-full md:min-h-[38rem]">
-            <iframe
+            <MapaAntecipado
               src={mapa}
-              title={`Localização do ${site.nome}`}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              tabIndex={-1}
+              titulo={`Localização do ${site.nome}`}
               className="pointer-events-none absolute inset-0 size-full border-0 [filter:invert(0.92)_hue-rotate(180deg)_saturate(0.35)_brightness(0.85)_sepia(0.25)]"
             />
 
