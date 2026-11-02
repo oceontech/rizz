@@ -103,7 +103,18 @@
     font-weight: 300;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  /* Trava a página na horizontal. Só o `overflow-x: hidden` no body não
+     segurava o arrasto lateral no iPhone: o Safari deixava a página escorregar
+     de lado num gesto diagonal. `clip` (no html e no body) corta sem criar
+     área de rolagem, então os `sticky` da home continuam funcionando, e o
+     `overscroll-behavior-x` tira o elástico lateral. Carrosséis com rolagem
+     própria (pratos, avaliações) seguem rolando de lado normalmente. */
+  html {
+    overflow-x: clip;
+    overscroll-behavior-x: none;
   }
 
   @media (max-width: 859px) {
