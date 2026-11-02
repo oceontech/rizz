@@ -50,6 +50,7 @@ export default function MuralB() {
         <li className="col-span-2 flex flex-col items-center justify-center gap-6 bg-vinho px-6 text-center md:col-span-1 md:row-span-2">
           <h2
             id="mural-b"
+            data-anima="letreiro"
             className="flex flex-col items-center leading-[0.9] not-italic"
           >
             <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.75rem,5vw,4.25rem)] text-creme">
@@ -67,6 +68,7 @@ export default function MuralB() {
         {FOTOS.map((f) => (
           <li
             key={f.chave}
+            data-anima="midia"
             className={`group relative overflow-hidden ${f.alta ? "row-span-2" : ""}`}
           >
             {f.video ? (

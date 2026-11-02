@@ -76,7 +76,7 @@ export default function RodizioB() {
             )}
           </div>
 
-          <h2 id="rodizio-b" className="mt-7 flex flex-col items-start not-italic">
+          <h2 id="rodizio-b" data-anima="letreiro" className="mt-7 flex flex-col items-start not-italic">
             <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(3rem,8vw,5.5rem)] leading-none">Rodízio de</span>
             <span className="font-[family-name:var(--font-instrument)] text-[clamp(5rem,17vw,11rem)] leading-[0.88] tracking-[0.01em] text-ouro-claro uppercase">
               risotos
@@ -100,7 +100,7 @@ export default function RodizioB() {
           </ol>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <BotaoLink href="/reservas" tamanho="lg">
+            <BotaoLink href="/reservas" tamanho="lg" data-anima-magnetico>
               Reservar mesa
             </BotaoLink>
             <BotaoLink href={whatsappLink("Olá! Gostaria de saber o valor e os sabores do rodízio de risotos desta semana.")} variante="contorno" tamanho="lg">
@@ -126,10 +126,10 @@ export default function RodizioB() {
 
         {/* Celular: as fotos abaixo do vídeo, sem cobrir a fala. */}
         <div ref={fotosRef} className="grid scroll-mt-24 grid-cols-[3fr_2fr] gap-3 md:hidden">
-          <div className="relative aspect-[4/5] overflow-hidden">
+          <div data-anima="midia" className="relative aspect-[4/5] overflow-hidden">
             <Image src={mesa} alt="Os risotos do rodízio em potinhos coloridos, com arancini ao centro" fill placeholder="blur" sizes="60vw" className="object-cover" />
           </div>
-          <div className="relative mt-10 aspect-[3/4] self-start overflow-hidden">
+          <div data-anima="midia" className="relative mt-10 aspect-[3/4] self-start overflow-hidden">
             <Image src={colheres} alt="Risotos servidos em petisqueiras de cerâmica coloridas" fill placeholder="blur" sizes="40vw" className="object-cover" />
           </div>
         </div>

@@ -19,15 +19,13 @@ export default function ReservaB() {
       <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-t from-noite to-transparent" />
 
       <div className="wrap flex flex-col items-center">
-        <Reveal>
-          <Letreiro id="reserva-b" cursiva="Reserve" titulo="sua mesa" linha={`Almoço e jantar · ${site.endereco.cidade}`} />
-        </Reveal>
-        <Reveal delay={0.1}>
+        <Letreiro animar id="reserva-b" cursiva="Reserve" titulo="sua mesa" linha={`Almoço e jantar · ${site.endereco.cidade}`} />
+        <Reveal delay={0.35}>
           <p className="mx-auto mt-8 max-w-sm text-center text-lg leading-relaxed text-creme/80">
             Escolha o dia, o horário e quantas pessoas.
           </p>
           <div className="mt-8 flex justify-center">
-            <BotaoLink href="/reservas" tamanho="lg">
+            <BotaoLink href="/reservas" tamanho="lg" data-anima-magnetico>
               Reservar pelo site
             </BotaoLink>
           </div>

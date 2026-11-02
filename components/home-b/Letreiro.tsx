@@ -9,15 +9,25 @@ export default function Letreiro({
   linha,
   id,
   className = "",
+  animar = false,
+  contar = false,
 }: {
   cursiva: string;
   titulo: string;
   linha?: string;
   id?: string;
   className?: string;
+  /** Entrada de letreiro da home (CenasHome). */
+  animar?: boolean;
+  /** O título é um número que conta até o valor (nota das avaliações). */
+  contar?: boolean;
 }) {
   return (
-    <h2 id={id} className={`flex flex-col items-center text-center not-italic ${className}`}>
+    <h2
+      id={id}
+      data-anima={animar ? "letreiro" : undefined}
+      data-anima-contar={contar ? "" : undefined}
+      className={`flex flex-col items-center text-center not-italic ${className}`}>
       <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.9rem,11vw,6rem)] leading-none text-creme">
         {cursiva}
       </span>
