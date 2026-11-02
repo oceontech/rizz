@@ -41,6 +41,16 @@ export const site = {
     "https://www.google.com/maps/search/?api=1&query=Rizz%20Cucina%20%26%20Vino%20Esp%C3%ADrito%20Santo%20do%20Pinhal",
   googleReviewsUrl:
     "https://www.google.com/maps/search/?api=1&query=Rizz%20Cucina%20%26%20Vino%20Esp%C3%ADrito%20Santo%20do%20Pinhal",
+  /**
+   * Identificador do restaurante no Google (Place ID), lido em 02/11/2026 na
+   * própria janela "Avaliar" do Google Maps. Não é segredo.
+   */
+  googlePlaceId: "ChIJQx0ouuCtyZQRGY2XWWkC0uM",
+  /**
+   * Abre direto a janela de escrever avaliação (quem não está logado entra
+   * na conta do Google e segue para ela).
+   */
+  googleAvaliarUrl: "https://search.google.com/local/writereview?placeid=ChIJQx0ouuCtyZQRGY2XWWkC0uM",
 
   /** Faixa informada no perfil do Google (por pessoa). */
   faixaPreco: "R$ 60 a R$ 160",

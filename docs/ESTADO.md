@@ -4,6 +4,7 @@ Atualizado em 02/11/2026. Ao resolver um item, apague-o daqui (ou mova para "Fei
 
 ## Feito recentemente
 
+- **Página de avaliações refeita** (`app/(site)/avaliacoes/page.tsx`): o objetivo é levar a pessoa a avaliar no Google. Topo com o salão em vídeo e um cartão no estilo do Google (`components/avaliacoes/CartaoGoogle.tsx`) cujas estrelas e botão abrem direto a janela de escrever avaliação (`site.googleAvaliarUrl`, pelo Place ID). Depois: três passos, faixas com sugestões do que escrever (temas da casa, não depoimentos), depoimentos só da API e de 5 estrelas, e o fecho com a nota contando. Total de avaliações atualizado para 777 (Google Maps, 02/11/2026).
 - **Entradas da home** (`components/motion/CenasHome.tsx`, montado no fim de `app/(site)/page.tsx`): as seções marcam elementos com `data-anima` e um componente só coordena as entradas, com coreografia própria para desktop e celular. `letreiro` (a cursiva se escreve da esquerda para a direita; no desktop a serifada sobe letra a letra saindo de um desfoque, no celular entra inteira), `midia` (no desktop a foto abre de baixo como cortina com o zoom assentando; no celular abre do centro para as bordas), `cascata` (filhos em sequência; carrosséis do celular entram da direita), `data-anima-contar` (a nota das avaliações conta até o valor) e `data-anima-magnetico` (botões que seguem o cursor, só com mouse). Tudo roda uma vez, não esconde o que já está à vista e não anima com movimento reduzido. As cenas presas (hero, galeria da casa, camarão, mosaico, galeria) seguem com a animação própria.
 - **Home em notebooks** (telas largas e baixas, como 1366×657 e 1280×600): em `app/globals.css`, a unidade base (`rem`) segue a altura da janela a partir de 1024px de largura e abaixo de 896px de altura (16px a partir de 800px de altura, mínimo de 13px). Os vídeos e fotos em pé da home (prato mais pedido, rodízio, arcos de "Nossa cozinha" e mural) têm um teto de largura calculado pela altura da tela. Em 1920×969 nada muda. Medido no preview em 1366×657, 1280×600 e 1920×969: nenhuma mídia passa da altura da tela.
 - **Versão B virou a home** (02/11/2026): `app/(site)/page.tsx` é a antiga `/b` (que agora redireciona para `/`, em `next.config.ts`), e os componentes só da home antiga foram apagados (`components/home/` guarda apenas os que a home atual usa). As avaliações da home perderam os textos de exemplo: mostram a nota real do Google e o link, e os cartões só aparecem com textos reais (API do Google ou `data/reviews.ts` com `fonte: "manual"`).
@@ -74,11 +75,12 @@ Passo a passo:
 - A recusa do robô devolve a mensagem crua do zod (em inglês). É inofensivo, só aparece para robôs.
 
 ### Conteúdo e dados (herdado da v2, ver `ENTREGA.md`)
-- Chaves do Google Places (`GOOGLE_PLACES_API_KEY`, `GOOGLE_PLACE_ID`) não configuradas.
+- Chave do Google Places (`GOOGLE_PLACES_API_KEY`) não configurada. O Place ID do restaurante (`ChIJQx0ouuCtyZQRGY2XWWkC0uM`) já está em `site.googlePlaceId`.
 - Confirmar com a casa o preço do menu executivo (R$ 75,90 × 72,90), o preço do Brownie e se segunda-feira é mesmo fechada (`lib/hours.ts`; as reservas seguem esses horários).
 - Carta de vinhos (`/carta-de-vinhos`): os 145 rótulos estão em `data/vinhos.ts`, transcritos do cardápio online do restaurante (fechaconta.com.br/cardapio/rizzpinhal) em 27/10/2026. Não há sincronização: mudanças lá precisam ser transcritas de novo. `cartaVinhosUrl` em `lib/site.ts` não é mais usado pela página.
 - Rodízio de risotos (`lib/rodizio.ts`): dias e etapas vêm do vídeo do restaurante (abr/2026: quartas e quintas no jantar; arancini, seis risotos à vontade, sobremesa da semana). Falta confirmar o valor; enquanto isso o site manda consultar pelo WhatsApp. O aviso "hoje/amanhã tem rodízio" usa o horário do jantar de `lib/hours.ts`.
-- Avaliações da home e de `/avaliacoes` só com a nota: para mostrar textos, configurar `GOOGLE_PLACES_API_KEY` e `GOOGLE_PLACE_ID` (ou preencher `data/reviews.ts` com textos reais).
+- Avaliações da home e de `/avaliacoes` só com a nota: para mostrar textos, configurar `GOOGLE_PLACES_API_KEY` (ou preencher `data/reviews.ts` com textos reais). Em `/avaliacoes` só entram as de 5 estrelas, no mínimo três.
+- Telefone divergente: o site usa (19) 3661-5503 e o perfil do Google Maps mostra (19) 3661-6524 (visto em 02/11/2026). Confirmar com o restaurante qual vale e corrigir o outro.
 
 ### Repositório
 - `cardápios/` (PDFs do cardápio impresso de 2026, material de referência) fica fora do git, no `.gitignore`.
