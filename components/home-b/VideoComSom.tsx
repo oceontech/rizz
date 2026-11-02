@@ -41,6 +41,7 @@ export default function VideoComSom({
   seguinte?: RefObject<HTMLElement | null>;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const caixa = useRef<HTMLDivElement>(null);
   const visivel = useRef(false);
   const pausadoPelaPessoa = useRef(false);
   const umaVez = useRef(false);
@@ -107,21 +108,40 @@ export default function VideoComSom({
     observador.observe(video);
     window.addEventListener("scroll", aoRolar, { passive: true });
 
-    // Primeiro toque na página: se o vídeo está à vista e mudo, liga o som.
-    const aoInteragir = () => {
-      if (somAutomatico && aVista() && video.muted && !pausadoPelaPessoa.current) {
-        video.muted = false;
-        setMudo(false);
+    /**
+     * Primeiro toque na página: se o vídeo está à vista e mudo, liga o som.
+     *
+     * - Escuta o fim do toque (`pointerup`), não o começo: no celular só o
+     *   fim do toque vale como interação para o navegador liberar o som.
+     *   Ligado no começo, o Chrome podia pausar o vídeo.
+     * - Ignora toques no próprio vídeo e nos botões dele: esses já cuidam do
+     *   som. Antes, encostar o dedo em "Ligar o som" ligava o som por aqui e,
+     *   ao soltar, o botão alternava de volta para mudo: o som só saía
+     *   enquanto o dedo segurava o botão.
+     * - Vale uma vez só por vídeo: quem desligou o som depois não é
+     *   contrariado no próximo toque na página.
+     */
+    let jaLigou = false;
+    const aoInteragir = (e: Event) => {
+      if (jaLigou || !somAutomatico || pausadoPelaPessoa.current) return;
+      if (e.target instanceof Node && caixa.current?.contains(e.target)) return;
+      if (!aVista() || !video.muted) return;
+      jaLigou = true;
+      video.muted = false;
+      // Sem permissão para som, o navegador pausa o vídeo: volta mudo.
+      if (video.paused) {
+        video.muted = true;
+        void video.play().catch(() => {});
       }
     };
-    window.addEventListener("pointerdown", aoInteragir);
+    window.addEventListener("pointerup", aoInteragir);
     window.addEventListener("keydown", aoInteragir);
 
     return () => {
       observador.disconnect();
       cancelAnimationFrame(quadro);
       window.removeEventListener("scroll", aoRolar);
-      window.removeEventListener("pointerdown", aoInteragir);
+      window.removeEventListener("pointerup", aoInteragir);
       window.removeEventListener("keydown", aoInteragir);
     };
   }, [nome, somAutomatico, seguinte]);
@@ -147,21 +167,22 @@ export default function VideoComSom({
     }
   }
 
+  /** Lê o estado do próprio vídeo, não o da tela, que pode estar atrasado. */
   function alternarSom() {
     const video = ref.current;
     if (!video) return;
     if (!video.src) video.src = `/videos/b/${nome}.mp4`;
-    video.muted = !mudo;
-    if (mudo && video.paused) {
+    const ligar = video.muted;
+    video.muted = !ligar;
+    if (ligar && video.paused) {
       pausadoPelaPessoa.current = false;
       terminou.current = false;
       void video.play().catch(() => {});
     }
-    setMudo(!mudo);
   }
 
   return (
-    <div className="relative aspect-[9/16] overflow-hidden bg-noite">
+    <div ref={caixa} className="relative aspect-[9/16] overflow-hidden bg-noite">
       <video
         ref={ref}
         poster={`/videos/b/${nome}.jpg`}
@@ -172,6 +193,8 @@ export default function VideoComSom({
         aria-label={rotulo}
         onPlay={() => setTocando(true)}
         onPause={() => setTocando(false)}
+        // O botão de som mostra sempre o estado real do vídeo.
+        onVolumeChange={(e) => setMudo(e.currentTarget.muted)}
         onEnded={aoTerminar}
         onClick={alternarReproducao}
         className="absolute inset-0 size-full cursor-pointer object-cover"
