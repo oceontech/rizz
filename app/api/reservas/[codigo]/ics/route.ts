@@ -24,7 +24,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/reservas/[codig
     "PRODID:-//Rizz//Reservas//PT",
     "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
-    `UID:${r.codigo}@rizzrestaurante.com.br`,
+    `UID:${r.codigo}@${new URL(site.url).host}`,
     `DTSTAMP:${agora}`,
     `DTSTART;TZID=America/Sao_Paulo:${carimbo(r.data, inicio)}`,
     `DTEND;TZID=America/Sao_Paulo:${carimbo(r.data, inicio + cfg.permanencia)}`,

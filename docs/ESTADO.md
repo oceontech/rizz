@@ -53,7 +53,7 @@ Passo a passo:
 
 ## Acesso ao painel
 
-- A tabela `admin_usuarios` só ganha registro pelo `npm run db:setup`, e só quando está vazia. Esse primeiro acesso já existe: o e-mail padrão do script é `admin@rizzrestaurante.com.br`, e a senha apareceu uma única vez no terminal de quem rodou.
+- A tabela `admin_usuarios` só ganha registro pelo `npm run db:setup`, e só quando está vazia. Esse primeiro acesso já existe: o e-mail desse registro é `admin@rizzrestaurante.com.br` (o padrão do script era esse; hoje é `admin@rizzcucinaevino.com.br`, que só vale para um banco novo), e a senha apareceu uma única vez no terminal de quem rodou.
 - Em Configurações, o usuário logado troca o próprio nome, e-mail e senha (`lib/admin/sessao-actions.ts`). **Não existe tela para criar outro usuário nem para recuperar a senha.**
 - O usuário (Oceon) ainda não conseguiu um acesso com o próprio e-mail. Duas saídas:
   - quem tiver a senha do primeiro acesso entra e troca o e-mail para o seu em Configurações;
