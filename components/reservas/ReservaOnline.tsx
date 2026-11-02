@@ -192,7 +192,7 @@ function Resumo({
   aoIrPara,
   liberadas,
 }: {
-  pessoas: number;
+  pessoas: number | null;
   data: string | null;
   hora: string | null;
   nome: string;
@@ -200,7 +200,7 @@ function Resumo({
   liberadas: Set<Etapa>;
 }) {
   const linhas: { etapa: Etapa; Icone: typeof Users; rotulo: string; valor: string | null }[] = [
-    { etapa: "pessoas", Icone: Users, rotulo: "Pessoas", valor: pluralPessoas(pessoas) },
+    { etapa: "pessoas", Icone: Users, rotulo: "Pessoas", valor: pessoas ? pluralPessoas(pessoas) : null },
     { etapa: "dia", Icone: CalendarDays, rotulo: "Dia", valor: data ? dataPorExtenso(data) : null },
     { etapa: "horario", Icone: Clock, rotulo: "Horário", valor: hora },
     { etapa: "dados", Icone: UserRound, rotulo: "Em nome de", valor: nome.trim() || null },
@@ -267,6 +267,13 @@ export default function ReservaOnline({
   const [falhou, setFalhou] = useState(false);
 
   const [pessoas, setPessoas] = useState(alterando?.pessoas ?? 2);
+  /**
+   * Reserva nova começa sem nada marcado. Com o "2" já marcado, quem queria
+   * 2 não sabia que precisava tocar nele de novo para seguir. Quando já há
+   * uma escolha (alterando a reserva ou voltando uma etapa), a etapa mostra
+   * "Continuar".
+   */
+  const [escolheuPessoas, setEscolheuPessoas] = useState(Boolean(alterando));
   const [data, setData] = useState<string | null>(alterando?.data ?? null);
   const [hora, setHora] = useState<string | null>(alterando?.hora ?? null);
   // Guardados com o dia a que se referem: trocar de dia já mostra o carregando.
@@ -482,10 +489,11 @@ export default function ReservaOnline({
                     <Opcao
                       key={q}
                       role="radio"
-                      aria-checked={pessoas === q}
-                      ativo={pessoas === q}
+                      aria-checked={escolheuPessoas && pessoas === q}
+                      ativo={escolheuPessoas && pessoas === q}
                       onClick={() => {
                         setPessoas(q);
+                        setEscolheuPessoas(true);
                         avancarDepois("dia");
                       }}
                       className="aspect-square text-[22px] font-semibold"
@@ -496,15 +504,18 @@ export default function ReservaOnline({
                 </div>
                 <Opcao
                   role="radio"
-                  aria-checked={grupoGrande}
-                  ativo={grupoGrande}
-                  onClick={() => setPessoas((p) => Math.max(p, max + 1))}
+                  aria-checked={escolheuPessoas && grupoGrande}
+                  ativo={escolheuPessoas && grupoGrande}
+                  onClick={() => {
+                    setPessoas((p) => Math.max(p, max + 1));
+                    setEscolheuPessoas(true);
+                  }}
                   className="mt-3 h-14 w-full"
                 >
                   Mais de {max} pessoas
                 </Opcao>
 
-                {grupoGrande ? (
+                {escolheuPessoas && grupoGrande ? (
                   <div className="mt-6 rounded-3xl bg-superficie p-6">
                     <p className="text-[19px] font-semibold tracking-tight">Quantas pessoas no total?</p>
                     <div className="mt-4 flex items-center gap-3">
@@ -543,9 +554,9 @@ export default function ReservaOnline({
                     </Rodape>
                   </div>
                 ) : (
-                  alterando && (
+                  escolheuPessoas && (
                     <Rodape>
-                      <BotaoPrincipal onClick={() => ir("dia")}>Continuar</BotaoPrincipal>
+                      <BotaoPrincipal onClick={() => ir("dia")}>Continuar com {pluralPessoas(pessoas)}</BotaoPrincipal>
                     </Rodape>
                   )
                 )}
@@ -588,6 +599,11 @@ export default function ReservaOnline({
                     }}
                   />
                 </div>
+                {data && (
+                  <Rodape>
+                    <BotaoPrincipal onClick={() => ir("horario")}>Continuar</BotaoPrincipal>
+                  </Rodape>
+                )}
                 <p className="mt-4 text-[13px] text-muted-foreground">
                   Dias apagados não têm reserva online.{" "}
                   {expediente.some((d) => d.fechado) &&
@@ -672,6 +688,11 @@ export default function ReservaOnline({
                       </div>
                     ))}
                   </div>
+                )}
+                {horaValida && hora && (
+                  <Rodape>
+                    <BotaoPrincipal onClick={() => ir(alterando ? "revisao" : "dados")}>Continuar com {hora}</BotaoPrincipal>
+                  </Rodape>
                 )}
               </section>
             )}
@@ -864,7 +885,7 @@ export default function ReservaOnline({
         <aside className="hidden lg:block">
           <div className="sticky top-24 flex flex-col gap-4">
             <Resumo
-              pessoas={pessoas}
+              pessoas={escolheuPessoas ? pessoas : null}
               data={data}
               hora={horaValida ? hora : null}
               nome={alterando ? alterando.nome : nome}
