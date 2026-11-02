@@ -75,4 +75,12 @@ export function whatsappLink(mensagem: string) {
   return `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(mensagem)}`;
 }
 
-export const enderecoLinha = `${site.endereco.rua} · ${site.endereco.bairro} · ${site.endereco.cidade}/${site.endereco.uf}`;
+const montarEndereco = () => `${site.endereco.rua} · ${site.endereco.bairro} · ${site.endereco.cidade}/${site.endereco.uf}`;
+
+/** `let` (ligação viva do ESM): muda quando o endereço é editado no painel. */
+export let enderecoLinha = montarEndereco();
+
+/** Chamado por `aplicarConteudo` (lib/conteudo) depois de trocar o endereço. */
+export function atualizarEnderecoLinha() {
+  enderecoLinha = montarEndereco();
+}

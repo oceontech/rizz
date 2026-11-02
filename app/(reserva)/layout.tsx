@@ -5,6 +5,8 @@ import "./reserva.css";
 
 import Logo from "@/components/brand/Logo";
 import { ProvedorMovimento } from "@/components/sistema/movimento/provedor-movimento";
+import ConteudoSite from "@/components/ConteudoSite";
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import { site } from "@/lib/site";
 
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
@@ -34,7 +36,9 @@ export const viewport: Viewport = {
  * Root layout próprio da reserva: página branca e focada, sem o cabeçalho,
  * o rodapé e as animações do site. Quem chega aqui veio para reservar.
  */
-export default function ReservaLayout({ children }: { children: React.ReactNode }) {
+export default async function ReservaLayout({ children }: { children: React.ReactNode }) {
+  // Horários (turnos da reserva) e contato salvos no painel.
+  const conteudo = await carregarConteudo();
   return (
     <html lang="pt-BR" className={`${geist.variable} ${cormorant.variable} h-full`}>
       <body className="min-h-full">
@@ -55,7 +59,7 @@ export default function ReservaLayout({ children }: { children: React.ReactNode 
               </a>
             </div>
           </header>
-          {children}
+          <ConteudoSite valor={conteudo}>{children}</ConteudoSite>
         </ProvedorMovimento>
       </body>
     </html>

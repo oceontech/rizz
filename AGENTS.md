@@ -13,7 +13,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Site do restaurante Rizz Cucina & Vino (Espírito Santo do Pinhal/SP), cliente da Oceon. Tem duas partes:
 
 - **Site público:** home com cenas de scroll, cardápio, carta de vinhos, avaliações, fidelidade, **reservas online** e privacidade.
-- **Painel `/admin`:** reservas (com o selo de conexão do WhatsApp), cardápio (aba Menu executivo), página inicial do site, promoções/pop-up e configurações (abas Selos e WhatsApp). A fidelidade está trancada ("Em breve"). Subpáginas viram abas pelo campo `pai` em `components/admin/nav.ts`; os endereços não mudam.
+- **Painel `/admin`:** reservas (com o selo de conexão do WhatsApp), cardápio (aba Menu executivo), carta de vinhos, horários/rodízio/contato, página inicial do site, promoções/pop-up e configurações (abas Selos e WhatsApp). A fidelidade está trancada ("Em breve"). Subpáginas viram abas pelo campo `pai` em `components/admin/nav.ts`; os endereços não mudam.
 
 O estado atual e o que falta fazer estão em [`docs/ESTADO.md`](docs/ESTADO.md). **Leia esse arquivo antes de começar.**
 
@@ -78,8 +78,8 @@ app/(admin)/admin/   login e painel ((painel)/ = páginas que exigem sessão; te
 app/api/             reservas, fidelidade, promoções (rotas públicas)
 components/          site (home, menu, reservas, ...), admin/ (telas do painel) e sistema/ (UI base: ui, pickers, inputs, movimento)
 lib/
-  site.ts            nome, endereço, telefone, URL e links do restaurante
-  hours.ts           horários de funcionamento (base dos turnos de reserva)
+  site.ts            nome, URL e links; telefone, endereço e redes têm o padrão aqui e são editados no painel
+  hours.ts           horários (padrão; editados no painel e aplicados por lib/conteudo.ts)
   db.ts              cliente do Neon (`sql`, `bancoConfigurado`)
   dados.ts           leituras do site com cache (`unstable_cache` + tags) e fallback estático
   auth.ts            sessão do painel; `exigirSessao()` é a checagem que vale

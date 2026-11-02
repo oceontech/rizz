@@ -2,7 +2,11 @@
  * Carta de vinhos do Rizz, transcrita de https://www.fechaconta.com.br/cardapio/rizzpinhal/
  * (cardápio online do restaurante) em 27/10/2026. Textos dos rótulos como
  * estão lá; as uvas foram tiradas do nome do vinho, não da descrição.
- * Para atualizar, refaça a transcrição: este arquivo não é editado à mão.
+ *
+ * Desde nov/2026 a carta é editada no painel (/admin/vinhos, tabelas
+ * `vinho_secoes` e `vinhos`). Este arquivo ficou como carga inicial do
+ * `db:setup` e como reserva do site se o banco falhar: não precisa mais ser
+ * atualizado.
  */
 export type TipoVinho = "tinto" | "branco" | "rose" | "espumante" | "doce";
 
@@ -14,6 +18,8 @@ export type Vinho = {
   preco: number;
   /** Parágrafos da descrição do rótulo (pode ser vazio). */
   notas: string[];
+  /** Indisponível hoje: continua na carta, apagado, sem preço e com a etiqueta. */
+  disponivel?: boolean;
 };
 
 export type SecaoCarta = {

@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import { after } from "next/server";
 import { z } from "zod";
 
@@ -19,6 +20,8 @@ const erro = (mensagem: string, status = 400) => Response.json({ ok: false, erro
 
 /** O próprio cliente cancela ou muda a reserva pelo link pessoal. */
 export async function PATCH(req: Request, ctx: RouteContext<"/api/reservas/[codigo]">) {
+  // Horários e contato salvos no painel (lib/conteudo).
+  await carregarConteudo();
   const { codigo } = await ctx.params;
   const reserva = await reservaPorCodigo(codigo);
   if (!reserva) return erro("Reserva não encontrada.", 404);

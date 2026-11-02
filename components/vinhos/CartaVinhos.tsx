@@ -24,9 +24,10 @@ const sem = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCas
 /** `claro`: rótulo sobre fundo creme (a seção Gran Reserva). */
 function Rotulo({ vinho, taca, claro = false }: { vinho: Vinho; taca: boolean; claro?: boolean }) {
   const temNotas = vinho.notas.length > 0;
+  const emFalta = vinho.disponivel === false;
 
   const cabeca = (
-    <div className="flex items-start gap-3.5">
+    <div className={`flex items-start gap-3.5 ${emFalta ? "opacity-55" : ""}`}>
       <span aria-hidden className={`mt-[0.45rem] size-2.5 shrink-0 rounded-full ring-2 ${claro ? "ring-tinta/10" : "ring-white/10"} ${corDo(vinho.tipo)}`} />
       <div className="min-w-0 grow">
         <p className={`text-[1.0625rem] leading-snug font-medium ${claro ? "text-tinta" : "text-creme"}`}>{vinho.nome}</p>
@@ -35,8 +36,12 @@ function Rotulo({ vinho, taca, claro = false }: { vinho: Vinho; taca: boolean; c
         )}
       </div>
       <div className="shrink-0 text-right">
-        <Preco valor={vinho.preco} className={`text-lg ${claro ? "text-vinho" : "text-ouro-claro"} [&>span]:opacity-80`} />
-        {taca && <span className="block text-[0.6875rem] tracking-[0.12em] text-creme/50 uppercase">a taça</span>}
+        {emFalta ? (
+          <span className={`inline-block rounded-full border px-2.5 py-1 text-[0.625rem] font-medium tracking-[0.14em] uppercase ${claro ? "border-tinta/25 text-tinta/75" : "border-creme/30 text-creme/80"}`}>Indisponível</span>
+        ) : (
+          <Preco valor={vinho.preco} className={`text-lg ${claro ? "text-vinho" : "text-ouro-claro"} [&>span]:opacity-80`} />
+        )}
+        {taca && !emFalta && <span className="block text-[0.6875rem] tracking-[0.12em] text-creme/50 uppercase">a taça</span>}
       </div>
     </div>
   );

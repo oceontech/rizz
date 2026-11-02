@@ -11,6 +11,7 @@ import {
   type Categoria,
   type MenuItem,
 } from "@/data/menu";
+import { cartaDeVinhos as cartaEstatica, type SecaoCarta, type TipoVinho } from "@/data/vinhos";
 import { bancoConfigurado, sql } from "@/lib/db";
 import type { ImgKey } from "@/lib/images";
 import { SELOS_PADRAO, type FormaSelo, type SeloDef, type SimboloSelo } from "@/lib/selos";
@@ -23,7 +24,33 @@ export const TAGS = {
   config: "config",
   selos: "selos",
   home: "home",
+  vinhos: "vinhos",
 } as const;
+
+// ─── Carta de vinhos ──────────────────────────────────────────
+
+export type VinhoAdmin = {
+  id: string;
+  secaoId: string;
+  nome: string;
+  tipo: TipoVinho;
+  uvas: string[];
+  preco: number;
+  notas: string[];
+  disponivel: boolean;
+  visivel: boolean;
+  ordem: number;
+};
+
+export type SecaoVinhoAdmin = {
+  id: string;
+  titulo: string;
+  slug: string;
+  nota: string | null;
+  visivel: boolean;
+  ordem: number;
+  itens: VinhoAdmin[];
+};
 
 // ─── Tipos ────────────────────────────────────────────────────
 
@@ -247,6 +274,40 @@ export async function lerCardapio(): Promise<CategoriaCardapio[]> {
   }));
 }
 
+export async function lerCartaVinhos(): Promise<SecaoVinhoAdmin[]> {
+  const [secoes, vinhos] = await Promise.all([
+    sql`select * from vinho_secoes order by ordem, titulo`,
+    sql`select * from vinhos order by ordem, nome`,
+  ]);
+  const porSecao = new Map<string, VinhoAdmin[]>();
+  for (const l of vinhos) {
+    const v: VinhoAdmin = {
+      id: String(l.id),
+      secaoId: String(l.secao_id),
+      nome: String(l.nome),
+      tipo: String(l.tipo) as TipoVinho,
+      uvas: (l.uvas as string[]) ?? [],
+      preco: Number(l.preco),
+      notas: (l.notas as string[]) ?? [],
+      disponivel: Boolean(l.disponivel),
+      visivel: Boolean(l.visivel),
+      ordem: Number(l.ordem),
+    };
+    const lista = porSecao.get(v.secaoId) ?? [];
+    lista.push(v);
+    porSecao.set(v.secaoId, lista);
+  }
+  return secoes.map((s) => ({
+    id: String(s.id),
+    titulo: String(s.titulo),
+    slug: String(s.slug),
+    nota: txt(s.nota),
+    visivel: Boolean(s.visivel),
+    ordem: Number(s.ordem),
+    itens: porSecao.get(String(s.id)) ?? [],
+  }));
+}
+
 export async function lerExecutivo(): Promise<ExecutivoDados> {
   const [config, itens] = await Promise.all([
     sql`select * from executivo_config where id = 1`,
@@ -352,6 +413,36 @@ export const cardapioDoSite = unstable_cache(
   },
   ["cardapio-site"],
   { tags: [TAGS.cardapio], revalidate: 3600 },
+);
+
+/**
+ * Carta de vinhos do site, no formato de `data/vinhos.ts`. Sem banco, com
+ * erro ou com as tabelas ainda vazias (antes do `db:setup`), usa o arquivo.
+ */
+export const cartaVinhosDoSite = unstable_cache(
+  async (): Promise<SecaoCarta[]> => {
+    if (!bancoConfigurado) return cartaEstatica;
+    try {
+      const secoes = await lerCartaVinhos();
+      if (secoes.length === 0) return cartaEstatica;
+      return secoes
+        .filter((s) => s.visivel)
+        .map((s) => ({
+          slug: s.slug,
+          titulo: s.titulo,
+          nota: s.nota,
+          itens: s.itens
+            .filter((v) => v.visivel)
+            .map((v) => ({ id: v.id, nome: v.nome, tipo: v.tipo, uvas: v.uvas, preco: v.preco, notas: v.notas, disponivel: v.disponivel })),
+        }))
+        .filter((s) => s.itens.length > 0);
+    } catch (erro) {
+      console.error("[vinhos] usando a carta do arquivo:", erro);
+      return cartaEstatica;
+    }
+  },
+  ["carta-vinhos-site"],
+  { tags: [TAGS.vinhos], revalidate: 3600 },
 );
 
 export const executivoDoSite = unstable_cache(

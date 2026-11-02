@@ -247,6 +247,8 @@
 [data-secao="reservas"] { --secao: #2563eb; --secao-texto: #1d4ed8; --secao-sidebar: #93c5fd; }
 [data-secao="cardapio"] { --secao: #ea580c; --secao-texto: #c2410c; --secao-sidebar: #fdba74; }
 [data-secao="executivo"] { --secao: #7c3aed; --secao-texto: #6d28d9; --secao-sidebar: #c4b5fd; }
+[data-secao="funcionamento"] { --secao: #0891b2; --secao-texto: #0e7490; --secao-sidebar: #67e8f9; }
+[data-secao="vinhos"] { --secao: #9f1239; --secao-texto: #881337; --secao-sidebar: #fda4af; }
 [data-secao="selos"] { --secao: #ca8a04; --secao-texto: #a16207; --secao-sidebar: #fde047; }
 [data-secao="home"] { --secao: #0d9488; --secao-texto: #0f766e; --secao-sidebar: #5eead4; }
 [data-secao="promocoes"] { --secao: #db2777; --secao-texto: #be185d; --secao-sidebar: #f9a8d4; }
@@ -258,6 +260,8 @@
 .dark [data-secao="reservas"], .dark[data-secao="reservas"] { --secao: #3b82f6; --secao-texto: #93c5fd; }
 .dark [data-secao="cardapio"], .dark[data-secao="cardapio"] { --secao: #f97316; --secao-texto: #fdba74; }
 .dark [data-secao="executivo"], .dark[data-secao="executivo"] { --secao: #8b5cf6; --secao-texto: #c4b5fd; }
+.dark [data-secao="vinhos"], .dark[data-secao="vinhos"] { --secao: #e11d48; --secao-texto: #fda4af; }
+.dark [data-secao="funcionamento"], .dark[data-secao="funcionamento"] { --secao: #06b6d4; --secao-texto: #67e8f9; }
 .dark [data-secao="selos"], .dark[data-secao="selos"] { --secao: #eab308; --secao-texto: #fde047; }
 .dark [data-secao="home"], .dark[data-secao="home"] { --secao: #14b8a6; --secao-texto: #5eead4; }
 .dark [data-secao="promocoes"], .dark[data-secao="promocoes"] { --secao: #ec4899; --secao-texto: #f9a8d4; }

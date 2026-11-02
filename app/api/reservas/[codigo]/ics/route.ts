@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import { lerConfigReservas, reservaPorCodigo } from "@/lib/reservas/servidor";
 import { enderecoLinha, site } from "@/lib/site";
 
@@ -10,6 +11,8 @@ const carimbo = (data: string, minutos: number) => {
 
 /** Evento para o cliente salvar a reserva na agenda do celular. */
 export async function GET(_req: Request, ctx: RouteContext<"/api/reservas/[codigo]/ics">) {
+  // Horários e contato salvos no painel (lib/conteudo).
+  await carregarConteudo();
   const { codigo } = await ctx.params;
   const [r, cfg] = await Promise.all([reservaPorCodigo(codigo), lerConfigReservas()]);
   if (!r) return new Response("Reserva não encontrada", { status: 404 });

@@ -58,6 +58,21 @@ export function diaDe(dia: number) {
   return horarios.find((d) => d.dia === dia)!;
 }
 
+/** Primeiro horário de abertura do dia (o almoço, ou o jantar se só houver jantar). */
+function abertura(d: DiaOperacao) {
+  return (d.almoco ?? d.jantar)?.inicio ?? null;
+}
+
+/** Próximo dia aberto a partir de amanhã: "amanhã às 11:00" ou "qua às 18:30". */
+function proximaAbertura(dia: number) {
+  for (let i = 1; i <= 7; i++) {
+    const d = diaDe((dia + i) % 7);
+    const hora = !d.fechado && abertura(d);
+    if (hora) return i === 1 ? `amanhã às ${hora}` : `${d.nomeCurto.toLowerCase()} às ${hora}`;
+  }
+  return null;
+}
+
 export type StatusAbertura = {
   aberto: boolean;
   /** "Aberto agora" · "Abre às 18:30" · "Fechado hoje" */
@@ -71,13 +86,11 @@ export function statusDeAbertura(base = new Date()): StatusAbertura {
   const hoje = diaDe(dia);
 
   if (hoje.fechado) {
-    const amanha = diaDe((dia + 1) % 7);
+    const proxima = proximaAbertura(dia);
     return {
       aberto: false,
       rotulo: "Fechado hoje",
-      detalhe: amanha.fechado
-        ? "Volta a abrir em breve"
-        : `Reabre ${amanha.nomeCurto.toLowerCase()} às ${amanha.almoco!.inicio}`,
+      detalhe: proxima ? `Reabre ${proxima}` : "Volta a abrir em breve",
       servico: null,
     };
   }
@@ -110,13 +123,11 @@ export function statusDeAbertura(base = new Date()): StatusAbertura {
     }
   }
 
-  const amanha = diaDe((dia + 1) % 7);
+  const proxima = proximaAbertura(dia);
   return {
     aberto: false,
     rotulo: "Fechado agora",
-    detalhe: amanha.fechado
-      ? "Segunda não abrimos"
-      : `Amanhã a partir das ${amanha.almoco!.inicio}`,
+    detalhe: proxima ? `Reabre ${proxima}` : "Volta a abrir em breve",
     servico: null,
   };
 }

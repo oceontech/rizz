@@ -17,6 +17,8 @@ import PopupPromocional from "@/components/promo/PopupPromocional";
 import { SelosProvider } from "@/components/ui/Selos";
 import { resumoAvaliacoes } from "@/data/reviews";
 import { avisoDoSite, promocoesDoSite, selosDoSite } from "@/lib/dados";
+import ConteudoSite from "@/components/ConteudoSite";
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import { openingHoursSpecification } from "@/lib/hours";
 import { instrument, pinyon } from "@/lib/fontes";
 import { site } from "@/lib/site";
@@ -83,7 +85,8 @@ export const viewport: Viewport = {
  * ficou de fora de propósito: nota agregada inventada vira desinformação nos
  * resultados de busca.
  */
-const dadosEstruturados = {
+/** Montado a cada render: horários e contato vêm do painel. */
+const dadosEstruturados = () => ({
   "@context": "https://schema.org",
   "@type": "Restaurant",
   name: site.nome,
@@ -116,11 +119,11 @@ const dadosEstruturados = {
   },
   sameAs: [site.redes.instagram, site.redes.facebook],
   openingHoursSpecification: openingHoursSpecification(),
-};
+});
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Publicados pelo painel (/admin). Cacheados com tag: o painel invalida.
-  const [aviso, promocoes, selos] = await Promise.all([avisoDoSite(), promocoesDoSite(), selosDoSite()]);
+  const [aviso, promocoes, selos, conteudo] = await Promise.all([avisoDoSite(), promocoesDoSite(), selosDoSite(), carregarConteudo()]);
   const avisoAtivo = aviso.ativo && aviso.texto.trim() ? aviso : null;
 
   return (
@@ -129,6 +132,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${cormorant.variable} ${jost.variable} ${instrument.variable} ${pinyon.variable} h-full${avisoAtivo ? " com-aviso" : ""}`}
     >
       <body className="min-h-full">
+        <ConteudoSite valor={conteudo}>
         <BootProvider>
           <SmoothScroll />
           <ScrollRefresh />
@@ -170,11 +174,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             }))}
           />
         </BootProvider>
+        </ConteudoSite>
 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(dadosEstruturados),
+            __html: JSON.stringify(dadosEstruturados()),
           }}
         />
       </body>

@@ -87,24 +87,6 @@ export async function moverItem(id: string, direcao: "cima" | "baixo") {
   );
 }
 
-/** Reajuste em lote: percentual sobre os preços de uma categoria (ou de todas). */
-export async function reajustarPrecos(categoriaId: string | "todas", percentual: number) {
-  return protegida(
-    async () => {
-      if (!Number.isFinite(percentual) || percentual === 0 || Math.abs(percentual) > 50) {
-        throw new ErroAmigavel("Informe um percentual entre -50% e 50%.");
-      }
-      const fator = 1 + percentual / 100;
-      const linhas =
-        categoriaId === "todas"
-          ? await sql`update itens set preco = round(preco * ${fator}), atualizado_em = now() where preco is not null returning id`
-          : await sql`update itens set preco = round(preco * ${fator}), atualizado_em = now() where preco is not null and categoria_id = ${categoriaId} returning id`;
-      return linhas.length;
-    },
-    { tags: [TAGS.cardapio] },
-  );
-}
-
 // Categorias ---------------------------------------------------
 
 const esquemaCategoria = z.object({

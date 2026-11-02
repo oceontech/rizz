@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import { timingSafeEqual } from "node:crypto";
 
 import { enviarLembretes } from "@/lib/whatsapp/avisos";
@@ -20,6 +21,8 @@ function autorizado(req: Request) {
  * cron-job.org), envie `Authorization: Bearer <CRON_SECRET>`.
  */
 export async function GET(req: Request) {
+  // Horários e contato salvos no painel (lib/conteudo).
+  await carregarConteudo();
   if (!autorizado(req)) return Response.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
   const resultado = await enviarLembretes();
   return Response.json({ ok: true, ...resultado });

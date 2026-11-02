@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -20,6 +21,8 @@ export const metadata: Metadata = {
 };
 
 export default async function CardapioPage() {
+  // Layout e página rodam em paralelo: garante horários e contato do painel aqui também.
+  await carregarConteudo();
   // Publicado pelo painel; cai nos dados de `data/` se o banco falhar.
   const [cardapio, executivo] = await Promise.all([cardapioDoSite(), executivoDoSite()]);
 

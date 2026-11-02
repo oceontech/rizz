@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import type { Metadata } from "next";
 
 import GestorReservas from "@/components/admin/reservas/GestorReservas";
@@ -9,6 +10,8 @@ import { lerBloqueios, lerConfigReservas } from "@/lib/reservas/servidor";
 export const metadata: Metadata = { title: "Reservas" };
 
 export default async function ReservasAdminPage({ searchParams }: PageProps<"/admin/reservas">) {
+  // Layout e página rodam em paralelo: garante horários e contato do painel aqui também.
+  await carregarConteudo();
   await exigirSessao();
   const hoje = hojeSP();
   const [{ nova }, reservas, config, bloqueios] = await Promise.all([

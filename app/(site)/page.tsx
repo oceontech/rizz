@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import Destaques from "@/components/home/Destaques";
 import IntroCamarao from "@/components/home/IntroCamarao";
 import Marquee from "@/components/home/Marquee";
@@ -25,6 +26,8 @@ import { executivoDoSite, homeDoSite } from "@/lib/dados";
  * executivo em cartaz e o convite de reserva.
  */
 export default async function HomePage() {
+  // Layout e página rodam em paralelo: garante horários e contato do painel aqui também.
+  await carregarConteudo();
   const [executivo, home] = await Promise.all([executivoDoSite(), homeDoSite()]);
   const { maisPedido } = home;
 

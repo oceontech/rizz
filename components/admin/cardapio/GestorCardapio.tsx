@@ -4,12 +4,13 @@ import {
   ArrowDown,
   ArrowUp,
   BookOpen,
+  CircleCheck,
+  CircleSlash,
   Eye,
   EyeOff,
   FolderPlus,
   ImageIcon,
   Pencil,
-  Percent,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import { InputBusca } from "@/components/sistema/inputs/input-texto";
 import { ItemEscalonado, ListaEscalonada } from "@/components/sistema/movimento";
 import { ControleSegmentado } from "@/components/sistema/pickers/controle-segmentado";
 import { Button } from "@/components/sistema/ui/button";
+import { Switch } from "@/components/sistema/ui/switch";
 import { Card } from "@/components/sistema/ui/card";
 import {
   alternarDisponivel,
@@ -41,7 +43,6 @@ import { cn } from "@/lib/utils";
 
 import EditorCategoria from "./EditorCategoria";
 import EditorItem from "./EditorItem";
-import ReajustePrecos from "./ReajustePrecos";
 
 type Filtro = "todos" | "esgotados" | "ocultos";
 
@@ -54,26 +55,20 @@ export function fotoDoItem(item: Pick<ItemCardapio, "fotoUrl" | "img">) {
 const ancora = (id: string) => `categoria-${id}`;
 
 /**
- * Situação do prato hoje, num toque: verde "Disponível" ou vermelho
- * "Esgotado". Mais claro que um switch sem rótulo no meio da linha.
+ * Situação de hoje como interruptor com o texto ao lado: é o controle que
+ * qualquer pessoa reconhece. (Antes era uma pílula colorida que parecia um
+ * selo, e não dava para saber que era clicável.) Também está no menu "⋯".
  */
 function BotaoSituacao({ disponivel, nome, aoMudar }: { disponivel: boolean; nome: string; aoMudar: (v: boolean) => void }) {
   return (
-    <button
-      type="button"
-      onClick={() => aoMudar(!disponivel)}
-      aria-pressed={disponivel}
-      aria-label={`${nome}: ${disponivel ? "disponível. Tocar para marcar como esgotado" : "esgotado. Tocar para voltar ao cardápio"}`}
-      className={cn(
-        "flex h-8 w-[7.25rem] shrink-0 items-center justify-center gap-1.5 rounded-full text-xs font-semibold transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/40",
-        disponivel
-          ? "bg-positivo/12 text-positivo-texto hover:bg-positivo/20"
-          : "bg-negativo/10 text-negativo-texto hover:bg-negativo/16",
-      )}
-    >
-      <span className={cn("size-1.5 rounded-full", disponivel ? "bg-positivo" : "bg-negativo")} aria-hidden />
-      {disponivel ? "Disponível" : "Esgotado"}
-    </button>
+    <label className="flex w-[8.5rem] shrink-0 cursor-pointer items-center gap-2.5">
+      <Switch
+        checked={disponivel}
+        onCheckedChange={aoMudar}
+        aria-label={`${nome}: ${disponivel ? "disponível. Desligar para marcar como esgotado" : "esgotado. Ligar para voltar ao cardápio"}`}
+      />
+      <span className={cn("text-[13px] font-semibold", disponivel ? "text-positivo-texto" : "text-negativo-texto")}>{disponivel ? "Disponível" : "Esgotado"}</span>
+    </label>
   );
 }
 
@@ -110,6 +105,7 @@ function LinhaItem({
   function acao(chave: string) {
     if (chave === "editar") return onEditar();
     if (chave === "excluir") return onExcluir();
+    if (chave === "situacao") return alternar(!disponivel);
     iniciar(async () => {
       if (chave === "cima" || chave === "baixo") {
         const r = await moverItem(item.id, chave);
@@ -190,6 +186,7 @@ function LinhaItem({
           aoEscolher={acao}
           acoes={[
             { id: "editar", rotulo: "Editar", icone: Pencil },
+            { id: "situacao", rotulo: disponivel ? "Marcar como esgotado" : "Marcar como disponível", icone: disponivel ? CircleSlash : CircleCheck },
             { id: "visivel", rotulo: item.visivel ? "Ocultar do site" : "Mostrar no site", icone: item.visivel ? EyeOff : Eye },
             { id: "cima", rotulo: "Mover para cima", icone: ArrowUp, desabilitada: primeiro, separar: true },
             { id: "baixo", rotulo: "Mover para baixo", icone: ArrowDown, desabilitada: ultimo },
@@ -269,7 +266,6 @@ export default function GestorCardapio({
   const [sessao, setSessao] = useState(0);
   const [novoNaCategoria, setNovoNaCategoria] = useState<string | null>(null);
   const [categoriaEditada, setCategoriaEditada] = useState<CategoriaCardapio | "nova" | null>(null);
-  const [reajuste, setReajuste] = useState(false);
   const [excluindo, setExcluindo] = useState<
     { tipo: "item"; item: ItemCardapio } | { tipo: "categoria"; cat: CategoriaCardapio } | null
   >(null);
@@ -325,9 +321,6 @@ export default function GestorCardapio({
         descricao="Preços, pratos esgotados, selos e o que aparece no site. As alterações publicam na hora."
         acoes={
           <>
-            <Button variant="secondary" className="rounded-full bg-card shadow-suave hover:bg-accent" onClick={() => setReajuste(true)}>
-              <Percent /> Reajustar preços
-            </Button>
             <Button
               variant="secondary"
               className="rounded-full bg-card shadow-suave hover:bg-accent"
@@ -457,8 +450,6 @@ export default function GestorCardapio({
       />
 
       <EditorCategoria editando={categoriaEditada} onFechar={() => setCategoriaEditada(null)} />
-
-      <ReajustePrecos aberto={reajuste} categorias={categorias} onFechar={() => setReajuste(false)} />
 
       <Confirmar
         aberto={excluindo !== null}

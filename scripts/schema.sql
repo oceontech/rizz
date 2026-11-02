@@ -146,6 +146,35 @@ create index if not exists whatsapp_envios_criado_idx on whatsapp_envios (criado
 create unique index if not exists whatsapp_envios_lembrete_idx on whatsapp_envios (reserva_id)
   where tipo = 'lembrete' and status <> 'erro';
 
+-- Carta de vinhos ---------------------------------------------
+-- Seções (Em taça, Gran Reserva, Tintos...) e rótulos. O slug da seção é
+-- fixo depois de criado: o site usa "taca" para mostrar "a taça" no preço e
+-- "gran-reserva" para o fundo creme.
+
+create table if not exists vinho_secoes (
+  id      text primary key,
+  titulo  text not null,
+  slug    text not null unique,
+  nota    text,
+  visivel boolean not null default true,
+  ordem   int not null default 0
+);
+
+create table if not exists vinhos (
+  id            text primary key,
+  secao_id      text not null references vinho_secoes(id) on delete cascade,
+  nome          text not null,
+  tipo          text not null check (tipo in ('tinto', 'branco', 'rose', 'espumante', 'doce')),
+  uvas          text[] not null default '{}',
+  preco         numeric(10,2) not null,
+  notas         text[] not null default '{}',
+  disponivel    boolean not null default true,
+  visivel       boolean not null default true,
+  ordem         int not null default 0,
+  atualizado_em timestamptz not null default now()
+);
+create index if not exists vinhos_secao_idx on vinhos (secao_id, ordem);
+
 -- Promoções / pop-up -------------------------------------------
 
 create table if not exists promocoes (

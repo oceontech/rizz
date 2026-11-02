@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import { after } from "next/server";
 import { z } from "zod";
 
@@ -33,6 +34,8 @@ const erro = (mensagem: string, status = 400) => Response.json({ ok: false, erro
  * gravação é desfeita e o cliente escolhe outro horário.
  */
 export async function POST(req: Request) {
+  // Horários e contato salvos no painel (lib/conteudo).
+  await carregarConteudo();
   const corpo = esquema.safeParse(await req.json().catch(() => null));
   if (!corpo.success) return erro(corpo.error.issues[0]?.message ?? "Dados inválidos.");
   const d = corpo.data;
