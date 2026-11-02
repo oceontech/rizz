@@ -15,6 +15,7 @@ import bcrypt from "bcryptjs";
 
 import { executivo } from "../data/executivo.ts";
 import { cardapio } from "../data/menu.ts";
+import { cartaDeVinhos } from "../data/vinhos.ts";
 import { SELOS_PADRAO } from "../lib/selos.ts";
 
 const url = process.env.DATABASE_URL;
@@ -88,6 +89,26 @@ if (totalExec === 0) {
     }
   }
   console.log("✓ menu executivo");
+}
+
+// Carta de vinhos ----------------------------------------------
+const [{ n: totalSecoesVinho }] = (await sql`select count(*)::int as n from vinho_secoes`) as { n: number }[];
+if (totalSecoesVinho === 0) {
+  let rotulos = 0;
+  for (const [si, secao] of cartaDeVinhos.entries()) {
+    await sql`
+      insert into vinho_secoes (id, titulo, slug, nota, ordem)
+      values (${secao.slug}, ${secao.titulo}, ${secao.slug}, ${secao.nota}, ${si})`;
+    for (const [vi, v] of secao.itens.entries()) {
+      await sql`
+        insert into vinhos (id, secao_id, nome, tipo, uvas, preco, notas, ordem)
+        values (${v.id}, ${secao.slug}, ${v.nome}, ${v.tipo}, ${v.uvas}, ${v.preco}, ${v.notas}, ${vi})`;
+      rotulos++;
+    }
+  }
+  console.log(`✓ carta de vinhos: ${cartaDeVinhos.length} seções, ${rotulos} rótulos`);
+} else {
+  console.log("· carta de vinhos já populada — mantida");
 }
 
 // Configurações padrão -----------------------------------------

@@ -6,10 +6,8 @@ import { BotaoLink } from "@/components/ui/Botao";
 import Textura from "@/components/home-b/Textura";
 import CartaVinhos from "@/components/vinhos/CartaVinhos";
 import garrafa from "@/assets/img/vinho-rizz-syrah.webp";
-import { cartaDeVinhos } from "@/data/vinhos";
+import { cartaVinhosDoSite } from "@/lib/dados";
 import { site, whatsappLink } from "@/lib/site";
-
-const total = cartaDeVinhos.reduce((n, s) => n + s.itens.length, 0);
 
 export const metadata: Metadata = {
   title: "Carta de vinhos",
@@ -17,7 +15,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/carta-de-vinhos" },
 };
 
-export default function CartaDeVinhosPage() {
+export default async function CartaDeVinhosPage() {
+  // Editada no painel (/admin/vinhos); sem banco, vem de data/vinhos.ts.
+  const cartaDeVinhos = await cartaVinhosDoSite();
+  const total = cartaDeVinhos.reduce((n, s) => n + s.itens.length, 0);
+
   return (
     <div className="pb-24 md:pb-32">
       <header className="wrap pt-28 md:pt-40">

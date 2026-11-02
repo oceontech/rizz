@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { ZodError } from "zod";
 
 import { exigirSessao } from "@/lib/auth";
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 
 export type Resultado<T = undefined> = { ok: true; dados?: T } | { ok: false; erro: string };
 
@@ -17,6 +18,8 @@ export async function protegida<T>(
 ): Promise<Resultado<T>> {
   await exigirSessao();
   try {
+    // Horários e contato do painel valem também nas ações (turnos de reserva, avisos).
+    await carregarConteudo();
     const dados = await fn();
     for (const tag of tags) updateTag(tag);
     if (revalidar) revalidatePath("/admin", "layout");

@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import type { Metadata } from "next";
 
 import ReservaOnline from "@/components/reservas/ReservaOnline";
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/reservas" },
 };
 
-export default function ReservasPage() {
+export default async function ReservasPage() {
+  // Layout e página rodam em paralelo: garante horários e contato do painel aqui também.
+  await carregarConteudo();
   return (
     <main>
       <ReservaOnline />

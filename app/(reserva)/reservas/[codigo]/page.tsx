@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 
 /** Link pessoal da reserva: confirmação logo depois de reservar e, depois, onde o cliente altera ou cancela. */
 export default async function MinhaReservaPage({ params, searchParams }: PageProps<"/reservas/[codigo]">) {
+  // Layout e página rodam em paralelo: garante horários e contato do painel aqui também.
+  await carregarConteudo();
   const [{ codigo }, { nova }] = await Promise.all([params, searchParams]);
   const r = await reservaPorCodigo(codigo);
   if (!r) notFound();

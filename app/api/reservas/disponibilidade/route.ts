@@ -1,3 +1,4 @@
+import { carregarConteudo } from "@/lib/conteudo-servidor";
 import type { NextRequest } from "next/server";
 
 import { bancoConfigurado } from "@/lib/db";
@@ -11,6 +12,8 @@ import { agoraSP, horariosDisponiveis, lerBloqueios, lerConfigReservas, reservaP
  * conta quando o cliente está alterando.
  */
 export async function GET(req: NextRequest) {
+  // Horários e contato salvos no painel (lib/conteudo).
+  await carregarConteudo();
   if (!bancoConfigurado) return Response.json({ ativo: false });
 
   const params = req.nextUrl.searchParams;

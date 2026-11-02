@@ -3,12 +3,14 @@ import {
   BookOpen,
   BriefcaseBusiness,
   CalendarDays,
+  Clock,
   Heart,
   House,
   LayoutGrid,
   Megaphone,
   MessageCircle,
   Settings,
+  Wine,
   type LucideIcon,
 } from "lucide-react";
 
@@ -18,6 +20,8 @@ export type Secao =
   | "reservas"
   | "cardapio"
   | "executivo"
+  | "vinhos"
+  | "funcionamento"
   | "selos"
   | "home"
   | "promocoes"
@@ -45,6 +49,8 @@ export const NAV: ItemNav[] = [
   { href: "/admin/reservas", rotulo: "Reservas", curto: "Reservas", Icone: CalendarDays, secao: "reservas", grupo: "restaurante" },
   { href: "/admin/cardapio", rotulo: "Cardápio", curto: "Cardápio", Icone: BookOpen, secao: "cardapio", grupo: "restaurante", aba: "Cardápio" },
   { href: "/admin/executivo", rotulo: "Menu executivo", curto: "Executivo", Icone: BriefcaseBusiness, secao: "executivo", grupo: "restaurante", pai: "/admin/cardapio" },
+  { href: "/admin/vinhos", rotulo: "Carta de vinhos", curto: "Vinhos", Icone: Wine, secao: "vinhos", grupo: "restaurante" },
+  { href: "/admin/funcionamento", rotulo: "Horários e contato", curto: "Horários", Icone: Clock, secao: "funcionamento", grupo: "restaurante" },
   { href: "/admin/home", rotulo: "Página inicial", curto: "Início do site", Icone: House, secao: "home", grupo: "site" },
   { href: "/admin/promocoes", rotulo: "Promoções e pop-up", curto: "Promoções", Icone: Megaphone, secao: "promocoes", grupo: "site" },
   { href: "/admin/fidelidade", rotulo: "Fidelidade", curto: "Fidelidade", Icone: Heart, secao: "fidelidade", grupo: "site", emBreve: true },
