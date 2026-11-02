@@ -108,7 +108,7 @@ export default function Destaques({ pratos, letreiro = false }: { pratos: PratoD
             <div>
               <p className="eyebrow text-ambar">Do cardápio</p>
               {letreiro ? (
-                <h2 className="mt-4 flex flex-col items-start text-creme not-italic">
+                <h2 data-anima="letreiro" className="mt-4 flex flex-col items-start text-creme not-italic">
                   <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.4rem,5vw,3.75rem)] leading-none">Uma seleção</span>
                   <span className="font-[family-name:var(--font-instrument)] text-[clamp(3.5rem,8vw,6.5rem)] leading-[0.9] tracking-[0.01em] text-ouro-claro uppercase">do cardápio</span>
                 </h2>
@@ -133,6 +133,8 @@ export default function Destaques({ pratos, letreiro = false }: { pratos: PratoD
             largo no mobile). */}
         <ul
           data-trilho
+          data-anima="cascata"
+          data-anima-so="mobile"
           className="no-scrollbar relative mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 md:mt-10 md:gap-7 md:overflow-visible md:px-12"
         >
           {pratos.map((item, i) => {

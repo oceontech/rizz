@@ -51,7 +51,7 @@ export default function CozinhaB() {
       <div className="wrap">
         <div className="max-w-3xl">
           <p className="eyebrow text-vinho">Nossa cozinha</p>
-          <h2 id="cozinha-b" className="mt-5 flex flex-col items-start text-vinho not-italic">
+          <h2 id="cozinha-b" data-anima="letreiro" className="mt-5 flex flex-col items-start text-vinho not-italic">
             <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.75rem,7vw,5rem)] leading-none">Por onde</span>
             <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(4.5rem,13vw,9.5rem)] leading-[0.9]">começar</span>
           </h2>
@@ -67,7 +67,7 @@ export default function CozinhaB() {
                 >
                   {/* Moldura em arco com filete interno: a moldura de espelho
                       dos convites, sem ornamento desenhado. */}
-                  <div className="relative rounded-t-full border border-vinho/25 p-2.5 md:p-3.5">
+                  <div data-anima="midia" className="relative rounded-t-full border border-vinho/25 p-2.5 md:p-3.5">
                     <Parallax className="aspect-[3/4] rounded-t-full" forca={8}>
                       <Image
                         src={img(c.foto)}

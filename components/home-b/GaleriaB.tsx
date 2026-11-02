@@ -128,7 +128,7 @@ export default function GaleriaB() {
   return (
     <section ref={raiz} aria-labelledby="galeria-b" className="relative overflow-hidden bg-noite pt-24 md:pt-32">
       <div className="wrap flex flex-col items-center text-center">
-        <h2 id="galeria-b" className="flex flex-col items-center not-italic">
+        <h2 id="galeria-b" data-anima="letreiro" className="flex flex-col items-center not-italic">
           <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.9rem,9vw,5.5rem)] leading-none text-creme">
             Da cozinha
           </span>

@@ -27,7 +27,7 @@ export default function VisiteB() {
     <section id="visite" aria-labelledby="visite-b" className="scroll-mt-24 bg-noite py-24 md:py-32">
       <div className="wrap grid gap-14 md:grid-cols-12 md:gap-12">
         <div className="md:col-span-5">
-          <h2 id="visite-b" className="flex flex-col items-start not-italic">
+          <h2 id="visite-b" data-anima="letreiro" className="flex flex-col items-start not-italic">
             <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.75rem,6vw,4.5rem)] leading-none text-creme">
               Planeje
             </span>
@@ -40,10 +40,9 @@ export default function VisiteB() {
             <IndicadorAbertura />
           </div>
 
-          <Reveal delay={0.08}>
-            <table className="mt-8 w-full text-[0.9375rem]">
+          <table className="mt-8 w-full text-[0.9375rem]">
               <caption className="sr-only">Horário de funcionamento por dia da semana</caption>
-              <tbody>
+              <tbody data-anima="cascata">
                 {horarios.map((d) => (
                   <tr key={d.dia} className="border-b border-creme/10 last:border-0">
                     <th scope="row" className="py-3.5 pr-4 text-left font-normal text-creme/60">
@@ -63,7 +62,6 @@ export default function VisiteB() {
                 ))}
               </tbody>
             </table>
-          </Reveal>
 
           <dl className="mt-10 grid gap-6 sm:grid-cols-2">
             <div>

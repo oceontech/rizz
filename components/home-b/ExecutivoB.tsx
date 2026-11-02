@@ -1,6 +1,5 @@
 import Image from "next/image";
 
-import Reveal from "@/components/motion/Reveal";
 import BadgeExecutivo from "@/components/ui/BadgeExecutivo";
 import { BotaoLink } from "@/components/ui/Botao";
 import Preco from "@/components/ui/Preco";
@@ -35,17 +34,15 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
             <BadgeExecutivo claro executivo={executivo} />
           </div>
 
-          <Reveal>
-            <h2 id="executivo-b" className="mt-8 flex flex-col items-start not-italic">
+          <h2 id="executivo-b" data-anima="letreiro" className="mt-8 flex flex-col items-start not-italic">
               <span className="relative z-10 -mb-[0.1em] font-[family-name:var(--font-pinyon)] text-[clamp(2.4rem,5.5vw,4rem)] leading-none">Entrada, prato e</span>
               <span className="font-[family-name:var(--font-instrument)] tracking-[0.01em] uppercase text-[clamp(4rem,10vw,7.5rem)] leading-[0.9]">sobremesa</span>
-            </h2>
-          </Reveal>
+          </h2>
 
           <p className="mt-6 max-w-md text-lg leading-relaxed text-vinho/80">{executivo.chamada}.</p>
 
           {confirmado ? (
-            <dl className="mt-10 max-w-md divide-y divide-vinho/20 border-y border-vinho/20">
+            <dl data-anima="cascata" className="mt-10 max-w-md divide-y divide-vinho/20 border-y border-vinho/20">
               <div className="flex items-end justify-between gap-4 py-4">
                 <dt className="text-sm leading-snug">
                   Menu completo
@@ -78,7 +75,7 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
           )}
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <BotaoLink href="/cardapio#executivo" variante="vinho" tamanho="lg">
+            <BotaoLink href="/cardapio#executivo" variante="vinho" tamanho="lg" data-anima-magnetico>
               Ver menu executivo
             </BotaoLink>
             {!confirmado && (
@@ -94,7 +91,7 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
 
         {/* -ml-px: a coluna de fotos encosta 1px no painel amarelo, sem fio entre os dois. */}
         <div className="flex flex-col md:-ml-px">
-          <div className="relative min-h-[22rem] grow">
+          <div data-anima="midia" className="relative min-h-[22rem] grow">
             <Image
               src={img("mesa-executivo")}
               alt="Mesa vista de cima com os pratos do menu executivo: parmegiana com arroz e fritas, risoto de funghi, massa, salada, arancini e sobremesas"
@@ -110,7 +107,7 @@ export default function ExecutivoB({ executivo }: { executivo: ExecutivoDados })
             <ul className="grid divide-y divide-tinta/10 bg-creme md:divide-y-0 md:bg-vinho md:grid-cols-3 md:[&>li+li]:-ml-px">
               {fotos.map((p) => (
                 <li key={p.id} className="relative flex items-center gap-4 md:block md:aspect-[3/4]">
-                  <div className="relative size-40 shrink-0 md:absolute md:inset-0 md:size-auto">
+                  <div data-anima="midia" className="relative size-40 shrink-0 md:absolute md:inset-0 md:size-auto">
                     <Image src={img(p.img!)} alt={p.nome} fill sizes="(min-width: 768px) 15vw, 160px" className="object-cover" />
                   </div>
                   <div className="py-3 pr-5 md:absolute md:inset-x-0 md:bottom-0 md:bg-gradient-to-t md:from-black/85 md:via-black/45 md:to-transparent md:p-5 md:pt-20">

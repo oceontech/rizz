@@ -14,6 +14,7 @@ import ReservaB from "@/components/home-b/ReservaB";
 import RodizioB from "@/components/home-b/RodizioB";
 import VinhoDaCasa from "@/components/home-b/VinhoDaCasa";
 import VisiteB from "@/components/home-b/VisiteB";
+import CenasHome from "@/components/motion/CenasHome";
 import { executivoDoSite, homeDoSite } from "@/lib/dados";
 
 /**
@@ -50,6 +51,8 @@ export default async function HomePage() {
       <AvaliacoesB />
       <ReservaB />
       <VisiteB />
+      {/* Depois de todas as seções: as entradas por atributo (data-anima). */}
+      <CenasHome />
     </>
   );
 }
