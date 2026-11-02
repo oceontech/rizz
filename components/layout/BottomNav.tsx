@@ -20,6 +20,13 @@ const abas = [
     ),
   },
   {
+    // Taça: bojo, haste e base. A carta de vinhos não tinha acesso no
+    // celular (o menu do header só aparece a partir de 768px).
+    href: "/carta-de-vinhos",
+    rotulo: "Vinhos",
+    icone: <path d="M7.5 3h9c.4 3.2.2 5.8-1.2 7.4A4.3 4.3 0 0 1 12 12a4.3 4.3 0 0 1-3.3-1.6C7.3 8.8 7.1 6.2 7.5 3ZM7.6 6.5h8.8M12 12v8.5M8.5 21h7" />,
+  },
+  {
     href: "/avaliacoes",
     rotulo: "Avaliações",
     icone: (
@@ -43,7 +50,7 @@ export default function BottomNav() {
       data-bottom-nav
       className="pb-safe fixed inset-x-0 bottom-0 z-50 border-t border-creme/12 bg-noite/94 backdrop-blur-xl md:hidden"
     >
-      <ul className="grid h-[var(--spacing-nav)] grid-cols-3">
+      <ul className="grid h-[var(--spacing-nav)] grid-cols-4">
         {abas.map((aba) => {
           const ativo =
             aba.href === "/" ? pathname === "/" : pathname.startsWith(aba.href);

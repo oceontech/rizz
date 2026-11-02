@@ -1,8 +1,12 @@
 # Estado do projeto e pendências
 
-Atualizado em 26/10/2026. Ao resolver um item, apague-o daqui (ou mova para "Feito recentemente").
+Atualizado em 02/11/2026. Ao resolver um item, apague-o daqui (ou mova para "Feito recentemente").
 
 ## Feito recentemente
+
+- **Versão B virou a home** (02/11/2026): `app/(site)/page.tsx` é a antiga `/b` (que agora redireciona para `/`, em `next.config.ts`), e os componentes só da home antiga foram apagados (`components/home/` guarda apenas os que a home atual usa). As avaliações da home perderam os textos de exemplo: mostram a nota real do Google e o link, e os cartões só aparecem com textos reais (API do Google ou `data/reviews.ts` com `fonte: "manual"`).
+- **Carta de vinhos no celular**: o menu do header só aparece a partir de 768px e a barra inferior não tinha a carta. Entrou a aba **Vinhos** na barra inferior (`components/layout/BottomNav.tsx`) e o botão "Ver a carta de vinhos" na seção do vinho da home.
+- **Domínio `rizzcucinaevino.com.br`** adicionado ao projeto na Vercel (02/11/2026), com o `www` redirecionando (308) para o domínio sem `www`. `site.url` aponta para ele. O DNS fica na Hostinger de quem registrou o domínio (Registro.br, nameservers `dns-parking.com`); ver "Domínio" em Pendências.
 
 - **Organização do painel** (branch `feat/painel-organizacao`): Menu executivo virou aba do Cardápio; Selos e WhatsApp viraram abas de Configurações (sidebar mais curta, mesmos endereços). Nas Reservas, um selo mostra se o WhatsApp está conectado; desconectado, abre a janela já com o QR Code (`components/admin/whatsapp/conexao.tsx`, usado também na tela do WhatsApp). Página inicial: o prato é escolhido num seletor com fotos e, ao trocar, título e texto vêm do prato (antes ficavam os do camarão e parecia que nada mudava).
 
@@ -49,7 +53,7 @@ Passo a passo:
 
 ## Acesso ao painel
 
-- A tabela `admin_usuarios` só ganha registro pelo `npm run db:setup`, e só quando está vazia. Esse primeiro acesso já existe: o e-mail padrão do script é `admin@rizzrestaurante.com.br`, e a senha apareceu uma única vez no terminal de quem rodou.
+- A tabela `admin_usuarios` só ganha registro pelo `npm run db:setup`, e só quando está vazia. Esse primeiro acesso já existe: o e-mail desse registro é `admin@rizzrestaurante.com.br` (o padrão do script era esse; hoje é `admin@rizzcucinaevino.com.br`, que só vale para um banco novo), e a senha apareceu uma única vez no terminal de quem rodou.
 - Em Configurações, o usuário logado troca o próprio nome, e-mail e senha (`lib/admin/sessao-actions.ts`). **Não existe tela para criar outro usuário nem para recuperar a senha.**
 - O usuário (Oceon) ainda não conseguiu um acesso com o próprio e-mail. Duas saídas:
   - quem tiver a senha do primeiro acesso entra e troca o e-mail para o seu em Configurações;
@@ -58,7 +62,7 @@ Passo a passo:
 ## Pendências
 
 ### Domínio
-- `rizzrestaurante.com.br` **não está ligado ao projeto na Vercel e não responde**. Mesmo assim, o site usa esse endereço (`site.url` em `lib/site.ts`) em links absolutos: o link de detalhes no arquivo `.ics` e os metadados de SEO (canonical, `app/sitemap.ts`, `app/robots.ts`, `app/(site)/layout.tsx`). Até ligar o domínio, esses links não abrem. A mensagem de confirmação que a equipe manda por WhatsApp pelo painel usa o endereço em que o painel está aberto (`window.location.origin`), então funciona. Falta confirmar com o cliente quem controla o domínio, adicioná-lo na Vercel e configurar o DNS.
+- `rizzcucinaevino.com.br` já está no projeto da Vercel, mas **o DNS na Hostinger ainda aponta para a página de estacionamento** (A `2.57.91.91` e um AAAA). Trocar por: A `@` → `216.150.1.1` (e apagar o AAAA `@`); CNAME `www` → `5b04ce0cb676dc92.vercel-dns-017.com`. Conferir com `curl -sI https://rizzcucinaevino.com.br` ou na Vercel (Settings → Domains). Até lá, os links absolutos (`.ics`, canonical, sitemap) apontam para um endereço que ainda não abre o site.
 
 ### Reservas (ver detalhes em `reservas.md`)
 - **Corrida no último lugar:** o servidor grava e só depois confere a lotação. Se duas pessoas reservarem o último lugar no mesmo instante, as duas podem ser desfeitas, mas nunca passam da lotação. A correção é uma trava (`pg_advisory_xact_lock` por data+turno, dentro de `sql.transaction`).
@@ -72,7 +76,7 @@ Passo a passo:
 - Confirmar com a casa o preço do menu executivo (R$ 75,90 × 72,90), o preço do Brownie e se segunda-feira é mesmo fechada (`lib/hours.ts`; as reservas seguem esses horários).
 - Carta de vinhos (`/carta-de-vinhos`): os 145 rótulos estão em `data/vinhos.ts`, transcritos do cardápio online do restaurante (fechaconta.com.br/cardapio/rizzpinhal) em 27/10/2026. Não há sincronização: mudanças lá precisam ser transcritas de novo. `cartaVinhosUrl` em `lib/site.ts` não é mais usado pela página.
 - Rodízio de risotos (`lib/rodizio.ts`): dias e etapas vêm do vídeo do restaurante (abr/2026: quartas e quintas no jantar; arancini, seis risotos à vontade, sobremesa da semana). Falta confirmar o valor; enquanto isso o site manda consultar pelo WhatsApp. O aviso "hoje/amanhã tem rodízio" usa o horário do jantar de `lib/hours.ts`.
-- Versão B da home (`/b`): as avaliações são textos de exemplo marcados como tal; trocar por avaliações reais antes de levar a seção para `/`.
+- Avaliações da home e de `/avaliacoes` só com a nota: para mostrar textos, configurar `GOOGLE_PLACES_API_KEY` e `GOOGLE_PLACE_ID` (ou preencher `data/reviews.ts` com textos reais).
 
 ### Repositório
 - `cardápios/` (PDFs do cardápio impresso de 2026, material de referência) fica fora do git, no `.gitignore`.

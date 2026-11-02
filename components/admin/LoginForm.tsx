@@ -31,7 +31,7 @@ export default function LoginForm({ de }: { de?: string }) {
           required
           valor={email}
           aoMudar={(v) => setEmail(v ?? "")}
-          placeholder="voce@rizzrestaurante.com.br"
+          placeholder="voce@rizzcucinaevino.com.br"
         />
       </Campo>
 

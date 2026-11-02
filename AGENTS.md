@@ -45,7 +45,7 @@ Não há testes automatizados. Antes de dizer que terminou, rode lint, typecheck
 
 | Ambiente | Onde |
 |---|---|
-| Produção | https://rizz-pinhal.vercel.app (projeto `oceonteam/rizz` na Vercel). **O domínio `rizzrestaurante.com.br` não está ligado ao projeto**, apesar de estar em `lib/site.ts` |
+| Produção | https://rizzcucinaevino.com.br (projeto `rizz` na Vercel, time `oceon`; o `www` redireciona para o domínio sem `www`, e `rizz-pinhal.vercel.app` continua respondendo). DNS na Hostinger do dono do domínio |
 | Preview | Deploys automáticos de cada branch na Vercel |
 | Local | `npm run dev`, com o `.env.local` (baixado por `vercel env pull`) |
 

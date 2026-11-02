@@ -114,7 +114,7 @@ console.log("✓ configurações padrão");
 // Administrador ------------------------------------------------
 const [{ n: totalAdmins }] = (await sql`select count(*)::int as n from admin_usuarios`) as { n: number }[];
 if (totalAdmins === 0) {
-  const email = (process.argv[2] ?? "admin@rizzrestaurante.com.br").toLowerCase();
+  const email = (process.argv[2] ?? "admin@rizzcucinaevino.com.br").toLowerCase();
   const senha = randomBytes(9).toString("base64url");
   const hash = await bcrypt.hash(senha, 12);
   await sql`insert into admin_usuarios (nome, email, senha_hash) values ('Administrador', ${email}, ${hash})`;

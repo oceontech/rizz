@@ -14,8 +14,8 @@ export const site = {
     "Cozinha contemporânea, especialidade em risotos e vinhos em Espírito Santo do Pinhal. Conheça o cardápio e consulte horários e reservas.",
   tagline: "Especialidade em risotos",
 
-  // Domínio informado no perfil oficial do restaurante.
-  url: "https://rizzrestaurante.com.br",
+  // Domínio de produção (ligado à Vercel em nov/2026; o www redireciona para cá).
+  url: "https://rizzcucinaevino.com.br",
 
   telefone: "(19) 3661-5503",
   telefoneLink: "+551936615503",

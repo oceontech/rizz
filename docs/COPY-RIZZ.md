@@ -12,7 +12,7 @@ Atualizações da implementação:
 - Foram removidas as instruções técnicas das páginas públicas, as afirmações genéricas de rastreabilidade e exclusividade e as descrições promocionais derivadas da arquitetura das fotos.
 - As avaliações guardadas exibem data de consulta; o acesso a todas as avaliações aponta para o Google.
 - A página de privacidade descreve o fluxo observado de navegação, formulário e serviços externos. Uma política completa sobre práticas da operação e da hospedagem ainda depende de confirmação dos responsáveis.
-- O domínio de referência passou a ser o informado na bio oficial: `rizzrestaurante.com.br`. A revisão não inclui implantação nem alteração de DNS.
+- O domínio do site é `rizzcucinaevino.com.br` (definido em nov/2026). O `rizzrestaurante.com.br`, citado na bio antiga, não será mais usado.
 
 ## 1. Direção recomendada
 
@@ -70,7 +70,7 @@ Estas são decisões para este projeto, inferidas da pesquisa e da auditoria:
 | Camarão como campeão de vendas | Apenas afirmação no código | Não comprovado. Remover a alegação e apresentar como destaque editorial. |
 | Nota 4,6 e 763 avaliações | Registro local com data de 16/09/2026 | Tratar como registro datado até verificação atual. Não apresentar como consulta ao vivo por padrão. |
 | Telefone e WhatsApp | `lib/site.ts` e documentação anterior do projeto | Manter provisoriamente. A validação anterior não substitui um teste do canal antes da publicação. |
-| Domínio do restaurante | A bio enviada aponta `rizzrestaurante.com.br`; o projeto usa outro domínio como provisório | Corrigir os metadados somente após definir o domínio desta publicação. |
+| Domínio do restaurante | Definido: `rizzcucinaevino.com.br` (nov/2026); `rizzrestaurante.com.br` não será usado | Resolvido: metadados em `lib/site.ts`. Atualizar a bio do Instagram/Google se ainda citar o domínio antigo. |
 
 Fontes do restaurante: [Instagram oficial](https://www.instagram.com/rizzcucinaevino/) e [Facebook oficial](https://www.facebook.com/rizzrestaurante/). O Instagram foi consultado por conteúdo público indexado e pela captura fornecida, sem acesso completo ao histórico de publicações ou a Stories. Trechos de busca ajudam a localizar informações, mas não estabelecem sozinhos datas ou condições atuais.
 

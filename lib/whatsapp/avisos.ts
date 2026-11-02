@@ -14,9 +14,9 @@ export async function lerConfigWhatsapp() {
 }
 
 /**
- * Endereço público do site, para os links das mensagens. O domínio de
- * `site.url` ainda não está ligado à Vercel, então vale primeiro o
- * `SITE_URL` e depois o domínio de produção que a Vercel informa.
+ * Endereço público do site, para os links das mensagens: vale primeiro o
+ * `SITE_URL`, depois o domínio de produção que a Vercel informa (o
+ * `rizzcucinaevino.com.br`, já ligado) e por fim `site.url`.
  */
 export function urlDoSite() {
   const env = process.env.SITE_URL?.trim().replace(/\/+$/, "");
