@@ -61,7 +61,9 @@ export default async function CardapioPage() {
           extra={executivo.ativo ? { slug: "executivo", nome: "Menu executivo", conteudo: <BlocoExecutivo executivo={executivo} /> } : undefined}
         />
 
-        <div className="mt-20 border-t border-tinta/12 pt-10">
+        {/* pb: a legenda tinha a seção do vídeo colada embaixo, e os selos
+            pareciam cortados. */}
+        <div className="mt-20 border-t border-tinta/12 pt-10 pb-24 md:pb-32">
           <h2 className="eyebrow mb-6 text-vinho">Legenda</h2>
           <Legenda className="text-tinta/70" />
         </div>
@@ -69,7 +71,7 @@ export default async function CardapioPage() {
 
 
       {/* Fecho com o salão em vídeo, escurecido, e o letreiro por cima. */}
-      <section className="relative isolate flex min-h-[80svh] items-center overflow-hidden bg-noite py-24 text-center text-creme md:py-32">
+      <section data-header-escuro className="relative isolate flex min-h-[80svh] items-center overflow-hidden bg-noite py-24 text-center text-creme md:py-32">
         <VideoB nome="salao-ambiente" rotulo="O salão do Rizz por dentro" className="absolute inset-0 -z-20 hidden size-full object-cover md:block" />
         <VideoB nome="salao-ambiente-v" rotulo="O salão do Rizz por dentro" className="absolute inset-0 -z-20 size-full object-cover md:hidden" />
         <div className="absolute inset-0 -z-10 bg-noite/65" />

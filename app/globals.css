@@ -240,6 +240,15 @@
     backdrop-filter: blur(16px);
   }
 
+  /* O mesmo vidro em vinho escuro: quando o header do cardápio passa por
+     cima de uma seção escura (o fecho com o vídeo do salão), o creme claro
+     virava uma faixa estranha sobre o vídeo. */
+  .vidro-escuro {
+    background-color: rgb(43 7 16 / 0.55);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.2);
+  }
+
   /* Divisa entre o header e as abas do cardápio: fio dourado que some nas
      pontas, com um losango vazado no centro. */
   /* Só aparece com o header visível E as abas grudadas logo abaixo dele
