@@ -25,7 +25,7 @@ Tudo se liga e desliga no painel, e os textos são editáveis lá (com variávei
 - Os avisos rodam dentro de `after()` (Next), depois da resposta: o cliente não espera o WhatsApp, e **uma falha no envio nunca desfaz a reserva**. Tudo fica registrado na tabela `whatsapp_envios` (histórico no painel).
 - Configuração em `configuracoes`, chave `whatsapp`. A última rodada dos lembretes fica na chave `whatsapp_lembretes`.
 - Lembretes: `GET /api/whatsapp/lembretes`, protegida pelo `CRON_SECRET`. Um índice único impede dois lembretes para a mesma reserva; se a reserva muda de horário, o lembrete pode sair de novo. Reservas feitas há menos de 2 horas não recebem lembrete (acabaram de receber a confirmação). Falhas são tentadas de novo até 3 vezes.
-- O link das mensagens usa `SITE_URL` ou, sem ela, o domínio de produção da Vercel (`VERCEL_PROJECT_PRODUCTION_URL`). O `site.url` (`rizzrestaurante.com.br`) ainda não responde.
+- O link das mensagens usa `SITE_URL` ou, sem ela, o domínio de produção da Vercel (`VERCEL_PROJECT_PRODUCTION_URL`). Com o `rizzcucinaevino.com.br` ligado, a Vercel passa a informar esse domínio.
 
 ## Configurar (uma vez)
 

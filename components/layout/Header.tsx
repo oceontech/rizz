@@ -178,8 +178,8 @@ export default function Header({ aviso = null }: { aviso?: AvisoHeader }) {
           className="hidden items-center gap-10 md:flex"
         >
           {links.map((l) => {
-            // "/" casaria com tudo: o início só fica ativo na própria home (e na B).
-            const ativo = l.href === "/" ? pathname === "/" || pathname === "/b" : pathname.startsWith(l.href);
+            // "/" casaria com tudo: o início só fica ativo na própria home.
+            const ativo = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
             return (
               <Link
                 key={l.href}

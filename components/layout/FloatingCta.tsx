@@ -7,7 +7,7 @@ import { CONDICOES, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { site, whatsappLink } from "@/lib/site";
 
 /**
- * Quarto acesso persistente, fora das três abas.
+ * Acesso persistente à reserva, fora das abas da barra inferior.
  *
  * As abas cobrem navegação; a conversão precisa de alvo próprio, senão
  * disputa espaço com o menu e perde.

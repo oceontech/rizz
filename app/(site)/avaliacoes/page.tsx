@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Estrelas } from "@/components/home/AvaliacoesResumo";
+import { Estrelas } from "@/components/ui/Estrelas";
 import Counter from "@/components/motion/Counter";
 import Filete from "@/components/motion/Filete";
 import Reveal from "@/components/motion/Reveal";

@@ -1,39 +1,55 @@
-import AvaliacoesResumo from "@/components/home/AvaliacoesResumo";
 import Destaques from "@/components/home/Destaques";
-import Executivo from "@/components/home/Executivo";
-import Galeria from "@/components/home/Galeria";
-import Hero from "@/components/home/Hero";
 import IntroCamarao from "@/components/home/IntroCamarao";
-import Manifesto from "@/components/home/Manifesto";
 import Marquee from "@/components/home/Marquee";
-import Mosaico from "@/components/home/Mosaico";
-import PratoAssinatura from "@/components/home/PratoAssinatura";
-import Visite from "@/components/home/Visite";
+import AvaliacoesB from "@/components/home-b/AvaliacoesB";
+import CozinhaB from "@/components/home-b/CozinhaB";
+import ExecutivoB from "@/components/home-b/ExecutivoB";
+import GaleriaB from "@/components/home-b/GaleriaB";
+import GaleriaCasaB from "@/components/home-b/GaleriaCasaB";
+import HeroB from "@/components/home-b/HeroB";
+import MosaicoB from "@/components/home-b/MosaicoB";
+import MuralB from "@/components/home-b/MuralB";
+import PratoAssinaturaB from "@/components/home-b/PratoAssinaturaB";
+import ReservaB from "@/components/home-b/ReservaB";
+import RodizioB from "@/components/home-b/RodizioB";
+import VinhoDaCasa from "@/components/home-b/VinhoDaCasa";
+import VisiteB from "@/components/home-b/VisiteB";
 import { executivoDoSite, homeDoSite } from "@/lib/dados";
 
+/**
+ * Página inicial (antiga "versão B", promovida em nov/2026; a home anterior
+ * foi apagada). Um só tom escuro de fundo, o amarelo com letras misturadas
+ * (itálico + caixa alta), hero do celular com o vídeo em arco, "Nossa
+ * cozinha" em papel creme, galerias de fotos coladas, o vinho Rizz Syrah,
+ * executivo em cartaz e o convite de reserva.
+ */
 export default async function HomePage() {
   const [executivo, home] = await Promise.all([executivoDoSite(), homeDoSite()]);
   const { maisPedido } = home;
 
   return (
     <>
-      <Hero />
-      <Galeria />
-      <Marquee />
-      <Manifesto />
-      {/* O vídeo de abertura é do camarão: com outro prato, a dobra entra sozinha. */}
+      <HeroB />
+      <GaleriaCasaB />
+      <Marquee amarela />
+      <CozinhaB />
       {maisPedido?.id === "camarao-empanado" ? (
-        <IntroCamarao nome={maisPedido.nome}>
-          <PratoAssinatura prato={maisPedido} entradaPeloVideo />
+        <IntroCamarao nome={maisPedido.nome} fadeTopo="var(--color-creme)" letreiro>
+          <PratoAssinaturaB prato={maisPedido} entradaPeloVideo />
         </IntroCamarao>
       ) : (
-        maisPedido && <PratoAssinatura prato={maisPedido} />
+        maisPedido && <PratoAssinaturaB prato={maisPedido} />
       )}
-      {home.destaques.length > 0 && <Destaques pratos={home.destaques} />}
-      <Mosaico />
-      {executivo.ativo && <Executivo executivo={executivo} />}
-      <AvaliacoesResumo />
-      <Visite />
+      {home.destaques.length > 0 && <Destaques pratos={home.destaques} letreiro />}
+      <RodizioB />
+      <GaleriaB />
+      <VinhoDaCasa />
+      <MosaicoB />
+      {executivo.ativo && <ExecutivoB executivo={executivo} />}
+      <MuralB />
+      <AvaliacoesB />
+      <ReservaB />
+      <VisiteB />
     </>
   );
 }

@@ -88,13 +88,18 @@ export default function VinhoDaCasa() {
             <p className="eyebrow text-vinho/80">
               Safra 2023 · 750 ml · 13,5% vol.
             </p>
-            <BotaoLink
-              href={whatsappLink("Olá! Gostaria de saber sobre o vinho Rizz Syrah.")}
-              variante="vinho"
-              tamanho="lg"
-            >
-              Perguntar pelo WhatsApp
-            </BotaoLink>
+            <div className="flex flex-col items-center gap-3 sm:flex-row">
+              <BotaoLink href="/carta-de-vinhos" variante="vinho" tamanho="lg">
+                Ver a carta de vinhos
+              </BotaoLink>
+              <BotaoLink
+                href={whatsappLink("Olá! Gostaria de saber sobre o vinho Rizz Syrah.")}
+                variante="contorno-vinho"
+                tamanho="lg"
+              >
+                Perguntar pelo WhatsApp
+              </BotaoLink>
+            </div>
           </div>
         </div>
 

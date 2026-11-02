@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
     // Fotos enviadas pelo painel (Vercel Blob).
     remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },
+  // A versão B da home ficava em /b e o link circulou; agora ela é a home.
+  async redirects() {
+    return [{ source: "/b", destination: "/", permanent: true }];
+  },
   experimental: {
     // Site e painel têm root layouts separados; o 404 global cobre os dois.
     globalNotFound: true,
