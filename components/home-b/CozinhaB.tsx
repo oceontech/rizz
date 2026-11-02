@@ -63,7 +63,7 @@ export default function CozinhaB() {
             return (
               <li key={c.numero} className="grid items-center gap-10 md:grid-cols-12 md:gap-8">
                 <div
-                  className={`relative mx-auto w-full max-w-md md:col-span-5 md:max-w-none ${invertido ? "md:order-2 md:col-start-8" : "md:col-start-1"}`}
+                  className={`relative mx-auto w-full max-w-md md:col-span-5 md:max-w-[calc((100svh-7rem)*3/4)] ${invertido ? "md:order-2 md:col-start-8" : "md:col-start-1"}`}
                 >
                   {/* Moldura em arco com filete interno: a moldura de espelho
                       dos convites, sem ornamento desenhado. */}
