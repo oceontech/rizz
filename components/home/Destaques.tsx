@@ -94,12 +94,14 @@ export default function Destaques({ pratos, letreiro = false }: { pratos: PratoD
 
   return (
     <div ref={raiz} className="bg-noite">
-      {/* O palco precisa caber em 100svh: a foto é medida em svh, não por
+      {/* `z-[1]`: o brilho do rodízio (seção seguinte) sobe até o fundo desta
+          seção e deve passar por baixo dos cards e textos.
+          O palco precisa caber em 100svh: a foto é medida em svh, não por
           proporção, senão os cards estouram a altura da viewport quando a
           seção prende. */}
       <div
         data-palco
-        className="overflow-hidden py-24 md:flex md:h-[100svh] md:flex-col md:justify-center md:py-0"
+        className="relative z-[1] overflow-hidden py-24 md:flex md:h-[100svh] md:flex-col md:justify-center md:py-0"
       >
         <div className="wrap">
           <div className="flex flex-wrap items-end justify-between gap-6">
