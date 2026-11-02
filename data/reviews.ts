@@ -8,7 +8,8 @@ export type Review = {
 };
 
 /**
- * Números REAIS do perfil do Google Meu Negócio, conferidos em set/2026.
+ * Números REAIS do perfil do Google Meu Negócio, conferidos em 02/11/2026
+ * (no Google Maps: 4,6 com 777 avaliações).
  *
  * Quando `GOOGLE_PLACES_API_KEY` e `GOOGLE_PLACE_ID` estiverem definidos,
  * `lib/google-reviews.ts` sobrescreve estes valores com o que a API devolver
@@ -17,8 +18,8 @@ export type Review = {
  */
 export const resumoAvaliacoes = {
   media: 4.6,
-  total: 763,
-  conferidoEm: "2026-09-16",
+  total: 777,
+  conferidoEm: "2026-11-02",
 };
 
 /**

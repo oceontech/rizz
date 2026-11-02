@@ -63,7 +63,7 @@ Os nomes estão em `.env.example`; os valores ficam no `.env.local` e na Vercel.
 | `DATABASE_URL` (+ `PG*`, `POSTGRES_*`, `NEON_*`) | Neon, provisionado pela Vercel Marketplace | ok |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob | ok |
 | `AUTH_SECRET` | assina o cookie do painel | ok |
-| `GOOGLE_PLACES_API_KEY`, `GOOGLE_PLACE_ID` | avaliações do Google | **não configuradas**: o site usa o retrato fixo em `data/reviews.ts` |
+| `GOOGLE_PLACES_API_KEY` (+ `GOOGLE_PLACE_ID`, opcional) | textos das avaliações do Google | **chave não configurada**: o site usa a nota fixa de `data/reviews.ts`. O Place ID já está em `site.googlePlaceId`; a variável só o sobrescreve |
 | `RESEND_API_KEY` | envio de e-mails (Resend) | **em configuração** (ver `docs/ESTADO.md`) |
 | `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCIA` | WhatsApp pela Evolution API (VPS, `https://evo.rizz.genext.group`) | ok |
 | `CRON_SECRET` | protege a rota dos lembretes (`/api/whatsapp/lembretes`); o mesmo valor está no cron da VPS | ok |

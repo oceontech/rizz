@@ -43,7 +43,8 @@ const CAMPOS = "rating,userRatingCount,reviews,googleMapsUri";
 
 export async function buscarAvaliacoesGoogle(): Promise<ResultadoAvaliacoes> {
   const chave = process.env.GOOGLE_PLACES_API_KEY;
-  const placeId = process.env.GOOGLE_PLACE_ID;
+  // O Place ID não é segredo e já está em `site`; a variável só sobrescreve.
+  const placeId = process.env.GOOGLE_PLACE_ID ?? site.googlePlaceId;
 
   if (!chave || !placeId) {
     return {
