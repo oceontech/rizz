@@ -84,7 +84,9 @@ export default function HeroB() {
       const mm = gsap.matchMedia();
 
       mm.add(CONDICOES, (contexto) => {
-        if (contexto.conditions?.parado) {
+        // Quem já rolou (a cortina saiu tarde, rede lenta) vê o texto pronto:
+        // refazer a entrada no meio da rolagem fazia o bloco sumir e subir.
+        if (contexto.conditions?.parado || (pronto && window.scrollY > 0)) {
           gsap.set(entrada, { opacity: 1, y: 0 });
           gsap.set(veu, { opacity: 1 });
           return;

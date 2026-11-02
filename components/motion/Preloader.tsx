@@ -32,9 +32,6 @@ export default function Preloader() {
     () => {
       const no = raiz.current;
 
-      // O JS está vivo: ele assume a saída e dispensa o resgate do CSS.
-      no?.removeAttribute("data-cortina");
-
       let solto = false;
       const soltar = () => {
         if (solto) return;
@@ -51,6 +48,28 @@ export default function Preloader() {
         soltar();
         return;
       }
+
+      /**
+       * JS que chega tarde (rede lenta) não toca a abertura. Até ele chegar,
+       * a página já está no ar por baixo da cortina, e o resgate em CSS a
+       * tira aos 4s. Tocar a abertura nessa hora fazia a cortina voltar por
+       * cima de uma página que a pessoa já estava rolando, travar a rolagem
+       * por quase 2s e soltar a entrada do hero de novo: o "espasmo" da
+       * primeira rolagem no celular. Agora ela só se dissolve.
+       */
+      if (window.scrollY > 0 || performance.now() > 3000) {
+        // Parte de onde o resgate do CSS estiver (talvez já sumida), sem
+        // reacender a cortina ao tirar a animação.
+        const opacidade = Number(getComputedStyle(no).opacity);
+        gsap.set(no, { opacity: opacidade, pointerEvents: "none" });
+        no.removeAttribute("data-cortina");
+        gsap.to(no, { autoAlpha: 0, duration: opacidade ? 0.3 : 0, ease: "none" });
+        soltar();
+        return;
+      }
+
+      // O JS está vivo: ele assume a saída e dispensa o resgate do CSS.
+      no.removeAttribute("data-cortina");
 
       if (semMovimento) {
         // Sem deslocamento nenhum: a assinatura só acende e a cortina se

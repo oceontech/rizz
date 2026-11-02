@@ -10,6 +10,14 @@ import { ScrollTrigger } from "@/lib/gsap";
  * troca de rota, fontes que terminam de carregar, mídia que decodifica.
  * Sem isso, o start/end das ScrollTriggers fica calculado em cima de uma
  * página que ainda não tinha altura final.
+ *
+ * Fontes e `load` só remedem se a altura da página mudou desde o último
+ * refresh. O refresh leva a página ao topo para medir e depois devolve a
+ * posição; no celular com rede lenta o `load` chega quando a pessoa já
+ * começou a rolar (o GSAP adia para o fim do gesto), e a página dava um
+ * tranco logo após a primeira rolagem do hero — no iPhone ainda com a
+ * barra de endereço voltando. Na maioria das vezes a altura nem mudou
+ * (imagens e vídeos têm espaço reservado), então não há o que remedir.
  */
 export default function ScrollRefresh() {
   const pathname = usePathname();
@@ -21,18 +29,23 @@ export default function ScrollRefresh() {
 
   useEffect(() => {
     let vivo = true;
+    let altura = -1;
+    const anotar = () => {
+      altura = document.documentElement.scrollHeight;
+    };
+    ScrollTrigger.addEventListener("refresh", anotar);
 
-    document.fonts?.ready.then(() => {
-      if (vivo) ScrollTrigger.refresh();
-    });
+    const seMudou = () => {
+      if (vivo && document.documentElement.scrollHeight !== altura) ScrollTrigger.refresh();
+    };
 
-    // Imagens com lazy loading mudam a altura ao entrar em cena.
-    const onLoad = () => ScrollTrigger.refresh();
-    window.addEventListener("load", onLoad);
+    document.fonts?.ready.then(seMudou);
+    window.addEventListener("load", seMudou);
 
     return () => {
       vivo = false;
-      window.removeEventListener("load", onLoad);
+      ScrollTrigger.removeEventListener("refresh", anotar);
+      window.removeEventListener("load", seMudou);
     };
   }, []);
 
