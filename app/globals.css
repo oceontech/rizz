@@ -82,6 +82,21 @@
     background-color: var(--color-noite);
   }
 
+  /* Notebooks: tela larga e baixa (1366×657, 1280×600 com a barra do
+     navegador). Títulos, espaços e textos são em rem e batem no mesmo teto
+     que num monitor de 1920×969, mas aqui sobra 30% menos altura, e as
+     seções passavam da tela. A unidade base passa a seguir a altura da
+     janela (16px a partir de 800px de altura, ~14px em 657, 13px no mínimo,
+     para as legendas pequenas continuarem legíveis), e o conteúdo inteiro
+     encolhe junto. As mídias em pé têm, além disso, um teto pela altura da
+     tela (`max-w-[calc((100svh-…)*proporção)]` nos componentes da home). Os breakpoints do Tailwind (em rem) não mudam: media
+     queries usam o tamanho padrão do navegador, não o do html. */
+  @media (min-width: 64rem) and (max-height: 56rem) {
+    html {
+      font-size: clamp(0.8125rem, 1.333svh + 0.333rem, 1rem);
+    }
+  }
+
   body {
     color: var(--color-creme);
     font-family: var(--font-sans);

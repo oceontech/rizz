@@ -105,7 +105,7 @@ export default function RodizioB() {
         </div>
 
         {/* Vídeo e fotos */}
-        <div className="relative mx-auto w-full max-w-sm md:col-span-5 md:col-start-8 md:max-w-none lg:col-span-4 lg:col-start-8">
+        <div className="relative mx-auto w-full max-w-sm md:col-span-5 md:col-start-8 md:max-w-[calc((100svh-8rem)*9/16)] lg:col-span-4 lg:col-start-8">
           <VideoComSom nome="rodizio" posicaoBotao="left-5 md:left-auto md:right-5" rotulo="O rodízio de risotos explicado no restaurante: arancini, seis risotos e a sobremesa da semana" />
           <div data-profundidade="16" className="absolute -right-6 -bottom-12 w-[58%] shadow-[0_30px_60px_rgb(0_0_0/0.5)] md:right-auto md:-bottom-16 md:-left-[22%] md:w-[66%]">
             <div className="relative aspect-[4/3] overflow-hidden">

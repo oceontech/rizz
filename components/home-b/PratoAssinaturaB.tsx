@@ -168,7 +168,7 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
 
         {/* Preparo + foto sobreposta */}
         {/* No celular fica só a apresentação, para a tela não pesar. */}
-        <div data-entrada-prato className="relative order-2 hidden md:order-1 md:col-span-4 md:block">
+        <div data-entrada-prato className="relative order-2 hidden w-full md:order-1 md:col-span-4 md:mx-auto md:block md:max-w-[calc((100svh-8rem)*9/15)]">
           <div className="relative aspect-[9/15] overflow-hidden">
             <VideoB nome="camarao-preparo" rotulo="Camarões sendo empanados e o prato sendo montado" className="absolute inset-0 size-full object-cover" />
           </div>
@@ -193,12 +193,16 @@ export default function PratoAssinaturaB({ prato, entradaPeloVideo = false }: { 
 
         {/* Apresentação. No celular, no fim do vídeo entram as fotos e o preço. */}
         <div data-entrada-prato className="relative order-1 md:order-3 md:col-span-4 md:pl-10 lg:pl-16">
-          <VideoComSom
-            nome="camarao-apresentacao"
-            rotulo="O prato apresentado no salão do Rizz"
-            somAutomatico
-            final={<FinalPrato prato={prato} />}
-          />
+          {/* Teto pela altura da tela: em notebook (largo e baixo) o vídeo em
+              pé, medido pela largura da coluna, passava da tela. */}
+          <div className="md:mx-auto md:max-w-[calc((100svh-8rem)*9/16)]">
+            <VideoComSom
+              nome="camarao-apresentacao"
+              rotulo="O prato apresentado no salão do Rizz"
+              somAutomatico
+              final={<FinalPrato prato={prato} />}
+            />
+          </div>
         </div>
       </div>
     </section>
