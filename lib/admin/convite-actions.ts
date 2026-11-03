@@ -47,12 +47,12 @@ export async function aceitarConvite(_: EstadoConvite, form: FormData): Promise<
     id = Number(u.id);
     versao = Number(u.sessao_versao);
   } else {
-    const [c] = await sql`select papel, permissoes, criado_por from admin_convites where id = ${link.id}`;
+    const [c] = await sql`select papel, permissoes, criado_por, telefone from admin_convites where id = ${link.id}`;
     try {
       const [u] = await sql`
-        insert into admin_usuarios (nome, email, senha_hash, papel, permissoes, cargo, convidado_por)
+        insert into admin_usuarios (nome, email, senha_hash, papel, permissoes, cargo, telefone, convidado_por)
         values (${d.nome}, ${link.email.toLowerCase()}, ${hash}, ${c.papel}, ${c.permissoes ? JSON.stringify(c.permissoes) : null}::jsonb,
-                ${link.cargo || null}, ${c.criado_por})
+                ${link.cargo || null}, ${c.telefone ?? null}, ${c.criado_por})
         returning id, sessao_versao`;
       id = Number(u.id);
       versao = Number(u.sessao_versao);

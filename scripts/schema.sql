@@ -39,6 +39,9 @@ create table if not exists admin_convites (
   revogado_em timestamptz
 );
 create index if not exists admin_convites_email on admin_convites (lower(email));
+-- WhatsApp da pessoa: o convite e o link de nova senha vão por ele também.
+alter table admin_usuarios add column if not exists telefone text;
+alter table admin_convites add column if not exists telefone text;
 
 -- Cardápio ----------------------------------------------------
 

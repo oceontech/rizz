@@ -7,7 +7,9 @@ import { sql } from "@/lib/db";
 import { AREAS, permissoesDe } from "@/lib/permissoes";
 
 import { ErroAmigavel, protegida } from "./comum";
+import { enviarLinkDeAcesso } from "./envio-acesso";
 import { novoToken, origemAtual } from "./equipe";
+import { normalizarTelefone } from "./formato";
 
 const DIA = 864e5;
 const nivel = z.enum(["nenhum", "ver", "editar"]);
@@ -29,7 +31,7 @@ function conferirDono(sessao: Sessao, papelEnvolvido: string) {
 
 async function alvo(sessao: Sessao, id: number) {
   if (id === sessao.id) throw new ErroAmigavel("Para mudar o seu próprio acesso, peça a outro administrador.");
-  const [u] = await sql`select id, nome, papel, ativo from admin_usuarios where id = ${id}`;
+  const [u] = await sql`select id, nome, email, telefone, papel, ativo from admin_usuarios where id = ${id}`;
   if (!u) throw new ErroAmigavel("Pessoa não encontrada.");
   conferirDono(sessao, String(u.papel));
   return u;
@@ -41,13 +43,24 @@ async function garantirOutroDono(id: number) {
   if (Number(n) === 0) throw new ErroAmigavel("É preciso ter pelo menos um administrador ativo.");
 }
 
+const telefone = z
+  .string()
+  .transform(normalizarTelefone)
+  .refine((t) => t === "" || /^\d{10,11}$/.test(t), "WhatsApp com DDD, ex.: (19) 99999-9999.");
+
 const esquemaConvite = esquemaAcesso.extend({
   nome: z.string().trim().min(2, "Informe o nome da pessoa.").max(60),
   email: z.string().trim().toLowerCase().email("Informe um e-mail válido."),
+  telefone,
   validadeDias: z.number().int().min(1).max(30),
 });
 
-/** Cria o convite e devolve o link (aparece uma vez; dá para gerar outro depois). */
+const prazo = (dias: number) => (dias === 1 ? "1 dia" : `${dias} dias`);
+
+/**
+ * Cria o convite e já envia o link por e-mail e WhatsApp (os canais que
+ * estiverem ligados). Devolve o link também, para copiar se nada sair.
+ */
 export async function convidar(entrada: z.infer<typeof esquemaConvite>) {
   return protegida("equipe", async (sessao) => {
     const d = esquemaConvite.parse(entrada);
@@ -58,14 +71,24 @@ export async function convidar(entrada: z.infer<typeof esquemaConvite>) {
     await sql`update admin_convites set revogado_em = now()
               where tipo = 'convite' and lower(email) = ${d.email} and usado_em is null and revogado_em is null`;
     const { token, hash } = novoToken();
-    await sql`insert into admin_convites (token_hash, tipo, nome, email, cargo, papel, permissoes, criado_por, expira_em)
-              values (${hash}, 'convite', ${d.nome}, ${d.email}, ${d.cargo || null}, ${d.papel}, ${matriz(d)}::jsonb,
+    await sql`insert into admin_convites (token_hash, tipo, nome, email, telefone, cargo, papel, permissoes, criado_por, expira_em)
+              values (${hash}, 'convite', ${d.nome}, ${d.email}, ${d.telefone || null}, ${d.cargo || null}, ${d.papel}, ${matriz(d)}::jsonb,
                       ${sessao.id}, ${new Date(Date.now() + d.validadeDias * DIA).toISOString()})`;
-    return { link: `${await origemAtual()}/admin/convite/${token}` };
+    const link = `${await origemAtual()}/admin/convite/${token}`;
+    const envios = await enviarLinkDeAcesso({
+      tipo: "convite",
+      nome: d.nome,
+      email: d.email,
+      telefone: d.telefone,
+      link,
+      validade: prazo(d.validadeDias),
+      quemConvidou: sessao.nome.split(" ")[0],
+    });
+    return { link, envios };
   });
 }
 
-/** Gera um link novo para um convite pendente (o anterior deixa de valer). */
+/** Reenvia um convite pendente com link novo (o anterior deixa de valer) e mais 7 dias. */
 export async function renovarConvite(id: number) {
   return protegida("equipe", async (sessao) => {
     const [c] = await sql`select * from admin_convites where id = ${id} and tipo = 'convite' and usado_em is null and revogado_em is null`;
@@ -74,7 +97,17 @@ export async function renovarConvite(id: number) {
     const { token, hash } = novoToken();
     await sql`update admin_convites set token_hash = ${hash}, criado_por = ${sessao.id}, criado_em = now(),
               expira_em = ${new Date(Date.now() + 7 * DIA).toISOString()} where id = ${id}`;
-    return { link: `${await origemAtual()}/admin/convite/${token}` };
+    const link = `${await origemAtual()}/admin/convite/${token}`;
+    const envios = await enviarLinkDeAcesso({
+      tipo: "convite",
+      nome: String(c.nome ?? ""),
+      email: String(c.email ?? ""),
+      telefone: c.telefone ? String(c.telefone) : null,
+      link,
+      validade: prazo(7),
+      quemConvidou: sessao.nome.split(" ")[0],
+    });
+    return { link, envios };
   });
 }
 
@@ -84,14 +117,14 @@ export async function cancelarConvite(id: number) {
   });
 }
 
-export async function mudarAcesso(id: number, entrada: z.infer<typeof esquemaAcesso>) {
+export async function mudarAcesso(id: number, entrada: z.infer<typeof esquemaAcesso> & { telefone: string }) {
   return protegida("equipe", async (sessao) => {
-    const d = esquemaAcesso.parse(entrada);
+    const d = esquemaAcesso.extend({ telefone }).parse(entrada);
     const u = await alvo(sessao, id);
     conferirDono(sessao, d.papel);
     if (u.papel === "dono" && d.papel !== "dono") await garantirOutroDono(id);
-    await sql`update admin_usuarios set papel = ${d.papel}, permissoes = ${matriz(d)}::jsonb, cargo = ${d.cargo || null}
-              where id = ${id}`;
+    await sql`update admin_usuarios set papel = ${d.papel}, permissoes = ${matriz(d)}::jsonb, cargo = ${d.cargo || null},
+              telefone = ${d.telefone || null} where id = ${id}`;
   });
 }
 
@@ -119,14 +152,23 @@ export async function encerrarSessoesDe(id: number) {
   });
 }
 
-/** Link para a pessoa criar uma senha nova (vale 24 h e uma vez só). */
+/** Envia à pessoa um link para criar uma senha nova (vale 24 h e uma vez só). */
 export async function linkNovaSenha(id: number) {
   return protegida("equipe", async (sessao) => {
-    await alvo(sessao, id);
+    const u = await alvo(sessao, id);
     await sql`update admin_convites set revogado_em = now() where tipo = 'senha' and usuario_id = ${id} and usado_em is null and revogado_em is null`;
     const { token, hash } = novoToken();
     await sql`insert into admin_convites (token_hash, tipo, usuario_id, criado_por, expira_em)
               values (${hash}, 'senha', ${id}, ${sessao.id}, ${new Date(Date.now() + DIA).toISOString()})`;
-    return { link: `${await origemAtual()}/admin/convite/${token}` };
+    const link = `${await origemAtual()}/admin/convite/${token}`;
+    const envios = await enviarLinkDeAcesso({
+      tipo: "senha",
+      nome: String(u.nome),
+      email: String(u.email),
+      telefone: u.telefone ? String(u.telefone) : null,
+      link,
+      validade: "24 horas",
+    });
+    return { link, envios };
   });
 }

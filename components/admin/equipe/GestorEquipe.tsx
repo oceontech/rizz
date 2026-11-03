@@ -9,6 +9,8 @@ import {
   LogOut,
   Mail,
   MailPlus,
+  MessageCircle,
+  Send,
   RefreshCw,
   ShieldCheck,
   Trash2,
@@ -20,9 +22,10 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { avisar, BotaoSalvar, CampoSelect, CampoTexto, Confirmar } from "@/components/admin/campos";
+import { avisar, BotaoSalvar, CampoSelect, CampoTelefone, CampoTexto, Confirmar } from "@/components/admin/campos";
 import { Cabecalho, Janela, MenuAcoes, PainelLateral, Secao, Selo, useUltimo, type Tom } from "@/components/admin/ui";
 import { Button } from "@/components/sistema/ui/button";
+import type { Canais, Envio } from "@/lib/admin/envio-acesso";
 import type { ConvitePendente, Membro } from "@/lib/admin/equipe";
 import {
   cancelarConvite,
@@ -71,19 +74,30 @@ function relativo(iso: string | null, agora: number) {
 
 const diasAte = (iso: string, agora: number) => Math.max(0, Math.ceil((new Date(iso).getTime() - agora) / 864e5));
 
-// ─── Link gerado (convite ou nova senha) ───────────────────────
+// ─── Resultado do envio (convite ou nova senha) ────────────────
 
-type LinkPronto = { link: string; nome: string; email: string; tipo: "convite" | "senha"; validade: string };
+type EnvioPronto = { link: string; nome: string; tipo: "convite" | "senha"; envios: Envio[] };
 
-function JanelaLink({ dados, aoFechar }: { dados: LinkPronto | null; aoFechar: () => void }) {
+/** Linha "vai por e-mail / WhatsApp" do formulário, antes de enviar. */
+function CanalPrevisto({ icone: Icone, rotulo, destino, ligado, desligado }: { icone: typeof Mail; rotulo: string; destino: string; ligado: boolean; desligado: string }) {
+  return (
+    <li className="flex items-start gap-2.5 py-2 text-sm">
+      <Icone className={cn("mt-0.5 size-4 shrink-0", ligado ? "text-foreground" : "text-muted-foreground")} />
+      <span className="min-w-0">
+        <span className={cn("font-medium", !ligado && "text-muted-foreground")}>{rotulo}</span>
+        <span className="block truncate text-[13px] text-muted-foreground">{ligado ? destino : desligado}</span>
+      </span>
+    </li>
+  );
+}
+
+function JanelaEnvio({ dados, aoFechar }: { dados: EnvioPronto | null; aoFechar: () => void }) {
   const d = useUltimo(dados);
   const [copiado, setCopiado] = useState(false);
   if (!d) return null;
+  const enviados = d.envios.filter((e) => e.ok);
+  const nadaSaiu = enviados.length === 0;
   const primeiro = d.nome.split(" ")[0];
-  const mensagem =
-    d.tipo === "convite"
-      ? `Olá, ${primeiro}! Você foi convidado para o painel do Rizz Cucina & Vino. Crie sua senha por este link (vale ${d.validade}): ${d.link}`
-      : `Olá, ${primeiro}! Crie uma senha nova para o painel do Rizz por este link (vale ${d.validade}): ${d.link}`;
 
   async function copiar() {
     try {
@@ -99,9 +113,15 @@ function JanelaLink({ dados, aoFechar }: { dados: LinkPronto | null; aoFechar: (
     <Janela
       aberta={Boolean(dados)}
       aoFechar={aoFechar}
-      icone={Link2}
-      titulo={d.tipo === "convite" ? "Convite criado" : "Link de nova senha"}
-      descricao={`Envie para ${d.nome}. O link vale ${d.validade} e só pode ser usado uma vez.`}
+      icone={nadaSaiu ? Link2 : Send}
+      titulo={nadaSaiu ? "Link criado, mas não foi enviado" : d.tipo === "convite" ? `Convite enviado para ${primeiro}` : `Link de senha enviado para ${primeiro}`}
+      descricao={
+        nadaSaiu
+          ? "Nenhum canal de envio está disponível agora. Copie o link e mande para a pessoa."
+          : d.tipo === "convite"
+            ? "A pessoa toca no link, cria a senha e já entra com o acesso que você escolheu."
+            : "O link vale 24 horas e só pode ser usado uma vez."
+      }
       rodape={
         <Button className="rounded-full" onClick={aoFechar}>
           Pronto
@@ -109,34 +129,33 @@ function JanelaLink({ dados, aoFechar }: { dados: LinkPronto | null; aoFechar: (
       }
     >
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2 rounded-2xl border bg-muted/50 p-1.5 pl-3.5">
-          <span className="min-w-0 grow truncate font-mono text-[13px] select-all">{d.link}</span>
-          <Button size="sm" variant={copiado ? "secondary" : "default"} className="shrink-0 rounded-full" onClick={copiar}>
-            {copiado ? <Check /> : <Copy />}
-            {copiado ? "Copiado" : "Copiar"}
-          </Button>
+        {d.envios.length > 0 && (
+          <ul className="flex flex-col divide-y rounded-2xl border px-3.5">
+            {d.envios.map((e) => {
+              const Icone = e.canal === "email" ? Mail : MessageCircle;
+              return (
+                <li key={e.canal} className="flex items-center gap-3 py-3">
+                  <Icone className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 grow">
+                    <span className="block text-sm font-medium">{e.canal === "email" ? "E-mail" : "WhatsApp"}</span>
+                    <span className="block truncate text-[13px] text-muted-foreground">{e.ok ? e.destino : e.motivo}</span>
+                  </span>
+                  <Selo tom={e.ok ? "positivo" : "neutro"}>{e.ok ? "Enviado" : "Não enviado"}</Selo>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <div className={cn("flex flex-col gap-2", !nadaSaiu && "rounded-2xl bg-muted/50 p-3.5")}>
+          {!nadaSaiu && <p className="text-[13px] text-muted-foreground">Se a pessoa não receber, copie o link e mande por outro caminho.</p>}
+          <div className="flex items-center gap-2 rounded-2xl border bg-background p-1.5 pl-3.5">
+            <span className="min-w-0 grow truncate font-mono text-[13px] select-all">{d.link}</span>
+            <Button size="sm" variant={copiado ? "secondary" : nadaSaiu ? "default" : "secondary"} className="shrink-0 rounded-full" onClick={copiar}>
+              {copiado ? <Check /> : <Copy />}
+              {copiado ? "Copiado" : "Copiar link"}
+            </Button>
+          </div>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent(mensagem)}`}
-            target="_blank"
-            rel="noopener"
-            className="flex h-11 items-center justify-center gap-2 rounded-full bg-[#25d366] px-4 text-sm font-semibold text-[#0b3d1f] transition-opacity hover:opacity-90"
-          >
-            Enviar pelo WhatsApp
-          </a>
-          {d.email && (
-            <a
-              href={`mailto:${d.email}?subject=${encodeURIComponent("Acesso ao painel do Rizz")}&body=${encodeURIComponent(mensagem)}`}
-              className="flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors hover:bg-muted"
-            >
-              <Mail className="size-4" /> Enviar por e-mail
-            </a>
-          )}
-        </div>
-        <p className="text-[13px] text-muted-foreground">
-          Por segurança, o link não fica guardado no painel. Se perder, gere outro: o anterior deixa de valer.
-        </p>
       </div>
     </Janela>
   );
@@ -156,15 +175,18 @@ function PainelConvite({
   aberto,
   aoFechar,
   podeDarAdmin,
+  canais,
   aoCriar,
 }: {
   aberto: boolean;
   aoFechar: () => void;
   podeDarAdmin: boolean;
-  aoCriar: (l: LinkPronto) => void;
+  canais: Canais;
+  aoCriar: (l: EnvioPronto) => void;
 }) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [cargo, setCargo] = useState("");
   const [papel, setPapel] = useState<Papel>("colaborador");
   const [permissoes, setPermissoes] = useState<Permissoes>(permissoesDe("colaborador"));
@@ -174,6 +196,7 @@ function PainelConvite({
   function limpar() {
     setNome("");
     setEmail("");
+    setTelefone("");
     setCargo("");
     setPapel("colaborador");
     setPermissoes(permissoesDe("colaborador"));
@@ -182,10 +205,10 @@ function PainelConvite({
 
   async function enviar() {
     setEnviando(true);
-    const r = await convidar({ nome, email, cargo, papel, permissoes, validadeDias: Number(validade) });
+    const r = await convidar({ nome, email, telefone, cargo, papel, permissoes, validadeDias: Number(validade) });
     setEnviando(false);
     if (!r.ok) return avisar(r, "");
-    aoCriar({ link: r.dados!.link, nome, email, tipo: "convite", validade: VALIDADES.find((v) => v.id === validade)!.rotulo });
+    aoCriar({ link: r.dados!.link, nome, tipo: "convite", envios: r.dados!.envios });
     limpar();
   }
 
@@ -203,7 +226,7 @@ function PainelConvite({
             Cancelar
           </Button>
           <BotaoSalvar pendente={enviando} onClick={enviar} className="ml-auto" disabled={nome.trim().length < 2 || !email.includes("@")}>
-            <MailPlus /> Criar convite
+            <Send /> Enviar convite
           </BotaoSalvar>
         </>
       }
@@ -213,7 +236,10 @@ function PainelConvite({
           <CampoTexto label="Nome" value={nome} onChange={setNome} maxLength={60} placeholder="Ana Souza" autoFocus />
           <CampoTexto label="Cargo (opcional)" value={cargo} onChange={setCargo} maxLength={40} placeholder="Recepção" />
         </div>
-        <CampoTexto label="E-mail" tipo="email" value={email} onChange={setEmail} descricao="É com ele que a pessoa vai entrar no painel." />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <CampoTexto label="E-mail" tipo="email" value={email} onChange={setEmail} descricao="É com ele que a pessoa vai entrar no painel." />
+          <CampoTelefone label="WhatsApp (opcional)" value={telefone} onChange={setTelefone} descricao="Para receber o convite também por lá." />
+        </div>
         <EditorAcesso
           papel={papel}
           permissoes={permissoes}
@@ -224,6 +250,19 @@ function PainelConvite({
           }}
         />
         <CampoSelect label="O link vale por" value={validade} onChange={setValidade} opcoes={VALIDADES} className="sm:max-w-56" />
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium">O convite vai por</span>
+          <ul className="flex flex-col divide-y rounded-2xl border px-3.5">
+            <CanalPrevisto icone={Mail} rotulo="E-mail" ligado={canais.email} destino={email || "o e-mail informado acima"} desligado="Ainda não configurado: o link aparece para você copiar" />
+            <CanalPrevisto
+              icone={MessageCircle}
+              rotulo="WhatsApp"
+              ligado={canais.whatsapp && telefone.replace(/\D/g, "").length >= 12}
+              destino={`Pelo WhatsApp do restaurante, para ${telefone ? "o número informado" : "o número"}`}
+              desligado={canais.whatsapp ? "Informe o número acima para enviar por aqui também" : "WhatsApp do restaurante desconectado (Configurações → WhatsApp)"}
+            />
+          </ul>
+        </div>
       </div>
     </PainelLateral>
   );
@@ -243,6 +282,7 @@ function PainelAcesso({
   const [papel, setPapel] = useState<Papel>(membro?.papel ?? "colaborador");
   const [permissoes, setPermissoes] = useState<Permissoes>(membro?.permissoes ?? permissoesDe("colaborador"));
   const [cargo, setCargo] = useState(membro?.cargo ?? "");
+  const [telefone, setTelefone] = useState(membro?.telefone ?? "");
   const [salvando, setSalvando] = useState(false);
   if (membro !== de) {
     setDe(membro);
@@ -250,13 +290,14 @@ function PainelAcesso({
       setPapel(membro.papel);
       setPermissoes(membro.permissoes);
       setCargo(membro.cargo);
+      setTelefone(membro.telefone);
     }
   }
   if (!m) return null;
 
   async function salvar() {
     setSalvando(true);
-    const r = await mudarAcesso(m!.id, { papel, permissoes, cargo });
+    const r = await mudarAcesso(m!.id, { papel, permissoes, cargo, telefone });
     setSalvando(false);
     if (avisar(r, `Acesso de ${m!.nome.split(" ")[0]} atualizado`)) aoFechar();
   }
@@ -281,7 +322,10 @@ function PainelAcesso({
       }
     >
       <div className="flex flex-col gap-5">
-        <CampoTexto label="Cargo (opcional)" value={cargo} onChange={setCargo} maxLength={40} placeholder="Recepção" className="sm:max-w-sm" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <CampoTexto label="Cargo (opcional)" value={cargo} onChange={setCargo} maxLength={40} placeholder="Recepção" />
+          <CampoTelefone label="WhatsApp (opcional)" value={telefone} onChange={setTelefone} descricao="Recebe por aqui o link de nova senha." />
+        </div>
         <EditorAcesso
           papel={papel}
           permissoes={permissoes}
@@ -347,17 +391,19 @@ export default function GestorEquipe({
   eu,
   podeEditar,
   agora,
+  canais,
 }: {
   membros: Membro[];
   convites: ConvitePendente[];
   eu: { id: number; papel: Papel };
   podeEditar: boolean;
   agora: number;
+  canais: Canais;
 }) {
   const router = useRouter();
   const [convidando, setConvidando] = useState(false);
   const [editando, setEditando] = useState<Membro | null>(null);
-  const [link, setLink] = useState<LinkPronto | null>(null);
+  const [envio, setEnvio] = useState<EnvioPronto | null>(null);
   const [confirmar, setConfirmar] = useState<Pendente | null>(null);
   const ultimoConfirmar = useUltimo(confirmar);
   const souAdmin = eu.papel === "dono";
@@ -376,7 +422,7 @@ export default function GestorEquipe({
     if (id === "acesso") setEditando(m);
     if (id === "senha") {
       const r = await linkNovaSenha(m.id);
-      if (r.ok) setLink({ link: r.dados!.link, nome: m.nome, email: m.email, tipo: "senha", validade: "24 horas" });
+      if (r.ok) setEnvio({ link: r.dados!.link, nome: m.nome, tipo: "senha", envios: r.dados!.envios });
       else avisar(r, "");
     }
     if (id === "sessoes") executar(encerrarSessoesDe(m.id), `${primeiro} vai precisar entrar de novo`);
@@ -389,7 +435,7 @@ export default function GestorEquipe({
     if (id === "link") {
       const r = await renovarConvite(c.id);
       if (r.ok) {
-        setLink({ link: r.dados!.link, nome: c.nome, email: c.email, tipo: "convite", validade: "7 dias" });
+        setEnvio({ link: r.dados!.link, nome: c.nome, tipo: "convite", envios: r.dados!.envios });
         router.refresh();
       } else avisar(r, "");
     }
@@ -427,7 +473,7 @@ export default function GestorEquipe({
               aoEscolher={(id) => acaoMembro(m, id)}
               acoes={[
                 m.ativo && { id: "acesso", rotulo: "Mudar acesso e cargo", icone: ShieldCheck },
-                m.ativo && { id: "senha", rotulo: "Gerar link de nova senha", icone: KeyRound },
+                m.ativo && { id: "senha", rotulo: "Enviar link de nova senha", icone: KeyRound },
                 m.ativo && { id: "sessoes", rotulo: "Desconectar dos aparelhos", icone: LogOut },
                 m.ativo ? { id: "desativar", rotulo: "Desativar acesso", icone: Ban, separar: true } : { id: "reativar", rotulo: "Reativar acesso", icone: UserCheck },
                 { id: "remover", rotulo: "Remover da equipe", icone: Trash2, perigo: true, separar: !m.ativo },
@@ -491,7 +537,7 @@ export default function GestorEquipe({
                         rotulo={`Ações do convite de ${c.nome}`}
                         aoEscolher={(id) => acaoConvite(c, id)}
                         acoes={[
-                          { id: "link", rotulo: "Gerar novo link", icone: RefreshCw },
+                          { id: "link", rotulo: "Reenviar convite", icone: RefreshCw },
                           { id: "cancelar", rotulo: "Cancelar convite", icone: X, perigo: true, separar: true },
                         ]}
                       />
@@ -506,7 +552,7 @@ export default function GestorEquipe({
         <Secao
           icone={Users}
           titulo={`Pessoas com acesso (${ativos.length})`}
-          descricao={podeEditar ? "Toque no ⋯ para mudar o acesso, gerar uma senha nova ou desativar." : "Seu acesso à equipe é só para consultar."}
+          descricao={podeEditar ? "Toque no ⋯ para mudar o acesso, enviar uma senha nova ou desativar." : "Seu acesso à equipe é só para consultar."}
         >
           <ul className="flex flex-col divide-y">{ativos.map(linhaMembro)}</ul>
           {inativos.length > 0 && (
@@ -526,14 +572,15 @@ export default function GestorEquipe({
         aberto={convidando}
         aoFechar={() => setConvidando(false)}
         podeDarAdmin={souAdmin}
+        canais={canais}
         aoCriar={(l) => {
           setConvidando(false);
-          setLink(l);
+          setEnvio(l);
           router.refresh();
         }}
       />
       <PainelAcesso membro={editando} aoFechar={() => { setEditando(null); router.refresh(); }} podeDarAdmin={souAdmin} />
-      <JanelaLink dados={link} aoFechar={() => setLink(null)} />
+      <JanelaEnvio dados={envio} aoFechar={() => setEnvio(null)} />
       <Confirmar
         aberto={Boolean(confirmar)}
         onFechar={() => setConfirmar(null)}
