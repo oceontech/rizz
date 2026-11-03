@@ -1,7 +1,9 @@
 import "server-only";
 
-import { emailComBotao, emailConfigurado, enviarEmail, ErroEmail } from "@/lib/email";
+import { emailConfigurado, enviarEmail, ErroEmail } from "@/lib/email";
+import { emailAcesso, whatsappAcesso, type DadosAcesso, type EtapaAcesso } from "@/lib/emails/acesso";
 import { site } from "@/lib/site";
+import { urlDoSite } from "@/lib/whatsapp/avisos";
 import { enviarTexto, ErroEvolution, evolutionConfigurada, infoInstancia } from "@/lib/whatsapp/evolution";
 
 import { mascaraTelefone, normalizarTelefone } from "./formato";
@@ -25,21 +27,22 @@ export async function canaisDisponiveis(): Promise<Canais> {
 }
 
 /**
- * Manda o link de convite ou de nova senha pelos canais disponíveis. Nunca
- * falha: devolve o resultado de cada canal para a tela mostrar (e, se nada
- * saiu, a tela oferece o link para copiar).
+ * Manda a mensagem da etapa (convite, nova senha, recuperação ou aviso de
+ * senha alterada) pelos canais disponíveis. Nunca falha: devolve o resultado
+ * de cada canal para a tela mostrar (e, se nada saiu, a tela oferece o link).
  */
-export async function enviarLinkDeAcesso(d: {
-  tipo: "convite" | "senha";
-  nome: string;
-  email: string;
-  telefone: string | null;
-  link: string;
-  validade: string;
-  quemConvidou?: string;
-}): Promise<Envio[]> {
-  const primeiro = d.nome.split(" ")[0] || d.nome;
-  const convite = d.tipo === "convite";
+export async function enviarAcesso(
+  etapa: EtapaAcesso,
+  d: { nome: string; email: string; telefone: string | null; link?: string; validade?: string; quem?: string; papel?: string; cargo?: string },
+): Promise<Envio[]> {
+  const urlSite = urlDoSite();
+  const dados: DadosAcesso = {
+    ...d,
+    urlSite,
+    urlMarca: `${urlSite}/email/marca.png`,
+    endereco: `${site.endereco.rua} · ${site.endereco.cidade}/${site.endereco.uf}`,
+    nomeRestaurante: site.nome,
+  };
   const resultados: Envio[] = [];
   const canais = await canaisDisponiveis();
 
@@ -48,25 +51,8 @@ export async function enviarLinkDeAcesso(d: {
       resultados.push({ canal: "email", destino: d.email, ok: false, motivo: "E-mail ainda não configurado" });
     } else {
       try {
-        await enviarEmail({
-          para: d.email,
-          assunto: convite ? `Seu acesso ao painel do ${site.nome}` : `Nova senha do painel do ${site.nome}`,
-          texto: convite
-            ? `Olá, ${primeiro}! ${d.quemConvidou ?? "A equipe"} convidou você para o painel do ${site.nome}. Crie sua senha por este link (vale ${d.validade}): ${d.link}`
-            : `Olá, ${primeiro}! Crie uma senha nova para o painel do ${site.nome} por este link (vale ${d.validade}): ${d.link}`,
-          html: emailComBotao({
-            titulo: convite ? `Olá, ${primeiro}! Você foi convidado para o painel.` : `Olá, ${primeiro}! Vamos criar uma senha nova.`,
-            paragrafos: convite
-              ? [
-                  `${d.quemConvidou ?? "A equipe"} convidou você para o painel do ${site.nome}, onde ficam reservas, cardápio e o site do restaurante.`,
-                  `Toque no botão para criar sua senha. O link vale ${d.validade} e só pode ser usado uma vez.`,
-                ]
-              : [`Toque no botão para escolher a senha nova. O link vale ${d.validade} e só pode ser usado uma vez.`],
-            botao: convite ? "Criar minha senha" : "Criar senha nova",
-            link: d.link,
-            rodape: "Se você não esperava esta mensagem, pode ignorar: sem usar o link, nada muda.",
-          }),
-        });
+        const e = emailAcesso(etapa, dados);
+        await enviarEmail({ para: d.email, assunto: e.assunto, html: e.html, texto: e.texto });
         resultados.push({ canal: "email", destino: d.email, ok: true });
       } catch (erro) {
         resultados.push({ canal: "email", destino: d.email, ok: false, motivo: erro instanceof ErroEmail ? erro.message : "Falha ao enviar o e-mail" });
@@ -81,12 +67,7 @@ export async function enviarLinkDeAcesso(d: {
       resultados.push({ canal: "whatsapp", destino, ok: false, motivo: "WhatsApp do restaurante desconectado" });
     } else {
       try {
-        await enviarTexto(
-          tel,
-          convite
-            ? `Olá, ${primeiro}! 👋\n${d.quemConvidou ?? "A equipe"} convidou você para o painel do *${site.nome}*.\n\nCrie sua senha por este link (vale ${d.validade}, uso único):\n${d.link}`
-            : `Olá, ${primeiro}!\nPara criar uma senha nova no painel do *${site.nome}*, use este link (vale ${d.validade}, uso único):\n${d.link}`,
-        );
+        await enviarTexto(tel, whatsappAcesso(etapa, dados));
         resultados.push({ canal: "whatsapp", destino, ok: true });
       } catch (erro) {
         resultados.push({ canal: "whatsapp", destino, ok: false, motivo: erro instanceof ErroEvolution ? erro.message : "Falha ao enviar pelo WhatsApp" });
@@ -94,4 +75,13 @@ export async function enviarLinkDeAcesso(d: {
     }
   }
   return resultados;
+}
+
+/** Aviso de segurança depois de trocar a senha. Não atrapalha quem trocou se falhar. */
+export async function avisarSenhaAlterada(u: { nome: string; email: string; telefone: string | null }) {
+  try {
+    await enviarAcesso("senha-alterada", u);
+  } catch (erro) {
+    console.error("[acesso] aviso de senha alterada", erro);
+  }
 }

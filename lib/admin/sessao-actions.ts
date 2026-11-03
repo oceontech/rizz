@@ -8,7 +8,7 @@ import { z } from "zod";
 import { encerrarSessao, exigirSessao, iniciarSessao } from "@/lib/auth";
 import { sql } from "@/lib/db";
 
-import { enviarLinkDeAcesso } from "./envio-acesso";
+import { avisarSenhaAlterada, enviarAcesso } from "./envio-acesso";
 import { novoToken, origemAtual } from "./equipe";
 import { normalizarTelefone } from "./formato";
 
@@ -80,6 +80,7 @@ export async function trocarSenha(_: EstadoSenha, form: FormData): Promise<Estad
   const [l] = await sql`update admin_usuarios set senha_hash = ${hash}, sessao_versao = sessao_versao + 1
                         where id = ${sessao.id} returning sessao_versao`;
   await iniciarSessao({ id: sessao.id, versao: Number(l.sessao_versao) });
+  await avisarSenhaAlterada({ nome: sessao.nome, email: sessao.email, telefone: sessao.telefone || null });
   return { ok: true };
 }
 
@@ -138,8 +139,7 @@ export async function pedirNovaSenha(_: EstadoEsqueci, form: FormData): Promise<
       const { token, hash } = novoToken();
       await sql`insert into admin_convites (token_hash, tipo, usuario_id, expira_em)
                 values (${hash}, 'senha', ${u.id}, ${new Date(Date.now() + 864e5).toISOString()})`;
-      await enviarLinkDeAcesso({
-        tipo: "senha",
+      await enviarAcesso("recuperacao", {
         nome: String(u.nome),
         email: String(u.email),
         telefone: u.telefone ? String(u.telefone) : null,

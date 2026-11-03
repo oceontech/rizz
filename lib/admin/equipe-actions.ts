@@ -4,10 +4,10 @@ import { z } from "zod";
 
 import type { Sessao } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { AREAS, permissoesDe } from "@/lib/permissoes";
+import { AREAS, papelInfo, permissoesDe } from "@/lib/permissoes";
 
 import { ErroAmigavel, protegida } from "./comum";
-import { enviarLinkDeAcesso } from "./envio-acesso";
+import { enviarAcesso } from "./envio-acesso";
 import { novoToken, origemAtual } from "./equipe";
 import { normalizarTelefone } from "./formato";
 
@@ -75,14 +75,15 @@ export async function convidar(entrada: z.infer<typeof esquemaConvite>) {
               values (${hash}, 'convite', ${d.nome}, ${d.email}, ${d.telefone || null}, ${d.cargo || null}, ${d.papel}, ${matriz(d)}::jsonb,
                       ${sessao.id}, ${new Date(Date.now() + d.validadeDias * DIA).toISOString()})`;
     const link = `${await origemAtual()}/admin/convite/${token}`;
-    const envios = await enviarLinkDeAcesso({
-      tipo: "convite",
+    const envios = await enviarAcesso("convite", {
       nome: d.nome,
       email: d.email,
       telefone: d.telefone,
       link,
       validade: prazo(d.validadeDias),
-      quemConvidou: sessao.nome.split(" ")[0],
+      quem: sessao.nome,
+      papel: papelInfo(d.papel).rotulo,
+      cargo: d.cargo,
     });
     return { link, envios };
   });
@@ -98,14 +99,15 @@ export async function renovarConvite(id: number) {
     await sql`update admin_convites set token_hash = ${hash}, criado_por = ${sessao.id}, criado_em = now(),
               expira_em = ${new Date(Date.now() + 7 * DIA).toISOString()} where id = ${id}`;
     const link = `${await origemAtual()}/admin/convite/${token}`;
-    const envios = await enviarLinkDeAcesso({
-      tipo: "convite",
+    const envios = await enviarAcesso("convite", {
       nome: String(c.nome ?? ""),
       email: String(c.email ?? ""),
       telefone: c.telefone ? String(c.telefone) : null,
       link,
       validade: prazo(7),
-      quemConvidou: sessao.nome.split(" ")[0],
+      quem: sessao.nome,
+      papel: papelInfo(String(c.papel) as Parameters<typeof papelInfo>[0]).rotulo,
+      cargo: c.cargo ? String(c.cargo) : undefined,
     });
     return { link, envios };
   });
@@ -161,13 +163,13 @@ export async function linkNovaSenha(id: number) {
     await sql`insert into admin_convites (token_hash, tipo, usuario_id, criado_por, expira_em)
               values (${hash}, 'senha', ${id}, ${sessao.id}, ${new Date(Date.now() + DIA).toISOString()})`;
     const link = `${await origemAtual()}/admin/convite/${token}`;
-    const envios = await enviarLinkDeAcesso({
-      tipo: "senha",
+    const envios = await enviarAcesso("senha-equipe", {
       nome: String(u.nome),
       email: String(u.email),
       telefone: u.telefone ? String(u.telefone) : null,
       link,
       validade: "24 horas",
+      quem: sessao.nome,
     });
     return { link, envios };
   });
