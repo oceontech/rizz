@@ -170,3 +170,23 @@ export async function usoDosSelos(): Promise<Record<string, number>> {
     group by id`;
   return Object.fromEntries(linhas.map((l) => [String(l.id), Number(l.n)]));
 }
+
+/** Números do resumo da aba Geral de Configurações (cada consulta tolera tabela ausente). */
+export async function resumoConfiguracoes() {
+  const n = async (q: Promise<Record<string, unknown>[]>) => {
+    try {
+      return Number((await q)[0]?.n ?? 0);
+    } catch {
+      return 0;
+    }
+  };
+  const [pessoas, convites, selos, whatsapp] = await Promise.all([
+    n(sql`select count(*)::int as n from admin_usuarios where ativo`),
+    n(sql`select count(*)::int as n from admin_convites where tipo = 'convite' and usado_em is null and revogado_em is null and expira_em > now()`),
+    n(sql`select count(*)::int as n from selos`),
+    n(sql`select (coalesce((valor->>'ativo')::boolean, false))::int as n from configuracoes where chave = 'whatsapp'`),
+  ]);
+  return { pessoas, convites, selos, whatsappAtivo: whatsapp === 1 };
+}
+
+export type ResumoConfiguracoes = Awaited<ReturnType<typeof resumoConfiguracoes>>;

@@ -83,7 +83,8 @@ lib/
   db.ts              cliente do Neon (`sql`, `bancoConfigurado`)
   dados.ts           leituras do site com cache (`unstable_cache` + tags) e fallback estático
   auth.ts            sessão do painel; `exigirSessao()` é a checagem que vale
-  admin/             Server Actions do painel (`*-actions.ts`, sempre via `protegida()`)
+  admin/             Server Actions do painel (`*-actions.ts`, sempre via `protegida(area, ...)`)
+  permissoes.ts      papéis, áreas e níveis de acesso do painel
   reservas/          regras de lotação (`regras.ts`, puras) e consultas (`servidor.ts`)
   selos.ts           selos do cardápio: tipos, formatos, símbolos e os padrões (desenho em components/ui/SeloSvg.tsx)
 data/                cardápio, executivo e avaliações estáticos (fallback e seed)
@@ -93,7 +94,7 @@ docs/                ESTADO.md (estado e pendências), reservas.md, COPY-RIZZ.md
 ENTREGA.md, PLANO.md histórico da v2 do site (decisões de design e animação); não é o estado atual
 ```
 
-Convenções do código: nomes em português (`salvarReserva`, `lerConfig`), comentários curtos explicando o porquê, Server Actions do painel sempre embrulhadas em `protegida()` (que checa a sessão e revalida o cache), e configurações em JSON na tabela `configuracoes` (chaves `aviso`, `fidelidade`, `reservas`, `whatsapp`, `home`), lidas com `lerConfig(chave, PADRAO)`.
+Convenções do código: nomes em português (`salvarReserva`, `lerConfig`), comentários curtos explicando o porquê, Server Actions do painel sempre embrulhadas em `protegida(area, fn)` (que checa a sessão e a permissão da área e revalida o cache; consultas passam `nivel: "ver"`), páginas do painel abertas com `exigirAcesso(area)`, e configurações em JSON na tabela `configuracoes` (chaves `aviso`, `fidelidade`, `reservas`, `whatsapp`, `home`), lidas com `lerConfig(chave, PADRAO)`.
 
 Cores do painel: ação em grafite (`primary`), vinho só em pontos de marca (`marca`), e cada área com a sua cor (`secao`, definida por `data-secao` no Shell a partir de `components/admin/nav.ts`). Situação com tons de significado (`Selo tom="positivo|atencao|negativo|info"`). Ações em menus "…" passam por `MenuAcoes` (não modal; ver o comentário lá antes de mudar).
 

@@ -21,7 +21,7 @@ const esquemaCliente = z.object({
 export type ClienteEntrada = z.infer<typeof esquemaCliente>;
 
 export async function salvarCliente(entrada: ClienteEntrada) {
-  return protegida(async () => {
+  return protegida("fidelidade", async () => {
     const d = esquemaCliente.parse(entrada);
     const telefone = normalizarTelefone(d.telefone);
     if (telefone.length < 10 || telefone.length > 11) throw new ErroAmigavel("Telefone inválido.");
@@ -43,14 +43,14 @@ export async function salvarCliente(entrada: ClienteEntrada) {
 }
 
 export async function excluirCliente(id: number) {
-  return protegida(async () => {
+  return protegida("fidelidade", async () => {
     await sql`delete from clientes where id = ${id}`;
   });
 }
 
 /** Carimba uma (ou mais) visitas. Devolve os selos atuais e se a meta foi batida. */
 export async function registrarVisita(clienteId: number, quantidade = 1, nota?: string) {
-  return protegida(async () => {
+  return protegida("fidelidade", async () => {
     if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > 10) {
       throw new ErroAmigavel("Quantidade inválida.");
     }
@@ -68,7 +68,7 @@ export async function registrarVisita(clienteId: number, quantidade = 1, nota?: 
 
 /** Resgata a recompensa: consome `meta` selos. */
 export async function resgatarRecompensa(clienteId: number) {
-  return protegida(async () => {
+  return protegida("fidelidade", async () => {
     const config = await lerConfig("fidelidade", FIDELIDADE_PADRAO);
     const [c] = await sql`
       update clientes set selos = selos - ${config.meta}, resgates = resgates + 1
@@ -80,7 +80,7 @@ export async function resgatarRecompensa(clienteId: number) {
 }
 
 export async function ajustarSelos(clienteId: number, selos: number, nota: string) {
-  return protegida(async () => {
+  return protegida("fidelidade", async () => {
     if (!Number.isInteger(selos) || selos < 0 || selos > 999) throw new ErroAmigavel("Valor inválido.");
     const [antes] = await sql`select selos from clientes where id = ${clienteId}`;
     if (!antes) throw new ErroAmigavel("Cliente não encontrado.");
@@ -91,7 +91,7 @@ export async function ajustarSelos(clienteId: number, selos: number, nota: strin
 }
 
 export async function historicoCliente(clienteId: number) {
-  return protegida(async () => {
+  return protegida("fidelidade", async () => {
     const linhas = await sql`
       select id, tipo, quantidade, nota, criado_em from fidelidade_eventos
       where cliente_id = ${clienteId} order by criado_em desc limit 30`;
@@ -115,7 +115,7 @@ const esquemaConfig = z.object({
 });
 
 export async function salvarConfigFidelidade(entrada: z.infer<typeof esquemaConfig>) {
-  return protegida(
+  return protegida("fidelidade",
     async () => {
       const d = esquemaConfig.parse(entrada);
       await sql`insert into configuracoes (chave, valor, atualizado_em) values ('fidelidade', ${JSON.stringify(d)}::jsonb, now())

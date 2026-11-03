@@ -21,7 +21,7 @@ const esquemaHome = z.object({
 });
 
 export async function salvarHome(entrada: z.infer<typeof esquemaHome>) {
-  return protegida(
+  return protegida("site",
     async () => {
       const d = esquemaHome.parse(entrada);
       const ids = [d.maisPedido.itemId, ...d.destaques];

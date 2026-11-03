@@ -255,6 +255,9 @@
 [data-secao="fidelidade"] { --secao: #d97706; --secao-texto: #b45309; --secao-sidebar: #fcd34d; }
 [data-secao="whatsapp"] { --secao: #16a34a; --secao-texto: #15803d; --secao-sidebar: #86efac; }
 [data-secao="configuracoes"] { --secao: #525252; --secao-texto: #404040; --secao-sidebar: #d4d4d4; }
+[data-secao="contato"] { --secao: #0284c7; --secao-texto: #0369a1; --secao-sidebar: #7dd3fc; }
+[data-secao="equipe"] { --secao: #4f46e5; --secao-texto: #4338ca; --secao-sidebar: #a5b4fc; }
+[data-secao="conta"] { --secao: #57534e; --secao-texto: #44403c; --secao-sidebar: #d6d3d1; }
 
 .dark [data-secao="inicio"], .dark[data-secao="inicio"] { --secao: #a3a3a3; --secao-texto: #e5e5e5; }
 .dark [data-secao="reservas"], .dark[data-secao="reservas"] { --secao: #3b82f6; --secao-texto: #93c5fd; }
@@ -268,6 +271,9 @@
 .dark [data-secao="fidelidade"], .dark[data-secao="fidelidade"] { --secao: #f59e0b; --secao-texto: #fcd34d; }
 .dark [data-secao="whatsapp"], .dark[data-secao="whatsapp"] { --secao: #22c55e; --secao-texto: #86efac; }
 .dark [data-secao="configuracoes"], .dark[data-secao="configuracoes"] { --secao: #a3a3a3; --secao-texto: #d4d4d4; }
+.dark [data-secao="contato"], .dark[data-secao="contato"] { --secao: #0ea5e9; --secao-texto: #7dd3fc; }
+.dark [data-secao="equipe"], .dark[data-secao="equipe"] { --secao: #6366f1; --secao-texto: #a5b4fc; }
+.dark [data-secao="conta"], .dark[data-secao="conta"] { --secao: #a8a29e; --secao-texto: #d6d3d1; }
 
 @layer base {
   * {

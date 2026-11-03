@@ -1,13 +1,6 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import GestorFuncionamento from "@/components/admin/funcionamento/GestorFuncionamento";
-import { exigirSessao } from "@/lib/auth";
-import { carregarConteudo } from "@/lib/conteudo-servidor";
-
-export const metadata: Metadata = { title: "Horários e contato" };
-
-export default async function FuncionamentoAdminPage() {
-  await exigirSessao();
-  const conteudo = await carregarConteudo();
-  return <GestorFuncionamento conteudo={conteudo} />;
+/** Endereço antigo: Horários e contato agora são abas de Configurações. */
+export default function FuncionamentoAntigo() {
+  redirect("/admin/configuracoes/horarios");
 }

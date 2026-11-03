@@ -34,7 +34,7 @@ const esquema = z.object({
  * o formulário só avisa. Toda reserva ganha código, para o link do cliente.
  */
 export async function salvarReserva(entrada: z.infer<typeof esquema>) {
-  return protegida(async () => {
+  return protegida("reservas", async () => {
     const d = esquema.parse(entrada);
     const telefone = d.telefone ? normalizarTelefone(d.telefone) || null : null;
     if (d.id) {
@@ -72,7 +72,7 @@ function eventoDaMudanca(antes: string, depois: StatusReserva) {
 }
 
 export async function mudarStatusReserva(id: number, status: StatusReserva) {
-  return protegida(async () => {
+  return protegida("reservas", async () => {
     z.enum(STATUS).parse(status);
     const [antes] = await sql`select status from reservas where id = ${id}`;
     await sql`update reservas set status = ${status}, atualizado_em = now() where id = ${id}`;
@@ -82,7 +82,7 @@ export async function mudarStatusReserva(id: number, status: StatusReserva) {
 }
 
 export async function definirMesa(id: number, mesa: string) {
-  return protegida(async () => {
+  return protegida("reservas", async () => {
     const m = z.string().trim().max(40).parse(mesa);
     await sql`update reservas set mesa = ${m || null}, atualizado_em = now() where id = ${id}`;
   });
@@ -90,38 +90,38 @@ export async function definirMesa(id: number, mesa: string) {
 
 /** Garante o código da reserva (as antigas não têm) e o devolve para montar o link. */
 export async function codigoDaReserva(id: number) {
-  return protegida(
+  return protegida("reservas",
     async () => {
       const [l] = await sql`update reservas set codigo = coalesce(codigo, ${novoCodigo()})
                             where id = ${id} returning codigo`;
       if (!l) throw new ErroAmigavel("Reserva não encontrada.");
       return String(l.codigo);
     },
-    { revalidar: false },
+    { revalidar: false, nivel: "ver" },
   );
 }
 
 export async function excluirReserva(id: number) {
-  return protegida(async () => {
+  return protegida("reservas", async () => {
     await sql`delete from reservas where id = ${id}`;
   });
 }
 
 /** Lugares livres no horário, para o formulário avisar quando passar da lotação. */
 export async function lotacaoNoHorario(data: string, hora: string, ignorarId?: number) {
-  return protegida(
+  return protegida("reservas",
     async () => {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || !/^\d{2}:\d{2}$/.test(hora)) return null;
       const cfg = await lerConfigReservas();
       return livresNoHorario(cfg, data, hora, ignorarId);
     },
-    { revalidar: false },
+    { revalidar: false, nivel: "ver" },
   );
 }
 
 /** Quem liga já pode estar na fidelidade: o nome vem preenchido. */
 export async function clientePorTelefone(telefone: string) {
-  return protegida(
+  return protegida("reservas",
     async () => {
       const t = normalizarTelefone(telefone);
       if (t.length < 10) return null;
@@ -139,7 +139,7 @@ export async function clientePorTelefone(telefone: string) {
         faltas: ultima ? Number(ultima.faltas) : 0,
       };
     },
-    { revalidar: false },
+    { revalidar: false, nivel: "ver" },
   );
 }
 
@@ -159,7 +159,7 @@ const esquemaConfig = z.object({
 }) satisfies z.ZodType<ReservasConfig>;
 
 export async function salvarConfigReservas(entrada: ReservasConfig) {
-  return protegida(async () => {
+  return protegida("reservas", async () => {
     const d = esquemaConfig.parse({ ...RESERVAS_PADRAO, ...entrada });
     await sql`insert into configuracoes (chave, valor, atualizado_em) values ('reservas', ${JSON.stringify(d)}::jsonb, now())
               on conflict (chave) do update set valor = excluded.valor, atualizado_em = now()`;
@@ -174,7 +174,7 @@ const esquemaBloqueio = z.object({
 });
 
 export async function criarBloqueio(entrada: z.infer<typeof esquemaBloqueio>) {
-  return protegida(async () => {
+  return protegida("reservas", async () => {
     const d = esquemaBloqueio.parse(entrada);
     await sql`insert into reserva_bloqueios (data, turno, lotacao, motivo)
               values (${d.data}, ${d.turno}, ${d.lotacao}, ${d.motivo || null})`;
@@ -182,7 +182,7 @@ export async function criarBloqueio(entrada: z.infer<typeof esquemaBloqueio>) {
 }
 
 export async function excluirBloqueio(id: number) {
-  return protegida(async () => {
+  return protegida("reservas", async () => {
     await sql`delete from reserva_bloqueios where id = ${id}`;
   });
 }

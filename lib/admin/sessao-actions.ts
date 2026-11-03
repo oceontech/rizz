@@ -25,7 +25,7 @@ export async function entrar(_: EstadoLogin, form: FormData): Promise<EstadoLogi
   if (!dados.success) return { erro: dados.error.issues[0].message, email };
 
   const [usuario] = await sql`
-    select id, nome, email, senha_hash from admin_usuarios where email = ${dados.data.email}`;
+    select id, senha_hash, ativo, sessao_versao from admin_usuarios where email = ${dados.data.email}`;
 
   const confere = await bcrypt.compare(
     dados.data.senha,
@@ -35,13 +35,12 @@ export async function entrar(_: EstadoLogin, form: FormData): Promise<EstadoLogi
   if (!usuario || !confere) {
     return { erro: "E-mail ou senha incorretos.", email };
   }
+  if (!usuario.ativo) {
+    return { erro: "Este acesso está desativado. Fale com quem administra o painel.", email };
+  }
 
   await sql`update admin_usuarios set ultimo_login = now() where id = ${usuario.id}`;
-  await iniciarSessao({
-    id: Number(usuario.id),
-    email: String(usuario.email),
-    nome: String(usuario.nome),
-  });
+  await iniciarSessao({ id: Number(usuario.id), versao: Number(usuario.sessao_versao) });
 
   const destino = String(form.get("de") ?? "");
   redirect(destino.startsWith("/admin") ? destino : "/admin");
@@ -62,6 +61,7 @@ const esquemaSenha = z
   })
   .refine((d) => d.nova === d.confirmacao, { message: "A confirmação não confere." });
 
+/** Troca a senha e derruba as outras sessões abertas (este aparelho continua logado). */
 export async function trocarSenha(_: EstadoSenha, form: FormData): Promise<EstadoSenha> {
   const sessao = await exigirSessao();
   const dados = esquemaSenha.safeParse(Object.fromEntries(form));
@@ -73,7 +73,9 @@ export async function trocarSenha(_: EstadoSenha, form: FormData): Promise<Estad
   }
 
   const hash = await bcrypt.hash(dados.data.nova, 12);
-  await sql`update admin_usuarios set senha_hash = ${hash} where id = ${sessao.id}`;
+  const [l] = await sql`update admin_usuarios set senha_hash = ${hash}, sessao_versao = sessao_versao + 1
+                        where id = ${sessao.id} returning sessao_versao`;
+  await iniciarSessao({ id: sessao.id, versao: Number(l.sessao_versao) });
   return { ok: true };
 }
 
@@ -81,19 +83,27 @@ export async function atualizarPerfil(_: EstadoSenha, form: FormData): Promise<E
   const sessao = await exigirSessao();
   const dados = z
     .object({
-      nome: z.string().trim().min(2, "Informe seu nome."),
+      nome: z.string().trim().min(2, "Informe seu nome.").max(60),
       email: z.string().trim().toLowerCase().email("E-mail inválido."),
+      cargo: z.string().trim().max(40).optional().default(""),
     })
     .safeParse(Object.fromEntries(form));
   if (!dados.success) return { erro: dados.error.issues[0].message };
 
   try {
-    await sql`update admin_usuarios set nome = ${dados.data.nome}, email = ${dados.data.email}
-              where id = ${sessao.id}`;
+    await sql`update admin_usuarios set nome = ${dados.data.nome}, email = ${dados.data.email},
+              cargo = ${dados.data.cargo || null} where id = ${sessao.id}`;
   } catch {
     return { erro: "Esse e-mail já está em uso." };
   }
-  await iniciarSessao({ id: sessao.id, ...dados.data });
   revalidatePath("/admin", "layout");
   return { ok: true };
+}
+
+/** Encerra o acesso em todos os aparelhos, inclusive este. */
+export async function sairDeTodos() {
+  const sessao = await exigirSessao();
+  await sql`update admin_usuarios set sessao_versao = sessao_versao + 1 where id = ${sessao.id}`;
+  await encerrarSessao();
+  redirect("/admin/login");
 }

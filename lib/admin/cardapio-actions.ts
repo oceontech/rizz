@@ -25,7 +25,7 @@ const esquemaItem = z.object({
 export type ItemEntrada = z.infer<typeof esquemaItem>;
 
 export async function salvarItem(entrada: ItemEntrada) {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       const d = esquemaItem.parse(entrada);
       if (d.id) {
@@ -52,7 +52,7 @@ export async function salvarItem(entrada: ItemEntrada) {
 }
 
 export async function alternarDisponivel(id: string, disponivel: boolean) {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       await sql`update itens set disponivel = ${disponivel}, atualizado_em = now() where id = ${id}`;
     },
@@ -61,7 +61,7 @@ export async function alternarDisponivel(id: string, disponivel: boolean) {
 }
 
 export async function excluirItem(id: string) {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       await sql`delete from itens where id = ${id}`;
     },
@@ -71,7 +71,7 @@ export async function excluirItem(id: string) {
 
 /** Troca a posição de um item com o vizinho (acima ou abaixo). */
 export async function moverItem(id: string, direcao: "cima" | "baixo") {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       const [item] = await sql`select categoria_id from itens where id = ${id}`;
       if (!item) throw new ErroAmigavel("Item não encontrado.");
@@ -97,7 +97,7 @@ const esquemaCategoria = z.object({
 });
 
 export async function salvarCategoria(entrada: z.infer<typeof esquemaCategoria>) {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       const d = esquemaCategoria.parse(entrada);
       if (d.id) {
@@ -118,7 +118,7 @@ export async function salvarCategoria(entrada: z.infer<typeof esquemaCategoria>)
 }
 
 export async function excluirCategoria(id: string) {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       const [{ n }] = await sql`select count(*)::int as n from itens where categoria_id = ${id}`;
       if (Number(n) > 0) {
@@ -131,7 +131,7 @@ export async function excluirCategoria(id: string) {
 }
 
 export async function moverCategoria(id: string, direcao: "cima" | "baixo") {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       const lista = await sql`select id from categorias order by ordem, nome`;
       const ids = lista.map((l) => String(l.id));
@@ -150,7 +150,7 @@ export async function moverCategoria(id: string, direcao: "cima" | "baixo") {
 const TIPOS = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 export async function enviarImagem(form: FormData) {
-  return protegida(async () => {
+  return protegida("cardapio", async () => {
     const arquivo = form.get("arquivo");
     const pasta = form.get("pasta") === "promocoes" ? "promocoes" : "pratos";
     if (!(arquivo instanceof File) || arquivo.size === 0) throw new ErroAmigavel("Selecione uma imagem.");

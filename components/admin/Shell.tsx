@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Lock, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Eye, ExternalLink, Lock, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,12 +14,13 @@ import { BotaoTema } from "@/components/sistema/tema/botao-tema";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/sistema/ui/drawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/sistema/ui/tooltip";
 import { sair } from "@/lib/admin/sessao-actions";
+import type { Permissoes } from "@/lib/permissoes";
 import { cn } from "@/lib/utils";
 
-import { COOKIE_SIDEBAR, NAV, NAV_BARRA, NAV_SIDEBAR, abasDe, areaDe, ativoNaSidebar, type Secao } from "./nav";
+import { COOKIE_SIDEBAR, NAV, NAV_BARRA, NAV_SIDEBAR, abasDe, areaDe, ativoNaSidebar, destinoDe, type Secao } from "./nav";
 
 type Props = {
-  usuario: { nome: string; email: string };
+  usuario: { nome: string; email: string; cargo: string; permissoes: Permissoes };
   pendentes: number;
   recolhidaInicial: boolean;
   children: React.ReactNode;
@@ -166,10 +167,13 @@ function ConteudoSidebar({
   aoNavegar?: () => void;
 }) {
   const pathname = usePathname();
-  const item = (n: (typeof NAV)[number]) => (
+  const item = (n: (typeof NAV)[number]) => {
+    const destino = destinoDe(n, usuario.permissoes);
+    if (!destino) return null;
+    return (
     <ItemNav
       key={n.href}
-      href={n.href}
+      href={destino}
       rotulo={n.rotulo}
       Icone={n.Icone}
       secao={n.secao}
@@ -180,12 +184,13 @@ function ConteudoSidebar({
       contador={n.href === "/admin/reservas" ? pendentes : undefined}
       aoNavegar={aoNavegar}
     />
-  );
+    );
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <nav aria-label="Seções do painel" className="-mx-3 min-h-0 flex-1 overflow-y-auto px-3 [scrollbar-width:none]">
-        {GRUPOS.map(([grupo, titulo], i) => (
+        {GRUPOS.filter(([grupo]) => NAV_SIDEBAR.some((n) => n.grupo === grupo && destinoDe(n, usuario.permissoes))).map(([grupo, titulo], i) => (
           <div key={grupo} className={cn(i > 0 && "mt-5 baixa:mt-3")}>
             <p
               className={cn(
@@ -231,7 +236,7 @@ function ConteudoSidebar({
         >
           <ComDica ativa={recolhida} texto={usuario.nome}>
             <Link
-              href="/admin/configuracoes"
+              href="/admin/configuracoes/conta"
               onClick={aoNavegar}
               className={cn(
                 "flex min-w-0 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
@@ -244,7 +249,7 @@ function ConteudoSidebar({
               {!recolhida && (
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-white">{usuario.nome}</span>
-                  <span className="block truncate text-xs text-sidebar-muted">{usuario.email}</span>
+                  <span className="block truncate text-xs text-sidebar-muted">{usuario.cargo || usuario.email}</span>
                 </span>
               )}
             </Link>
@@ -288,8 +293,8 @@ function BotaoRecolher({ recolhida, aoClicar }: { recolhida: boolean; aoClicar: 
  * Selos, WhatsApp). Ficam acima do conteúdo, fora da transição de página,
  * para não piscarem ao trocar de aba.
  */
-function Abas({ pathname }: { pathname: string }) {
-  const abas = abasDe(pathname);
+function Abas({ pathname, permissoes }: { pathname: string; permissoes: Permissoes }) {
+  const abas = abasDe(pathname, permissoes);
   if (!abas.length) return null;
   const atual = areaDe(pathname)?.href;
   return (
@@ -334,7 +339,7 @@ function BarraCelular({ usuario, pendentes }: { usuario: Props["usuario"]; pende
         className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-5 rounded-full bg-sidebar p-1.5 shadow-modal">
-          {NAV.filter((n) => NAV_BARRA.includes(n.href)).map(({ href, curto, Icone, secao }) => {
+          {NAV.filter((n) => NAV_BARRA.includes(n.href) && destinoDe(n, usuario.permissoes)).map(({ href, curto, Icone, secao }) => {
             const atual = ativoNaSidebar(pathname, href);
             return (
               <li key={href} data-secao={secao}>
@@ -462,7 +467,13 @@ export default function Shell({ usuario, pendentes, recolhidaInicial, children }
           data-secao={area?.secao}
           className="mx-auto mt-2 w-full max-w-[1240px] flex-1 lg:mt-1 lg:[&_header:first-of-type]:pr-14"
         >
-          <Abas pathname={pathname} />
+          <Abas pathname={pathname} permissoes={usuario.permissoes} />
+          {area?.area && usuario.permissoes[area.area] === "ver" && (
+            <p className="mb-5 flex items-start gap-2.5 rounded-2xl bg-info/10 px-4 py-3 text-sm text-info-texto">
+              <Eye className="mt-0.5 size-4 shrink-0" aria-hidden />
+              Seu acesso a esta área é só para consultar. Para alterar algo, peça a quem administra a equipe.
+            </p>
+          )}
           <TransicaoPagina key={pathname}>{children}</TransicaoPagina>
         </main>
       </div>

@@ -38,7 +38,7 @@ const esquemaData = z.object({
 
 /** Salva a lista inteira de datas especiais (as que já passaram saem). */
 export async function salvarDatasEspeciais(entrada: z.infer<typeof esquemaData>[]) {
-  return protegida(
+  return protegida("horarios",
     async () => {
       const lista = z.array(esquemaData).max(120).parse(entrada);
       const ontem = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
@@ -68,7 +68,7 @@ export async function salvarDatasEspeciais(entrada: z.infer<typeof esquemaData>[
 const NOMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 export async function salvarHorarios(entrada: z.infer<typeof esquemaDia>[]) {
-  return protegida(
+  return protegida("horarios",
     async () => {
       const dias = z.array(esquemaDia).length(7).parse(entrada);
       for (const d of dias) {
@@ -102,7 +102,7 @@ const esquemaRodizio = z.object({
 });
 
 export async function salvarRodizio(entrada: z.infer<typeof esquemaRodizio>) {
-  return protegida(
+  return protegida("horarios",
     async () => {
       const d = esquemaRodizio.parse(entrada);
       await gravar("rodizio", { dias: [...new Set(d.dias)].sort(), etapas: d.etapas });
@@ -130,7 +130,7 @@ const esquemaContato = z.object({
 });
 
 export async function salvarContato(entrada: z.infer<typeof esquemaContato>) {
-  return protegida(
+  return protegida("horarios",
     async () => {
       const d = esquemaContato.parse(entrada);
       const digitos = d.whatsapp.replace(/\D/g, "");
