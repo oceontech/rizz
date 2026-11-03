@@ -37,7 +37,7 @@ import {
 import { AREAS, PAPEIS, papelInfo, permissoesDe, resumoPermissoes, type Papel, type Permissoes } from "@/lib/permissoes";
 import { cn } from "@/lib/utils";
 
-import { EditorAcesso, RotuloNivel } from "./acesso";
+import { EditorAcesso, LegendaNiveis, RotuloNivel } from "./acesso";
 
 const TOM_PAPEL: Record<Papel, Tom> = { dono: "marca", gerente: "info", colaborador: "positivo", personalizado: "atencao" };
 const CORES = ["bg-rose-600", "bg-amber-600", "bg-emerald-600", "bg-sky-600", "bg-indigo-600", "bg-fuchsia-600", "bg-teal-600"];
@@ -303,6 +303,7 @@ function ReferenciaPapeis() {
   const prontos = PAPEIS.filter((p) => p.id !== "personalizado");
   return (
     <Secao icone={ShieldCheck} titulo="Como funcionam os acessos" descricao="Três tipos prontos. Se nenhum servir, escolha Personalizado e marque área por área.">
+      <LegendaNiveis />
       <div className="-mx-(--card-spacing) overflow-x-auto px-(--card-spacing)">
         <table className="w-full min-w-[34rem] text-sm">
           <thead>
