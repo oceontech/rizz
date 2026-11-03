@@ -19,6 +19,7 @@ export type Sessao = {
   email: string;
   nome: string;
   cargo: string;
+  telefone: string;
   papel: Papel;
   permissoes: Permissoes;
 };
@@ -72,11 +73,11 @@ export const sessaoAtual = cache(async (): Promise<Sessao | null> => {
   const t = await lerToken((await cookies()).get(COOKIE_SESSAO)?.value);
   if (!t) return null;
   const [u] = await sql`
-    select id, nome, email, cargo, papel, permissoes, ativo, sessao_versao
+    select id, nome, email, cargo, telefone, papel, permissoes, ativo, sessao_versao
     from admin_usuarios where id = ${t.id}`;
   if (!u || !u.ativo || Number(u.sessao_versao) !== t.versao) return null;
   const papel = String(u.papel) as Papel;
-  return { id: Number(u.id), nome: String(u.nome), email: String(u.email), cargo: u.cargo ? String(u.cargo) : "", papel, permissoes: permissoesDe(papel, u.permissoes) };
+  return { id: Number(u.id), nome: String(u.nome), email: String(u.email), cargo: u.cargo ? String(u.cargo) : "", telefone: u.telefone ? String(u.telefone) : "", papel, permissoes: permissoesDe(papel, u.permissoes) };
 });
 
 /**

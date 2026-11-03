@@ -3,7 +3,7 @@
 import { CircleAlert, KeyRound, LogOut, MonitorSmartphone, ShieldCheck, UserRound } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 
-import { avisar, BotaoSalvar } from "@/components/admin/campos";
+import { avisar, BotaoSalvar, CampoTelefone } from "@/components/admin/campos";
 import { Cabecalho, Secao, Selo } from "@/components/admin/ui";
 import { Campo } from "@/components/sistema/formulario/campo";
 import { InputSenha } from "@/components/sistema/inputs/input-senha";
@@ -25,13 +25,14 @@ function Erro({ texto }: { texto?: string }) {
   );
 }
 
-type Usuario = { nome: string; email: string; cargo: string; papel: Papel; permissoes: Permissoes };
+type Usuario = { nome: string; email: string; cargo: string; telefone: string; papel: Papel; permissoes: Permissoes };
 
 function Perfil({ usuario }: { usuario: Usuario }) {
   const [estado, acao, pendente] = useActionState<EstadoSenha, FormData>(atualizarPerfil, {});
   const [nome, setNome] = useState(usuario.nome);
   const [email, setEmail] = useState(usuario.email);
   const [cargo, setCargo] = useState(usuario.cargo);
+  const [telefone, setTelefone] = useState(usuario.telefone);
   useEffect(() => {
     if (estado.ok) avisar({ ok: true }, "Perfil atualizado");
   }, [estado]);
@@ -48,9 +49,13 @@ function Perfil({ usuario }: { usuario: Usuario }) {
             <InputTexto name="cargo" maxLength={40} value={cargo} placeholder="Ex.: Gerente do salão" onChange={(e) => setCargo(e.currentTarget.value)} />
           </Campo>
         </div>
-        <Campo id="perfil-email" rotulo="E-mail">
-          <InputEmail name="email" required valor={email} aoMudar={(v) => setEmail(v ?? "")} />
-        </Campo>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Campo id="perfil-email" rotulo="E-mail">
+            <InputEmail name="email" required valor={email} aoMudar={(v) => setEmail(v ?? "")} />
+          </Campo>
+          <input type="hidden" name="telefone" value={telefone} />
+          <CampoTelefone label="WhatsApp" value={telefone} onChange={setTelefone} descricao="Para receber o link se esquecer a senha." />
+        </div>
         <BotaoSalvar type="submit" pendente={pendente} className="self-start">
           Salvar dados
         </BotaoSalvar>

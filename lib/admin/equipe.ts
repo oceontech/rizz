@@ -11,6 +11,7 @@ export type Membro = {
   id: number;
   nome: string;
   email: string;
+  telefone: string;
   cargo: string;
   papel: Papel;
   permissoes: Permissoes;
@@ -24,6 +25,7 @@ export type ConvitePendente = {
   id: number;
   nome: string;
   email: string;
+  telefone: string;
   cargo: string;
   papel: Papel;
   permissoes: Permissoes;
@@ -36,10 +38,10 @@ const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
 
 export async function lerEquipe(): Promise<{ membros: Membro[]; convites: ConvitePendente[] }> {
   const [membros, convites] = await Promise.all([
-    sql`select u.id, u.nome, u.email, u.cargo, u.papel, u.permissoes, u.ativo, u.ultimo_login, u.criado_em, c.nome as convidado_por
+    sql`select u.id, u.nome, u.email, u.telefone, u.cargo, u.papel, u.permissoes, u.ativo, u.ultimo_login, u.criado_em, c.nome as convidado_por
         from admin_usuarios u left join admin_usuarios c on c.id = u.convidado_por
         order by u.ativo desc, case u.papel when 'dono' then 0 when 'gerente' then 1 when 'colaborador' then 2 else 3 end, u.nome`,
-    sql`select v.id, v.nome, v.email, v.cargo, v.papel, v.permissoes, v.criado_em, v.expira_em, u.nome as criado_por
+    sql`select v.id, v.nome, v.email, v.telefone, v.cargo, v.papel, v.permissoes, v.criado_em, v.expira_em, u.nome as criado_por
         from admin_convites v left join admin_usuarios u on u.id = v.criado_por
         where v.tipo = 'convite' and v.usado_em is null and v.revogado_em is null and v.expira_em > now()
         order by v.criado_em desc`,
@@ -49,6 +51,7 @@ export async function lerEquipe(): Promise<{ membros: Membro[]; convites: Convit
       id: Number(l.id),
       nome: String(l.nome),
       email: String(l.email),
+      telefone: l.telefone ? String(l.telefone) : "",
       cargo: l.cargo ? String(l.cargo) : "",
       papel: String(l.papel) as Papel,
       permissoes: permissoesDe(String(l.papel), l.permissoes),
@@ -61,6 +64,7 @@ export async function lerEquipe(): Promise<{ membros: Membro[]; convites: Convit
       id: Number(l.id),
       nome: String(l.nome ?? ""),
       email: String(l.email ?? ""),
+      telefone: l.telefone ? String(l.telefone) : "",
       cargo: l.cargo ? String(l.cargo) : "",
       papel: String(l.papel) as Papel,
       permissoes: permissoesDe(String(l.papel), l.permissoes),

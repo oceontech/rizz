@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import GestorEquipe from "@/components/admin/equipe/GestorEquipe";
+import { canaisDisponiveis } from "@/lib/admin/envio-acesso";
 import { lerEquipe } from "@/lib/admin/equipe";
 import { exigirAcesso } from "@/lib/auth";
 
@@ -11,7 +12,7 @@ const agoraMs = () => Date.now();
 
 export default async function EquipePage() {
   const sessao = await exigirAcesso("equipe");
-  const { membros, convites } = await lerEquipe();
+  const [{ membros, convites }, canais] = await Promise.all([lerEquipe(), canaisDisponiveis()]);
   return (
     <GestorEquipe
       membros={membros}
@@ -19,6 +20,7 @@ export default async function EquipePage() {
       eu={{ id: sessao.id, papel: sessao.papel }}
       podeEditar={sessao.permissoes.equipe === "editar"}
       agora={agoraMs()}
+      canais={canais}
     />
   );
 }

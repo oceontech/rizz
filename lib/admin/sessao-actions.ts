@@ -8,6 +8,10 @@ import { z } from "zod";
 import { encerrarSessao, exigirSessao, iniciarSessao } from "@/lib/auth";
 import { sql } from "@/lib/db";
 
+import { enviarLinkDeAcesso } from "./envio-acesso";
+import { novoToken, origemAtual } from "./equipe";
+import { normalizarTelefone } from "./formato";
+
 export type EstadoLogin = { erro?: string; email?: string };
 
 const esquema = z.object({
@@ -86,13 +90,19 @@ export async function atualizarPerfil(_: EstadoSenha, form: FormData): Promise<E
       nome: z.string().trim().min(2, "Informe seu nome.").max(60),
       email: z.string().trim().toLowerCase().email("E-mail inválido."),
       cargo: z.string().trim().max(40).optional().default(""),
+      telefone: z
+        .string()
+        .optional()
+        .default("")
+        .transform(normalizarTelefone)
+        .refine((t) => t === "" || /^\d{10,11}$/.test(t), "WhatsApp com DDD, ex.: (19) 99999-9999."),
     })
     .safeParse(Object.fromEntries(form));
   if (!dados.success) return { erro: dados.error.issues[0].message };
 
   try {
     await sql`update admin_usuarios set nome = ${dados.data.nome}, email = ${dados.data.email},
-              cargo = ${dados.data.cargo || null} where id = ${sessao.id}`;
+              cargo = ${dados.data.cargo || null}, telefone = ${dados.data.telefone || null} where id = ${sessao.id}`;
   } catch {
     return { erro: "Esse e-mail já está em uso." };
   }
@@ -106,4 +116,37 @@ export async function sairDeTodos() {
   await sql`update admin_usuarios set sessao_versao = sessao_versao + 1 where id = ${sessao.id}`;
   await encerrarSessao();
   redirect("/admin/login");
+}
+
+export type EstadoEsqueci = { enviado?: boolean; erro?: string };
+
+/**
+ * "Esqueci minha senha": manda o link de nova senha por e-mail e WhatsApp.
+ * A resposta é a mesma exista ou não o e-mail (não revela quem tem acesso),
+ * e cada pessoa recebe no máximo um link a cada 5 minutos.
+ */
+export async function pedirNovaSenha(_: EstadoEsqueci, form: FormData): Promise<EstadoEsqueci> {
+  const email = z.string().trim().toLowerCase().email().safeParse(form.get("email"));
+  if (!email.success) return { erro: "Informe um e-mail válido." };
+
+  const [u] = await sql`select id, nome, email, telefone from admin_usuarios where email = ${email.data} and ativo`;
+  if (u) {
+    const [recente] = await sql`select 1 from admin_convites where tipo = 'senha' and usuario_id = ${u.id}
+                                and criado_em > now() - interval '5 minutes'`;
+    if (!recente) {
+      await sql`update admin_convites set revogado_em = now() where tipo = 'senha' and usuario_id = ${u.id} and usado_em is null and revogado_em is null`;
+      const { token, hash } = novoToken();
+      await sql`insert into admin_convites (token_hash, tipo, usuario_id, expira_em)
+                values (${hash}, 'senha', ${u.id}, ${new Date(Date.now() + 864e5).toISOString()})`;
+      await enviarLinkDeAcesso({
+        tipo: "senha",
+        nome: String(u.nome),
+        email: String(u.email),
+        telefone: u.telefone ? String(u.telefone) : null,
+        link: `${await origemAtual()}/admin/convite/${token}`,
+        validade: "24 horas",
+      });
+    }
+  }
+  return { enviado: true };
 }

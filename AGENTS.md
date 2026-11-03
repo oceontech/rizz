@@ -64,7 +64,7 @@ Os nomes estão em `.env.example`; os valores ficam no `.env.local` e na Vercel.
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob | ok |
 | `AUTH_SECRET` | assina o cookie do painel | ok |
 | `GOOGLE_PLACES_API_KEY` (+ `GOOGLE_PLACE_ID`, opcional) | textos das avaliações do Google | **chave não configurada**: o site usa a nota fixa de `data/reviews.ts`. O Place ID já está em `site.googlePlaceId`; a variável só o sobrescreve |
-| `RESEND_API_KEY` | envio de e-mails (Resend) | **em configuração** (ver `docs/ESTADO.md`) |
+| `RESEND_API_KEY`, `EMAIL_REMETENTE` | e-mails de convite e nova senha (Resend; `lib/email.ts`) | ok (domínio `rizzcucinaevino.com.br` verificado; chave só de envio) |
 | `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCIA` | WhatsApp pela Evolution API (VPS, `https://evo.rizz.genext.group`) | ok |
 | `CRON_SECRET` | protege a rota dos lembretes (`/api/whatsapp/lembretes`); o mesmo valor está no cron da VPS | ok |
 | `SITE_URL` | base dos links nas mensagens (opcional) | opcional |
@@ -104,5 +104,5 @@ Cores do painel: ação em grafite (`primary`), vinho só em pontos de marca (`m
 - O Git usa o credential helper do `gestoken`, configurado só neste repositório (`git config --local`).
 - Nunca rodar `gh auth login`, `supabase login` ou `vercel login`, nem alterar configurações globais (git, gh, supabase, vercel).
 - Todo comando da Vercel usa `--token $VERCEL_TOKEN` e o escopo da conta deste projeto: `--scope team_jsF9ervoTl8eJv5RwbwjQAlC` (time `oceon`). No PowerShell, use `$env:VERCEL_TOKEN`.
-- Resend: conta da Oceon, domínio de envio `mail.oceontech.com.br` (DNS do `oceontech.com.br` na Hostinger). A chave vai só no `.env.local` e na Vercel, colocada pelo usuário.
+- Resend: conta da Oceon, domínio de envio `rizzcucinaevino.com.br` (remetente `nao-responda@rizzcucinaevino.com.br`). A chave (só envio) vai só no `.env.local` e na Vercel, colocada pelo usuário.
 - Nunca exibir, registrar ou commitar tokens.
