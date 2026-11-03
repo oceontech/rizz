@@ -11,6 +11,7 @@ import { ItemEscalonado, ListaEscalonada } from "@/components/sistema/movimento"
 import { Card } from "@/components/sistema/ui/card";
 import type { ResumoPainel } from "@/lib/admin/consultas";
 import { formatarData } from "@/lib/admin/formato";
+import { pode, type Area, type Permissoes } from "@/lib/permissoes";
 
 function saudacao() {
   const h = Number(
@@ -55,20 +56,20 @@ function TituloBloco({
   );
 }
 
-const ATALHOS: { href: string; rotulo: string; detalhe: string; secao: Secao; icone?: LucideIcon }[] = [
-  { href: "/admin/reservas?nova=1", rotulo: "Nova reserva", detalhe: "Telefone ou balcão", secao: "reservas", icone: CalendarPlus },
-  { href: "/admin/cardapio?novo=1", rotulo: "Novo prato", detalhe: "Entra no cardápio do site", secao: "cardapio", icone: Plus },
-  { href: "/admin/home", rotulo: "Página inicial", detalhe: "Mais pedido e seleção", secao: "home" },
-  { href: "/admin/selos", rotulo: "Selos", detalhe: "Vegetariano, Criação Rizz…", secao: "selos" },
-  { href: "/admin/promocoes", rotulo: "Promoções", detalhe: "Pop-up e avisos do site", secao: "promocoes" },
-  { href: "/admin/whatsapp", rotulo: "WhatsApp", detalhe: "Mensagens automáticas", secao: "whatsapp" },
+const ATALHOS: { href: string; rotulo: string; detalhe: string; secao: Secao; area: Area; icone?: LucideIcon }[] = [
+  { href: "/admin/reservas?nova=1", rotulo: "Nova reserva", detalhe: "Telefone ou balcão", secao: "reservas", area: "reservas", icone: CalendarPlus },
+  { href: "/admin/cardapio?novo=1", rotulo: "Novo prato", detalhe: "Entra no cardápio do site", secao: "cardapio", area: "cardapio", icone: Plus },
+  { href: "/admin/home", rotulo: "Página inicial", detalhe: "Mais pedido e seleção", secao: "home", area: "site" },
+  { href: "/admin/selos", rotulo: "Selos", detalhe: "Vegetariano, Criação Rizz…", secao: "selos", area: "configuracoes" },
+  { href: "/admin/promocoes", rotulo: "Promoções", detalhe: "Pop-up e avisos do site", secao: "promocoes", area: "site" },
+  { href: "/admin/whatsapp", rotulo: "WhatsApp", detalhe: "Mensagens automáticas", secao: "whatsapp", area: "configuracoes" },
 ];
 
 /** Atalhos para as tarefas mais comuns, cada um na cor da sua área. */
-function Atalhos() {
+function Atalhos({ permissoes }: { permissoes: Permissoes }) {
   return (
     <ul className="grid grid-cols-2 gap-2 px-(--card-spacing)">
-      {ATALHOS.map((a) => {
+      {ATALHOS.filter((a) => pode(permissoes, a.area, "editar")).map((a) => {
         const Icone = a.icone ?? NAV.find((n) => n.secao === a.secao)!.Icone;
         return (
           <li key={a.href} data-secao={a.secao}>
@@ -89,7 +90,7 @@ function Atalhos() {
   );
 }
 
-export default function Dashboard({ nome, resumo }: { nome: string; resumo: ResumoPainel }) {
+export default function Dashboard({ nome, resumo, permissoes }: { nome: string; resumo: ResumoPainel; permissoes: Permissoes }) {
   const { reservas, promocoes, cardapio } = resumo;
   const ctr = promocoes.views ? Math.round((promocoes.cliques / promocoes.views) * 100) : 0;
   const primeiroNome = nome.split(" ")[0];
@@ -109,11 +110,13 @@ export default function Dashboard({ nome, resumo }: { nome: string; resumo: Resu
             {saudacao()}, <span className="text-marca-texto">{primeiroNome}</span>
           </h1>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <BotaoLink href="/admin/reservas?nova=1" variant="marca">
-            <CalendarPlus /> Nova reserva
-          </BotaoLink>
-        </div>
+        {pode(permissoes, "reservas", "editar") && (
+          <div className="flex flex-wrap gap-2">
+            <BotaoLink href="/admin/reservas?nova=1" variant="marca">
+              <CalendarPlus /> Nova reserva
+            </BotaoLink>
+          </div>
+        )}
       </header>
 
       <ListaEscalonada className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
@@ -203,7 +206,7 @@ export default function Dashboard({ nome, resumo }: { nome: string; resumo: Resu
 
         <Card>
           <TituloBloco icone={Zap} titulo="Atalhos" descricao="O que mais se faz no dia a dia" />
-          <Atalhos />
+          <Atalhos permissoes={permissoes} />
         </Card>
       </div>
     </div>

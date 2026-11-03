@@ -48,6 +48,7 @@ function datasComemorativas(hoje: string, dias = 150) {
       { data: domingo(a, 5, 2), motivo: "Dia das Mães" },
       { data: `${a}-06-12`, motivo: "Dia dos Namorados" },
       { data: somarDiasISO(p, 60), motivo: "Corpus Christi" },
+      { data: `${a}-07-09`, motivo: "Revolução Constitucionalista (SP)" },
       { data: domingo(a, 8, 2), motivo: "Dia dos Pais" },
       { data: `${a}-09-07`, motivo: "Independência" },
       { data: `${a}-10-12`, motivo: "Nossa Senhora Aparecida" },

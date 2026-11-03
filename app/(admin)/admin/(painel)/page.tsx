@@ -9,5 +9,5 @@ export const metadata: Metadata = { title: "Visão geral" };
 export default async function PainelPage() {
   const sessao = await exigirSessao();
   const resumo = await resumoPainel();
-  return <Dashboard nome={sessao.nome} resumo={resumo} />;
+  return <Dashboard nome={sessao.nome} resumo={resumo} permissoes={sessao.permissoes} />;
 }

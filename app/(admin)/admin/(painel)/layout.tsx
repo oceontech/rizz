@@ -13,13 +13,14 @@ export default async function PainelLayout({ children }: { children: React.React
   const sessao = await exigirSessao();
   const [loja, [{ n }], conteudo] = await Promise.all([
     cookies(),
-    sql`select count(*)::int as n from reservas where status = 'pendente'`,
+    // Quem não vê reservas não precisa do contador.
+    sessao.permissoes.reservas === "nenhum" ? [{ n: 0 }] : sql`select count(*)::int as n from reservas where status = 'pendente'`,
     carregarConteudo(),
   ]);
 
   return (
     <Shell
-      usuario={{ nome: sessao.nome, email: sessao.email }}
+      usuario={{ nome: sessao.nome, email: sessao.email, cargo: sessao.cargo, permissoes: sessao.permissoes }}
       pendentes={Number(n)}
       recolhidaInicial={loja.get(COOKIE_SIDEBAR)?.value === "recolhida"}
     >

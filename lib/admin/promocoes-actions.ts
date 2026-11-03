@@ -33,7 +33,7 @@ const esquema = z.object({
 export type PromocaoEntrada = z.infer<typeof esquema>;
 
 export async function salvarPromocao(entrada: PromocaoEntrada) {
-  return protegida(
+  return protegida("site",
     async () => {
       const d = esquema.parse(entrada);
       if (d.inicio && d.fim && d.fim < d.inicio) {
@@ -62,7 +62,7 @@ export async function salvarPromocao(entrada: PromocaoEntrada) {
 }
 
 export async function alternarPromocao(id: number, ativo: boolean) {
-  return protegida(
+  return protegida("site",
     async () => {
       await sql`update promocoes set ativo = ${ativo} where id = ${id}`;
     },
@@ -71,7 +71,7 @@ export async function alternarPromocao(id: number, ativo: boolean) {
 }
 
 export async function duplicarPromocao(id: number) {
-  return protegida(
+  return protegida("site",
     async () => {
       await sql`insert into promocoes (titulo, subtitulo, texto, imagem_url, cupom, cta_texto, cta_url, inicio, fim,
                                        ativo, paginas, frequencia, atraso_seg, estilo)
@@ -84,7 +84,7 @@ export async function duplicarPromocao(id: number) {
 }
 
 export async function excluirPromocao(id: number) {
-  return protegida(
+  return protegida("site",
     async () => {
       await sql`delete from promocoes where id = ${id}`;
     },

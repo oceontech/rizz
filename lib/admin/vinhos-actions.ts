@@ -26,7 +26,7 @@ export type VinhoEntrada = z.infer<typeof esquemaVinho>;
 const opcoes = { tags: [TAGS.vinhos] };
 
 export async function salvarVinho(entrada: VinhoEntrada) {
-  return protegida(async () => {
+  return protegida("vinhos", async () => {
     const d = esquemaVinho.parse(entrada);
     if (d.id) {
       await sql`
@@ -46,26 +46,26 @@ export async function salvarVinho(entrada: VinhoEntrada) {
 }
 
 export async function alternarDisponivelVinho(id: string, disponivel: boolean) {
-  return protegida(async () => {
+  return protegida("vinhos", async () => {
     await sql`update vinhos set disponivel = ${disponivel}, atualizado_em = now() where id = ${id}`;
   }, opcoes);
 }
 
 export async function alternarVisivelVinho(id: string, visivel: boolean) {
-  return protegida(async () => {
+  return protegida("vinhos", async () => {
     await sql`update vinhos set visivel = ${visivel}, atualizado_em = now() where id = ${id}`;
   }, opcoes);
 }
 
 export async function excluirVinho(id: string) {
-  return protegida(async () => {
+  return protegida("vinhos", async () => {
     await sql`delete from vinhos where id = ${id}`;
   }, opcoes);
 }
 
 /** Troca a posição de um vinho com o vizinho, dentro da seção. */
 export async function moverVinho(id: string, direcao: "cima" | "baixo") {
-  return protegida(async () => {
+  return protegida("vinhos", async () => {
     const [vinho] = await sql`select secao_id from vinhos where id = ${id}`;
     if (!vinho) throw new ErroAmigavel("Vinho não encontrado.");
     const lista = await sql`select id from vinhos where secao_id = ${vinho.secao_id} order by ordem, nome`;
@@ -88,7 +88,7 @@ const esquemaSecao = z.object({
 });
 
 export async function salvarSecaoVinho(entrada: z.infer<typeof esquemaSecao>) {
-  return protegida(async () => {
+  return protegida("vinhos", async () => {
     const d = esquemaSecao.parse(entrada);
     if (d.id) {
       // O slug não muda: o site e os links antigos dependem dele.
@@ -106,7 +106,7 @@ export async function salvarSecaoVinho(entrada: z.infer<typeof esquemaSecao>) {
 }
 
 export async function excluirSecaoVinho(id: string) {
-  return protegida(async () => {
+  return protegida("vinhos", async () => {
     const [{ n }] = await sql`select count(*)::int as n from vinhos where secao_id = ${id}`;
     if (Number(n) > 0) throw new ErroAmigavel("Mova ou exclua os vinhos desta seção antes de removê-la.");
     await sql`delete from vinho_secoes where id = ${id}`;
@@ -114,7 +114,7 @@ export async function excluirSecaoVinho(id: string) {
 }
 
 export async function moverSecaoVinho(id: string, direcao: "cima" | "baixo") {
-  return protegida(async () => {
+  return protegida("vinhos", async () => {
     const lista = await sql`select id from vinho_secoes order by ordem, titulo`;
     const ids = lista.map((l) => String(l.id));
     const i = ids.indexOf(id);

@@ -27,7 +27,7 @@ const esquemaSelo = z
   });
 
 export async function salvarSelo(entrada: z.input<typeof esquemaSelo>) {
-  return protegida(
+  return protegida("configuracoes",
     async () => {
       const d = esquemaSelo.parse(entrada);
       const letra = d.simbolo === "letra" ? d.letra!.toUpperCase() : null;
@@ -53,7 +53,7 @@ export async function salvarSelo(entrada: z.input<typeof esquemaSelo>) {
 }
 
 export async function alternarSelo(id: string, ativo: boolean) {
-  return protegida(
+  return protegida("configuracoes",
     async () => {
       await sql`update selos set ativo = ${ativo} where id = ${id}`;
     },
@@ -63,7 +63,7 @@ export async function alternarSelo(id: string, ativo: boolean) {
 
 /** Exclui o selo e o tira de todos os pratos (cardápio e executivo). */
 export async function excluirSelo(id: string) {
-  return protegida(
+  return protegida("configuracoes",
     async () => {
       const [selo] = await sql`select 1 from selos where id = ${id}`;
       if (!selo) throw new ErroAmigavel("Selo não encontrado.");
@@ -80,7 +80,7 @@ export async function excluirSelo(id: string) {
 
 /** Troca a posição de um selo com o vizinho (a ordem vale na legenda e nos filtros). */
 export async function moverSelo(id: string, direcao: "cima" | "baixo") {
-  return protegida(
+  return protegida("configuracoes",
     async () => {
       const lista = await sql`select id from selos order by ordem, nome`;
       const ids = lista.map((l) => String(l.id));

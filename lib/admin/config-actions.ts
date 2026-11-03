@@ -15,7 +15,7 @@ const esquemaAviso = z.object({
 });
 
 export async function salvarAviso(entrada: z.infer<typeof esquemaAviso>) {
-  return protegida(
+  return protegida("configuracoes",
     async () => {
       const d = esquemaAviso.parse(entrada);
       if (d.ativo && d.texto.length < 3) throw new ErroAmigavel("Escreva o texto do aviso.");

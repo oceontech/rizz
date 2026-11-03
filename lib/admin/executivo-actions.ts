@@ -17,7 +17,7 @@ const esquemaConfig = z.object({
 });
 
 export async function salvarConfigExecutivo(entrada: z.infer<typeof esquemaConfig>) {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       const d = esquemaConfig.parse(entrada);
       await sql`
@@ -42,7 +42,7 @@ const esquemaItem = z.object({
 });
 
 export async function salvarItemExecutivo(entrada: z.infer<typeof esquemaItem>) {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       const d = esquemaItem.parse(entrada);
       if (d.id) {
@@ -61,7 +61,7 @@ export async function salvarItemExecutivo(entrada: z.infer<typeof esquemaItem>) 
 }
 
 export async function alternarItemExecutivo(id: string, disponivel: boolean) {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       await sql`update executivo_itens set disponivel = ${disponivel} where id = ${id}`;
     },
@@ -70,7 +70,7 @@ export async function alternarItemExecutivo(id: string, disponivel: boolean) {
 }
 
 export async function excluirItemExecutivo(id: string) {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       await sql`delete from executivo_itens where id = ${id}`;
     },
@@ -79,7 +79,7 @@ export async function excluirItemExecutivo(id: string) {
 }
 
 export async function moverItemExecutivo(id: string, direcao: "cima" | "baixo") {
-  return protegida(
+  return protegida("cardapio",
     async () => {
       const [item] = await sql`select secao from executivo_itens where id = ${id}`;
       if (!item) throw new ErroAmigavel("Item não encontrado.");

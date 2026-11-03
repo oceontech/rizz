@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 import GestorReservas from "@/components/admin/reservas/GestorReservas";
 import { hojeSP, listarReservas } from "@/lib/admin/consultas";
-import { exigirSessao } from "@/lib/auth";
+import { exigirAcesso } from "@/lib/auth";
 import { somarDias } from "@/lib/reservas/regras";
 import { lerBloqueios, lerConfigReservas } from "@/lib/reservas/servidor";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Reservas" };
 export default async function ReservasAdminPage({ searchParams }: PageProps<"/admin/reservas">) {
   // Layout e página rodam em paralelo: garante horários e contato do painel aqui também.
   await carregarConteudo();
-  await exigirSessao();
+  await exigirAcesso("reservas");
   const hoje = hojeSP();
   const [{ nova }, reservas, config, bloqueios] = await Promise.all([
     searchParams,

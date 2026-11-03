@@ -4,9 +4,14 @@ Atualizado em 02/11/2026. Ao resolver um item, apague-o daqui (ou mova para "Fei
 
 ## Feito recentemente
 
-- **Feriados e datas especiais** (painel > Horários e contato; chave `datas_especiais` em `configuracoes`): uma data pode ficar fechada ou ter horário próprio, com motivo. `diaNaData(iso)` em `lib/hours.ts` decide o horário de uma data (a especial passa por cima da semana) e é usado no "aberto agora", nos turnos e no calendário da reserva, no executivo e no rodízio. A seção de visita da home lista as datas dos próximos 45 dias e o JSON-LD leva `specialOpeningHoursSpecification`. O painel sugere as próximas datas comemorativas (feriados nacionais, vésperas, Dia das Mães etc.).
+- **Configurações reorganizadas e equipe com níveis de acesso** (branch `feat/configuracoes`): Configurações tem as abas Geral (aviso do site e atalhos), Horários, Contato, Equipe, Selos, WhatsApp e Minha conta. "Horários e contato" saiu da sidebar (`/admin/funcionamento` redireciona). A semana virou uma grade com barras de almoço e jantar; tocar no dia abre o editor com "aplicar também a" outros dias.
+  - **Equipe** (`/admin/configuracoes/equipe`): lista de pessoas, convites pendentes, convite por link (copiar, WhatsApp ou e-mail; página pública `/admin/convite/[token]`), link de nova senha, desconectar aparelhos, desativar/reativar e remover. Tabelas: colunas novas em `admin_usuarios` (`papel`, `permissoes`, `ativo`, `sessao_versao`, `cargo`, `convidado_por`) e `admin_convites` (só o hash do token).
+  - **Permissões** (`lib/permissoes.ts`): 8 áreas, cada uma com nível "Sem acesso", "Só ver" ou "Editar". Papéis prontos: Administrador (tudo), Gerente (tudo menos a equipe), Colaborador (reservas, cardápio e vinhos) e Personalizado (matriz livre). Páginas usam `exigirAcesso(area)`; ações, `protegida(area, fn)`. A sessão relê papel e permissões do banco a cada requisição, então mudar o acesso ou desativar vale na hora.
+  - O e-mail automático do convite (Resend) continua pendente; hoje o link é enviado à mão.
+
+- **Feriados e datas especiais** (painel > Configurações > Horários; chave `datas_especiais` em `configuracoes`): uma data pode ficar fechada ou ter horário próprio, com motivo. `diaNaData(iso)` em `lib/hours.ts` decide o horário de uma data (a especial passa por cima da semana) e é usado no "aberto agora", nos turnos e no calendário da reserva, no executivo e no rodízio. A seção de visita da home lista as datas dos próximos 45 dias e o JSON-LD leva `specialOpeningHoursSpecification`. O painel sugere as próximas datas comemorativas (feriados nacionais, vésperas, Dia das Mães etc.).
 - **Carta de vinhos no painel** (`/admin/vinhos`, tabelas `vinho_secoes` e `vinhos`, carregadas pelo `db:setup` em 02/11/2026 com 7 seções e 145 rótulos): rótulos, tipo, uvas, preço, notas, seções, disponível/indisponível (no site o rótulo fica apagado, sem preço e com a etiqueta "Indisponível") e visível. O site lê do banco (`cartaVinhosDoSite`) e cai em `data/vinhos.ts` se o banco falhar.
-- **Horários, rodízio e contato no painel** (`/admin/funcionamento`, chaves `horarios`, `rodizio` e `contato` em `configuracoes`): `lib/conteudo.ts` aplica o que foi salvo sobre os objetos que o site já lia (`horarios`, `rodizio`, `site`), no servidor (`carregarConteudo()` em layouts, páginas, rotas de reserva e `protegida()`) e no navegador (`<ConteudoSite>`). Os valores do código ficam como padrão.
+- **Horários, rodízio e contato no painel** (Configurações > Horários e Contato, chaves `horarios`, `rodizio` e `contato` em `configuracoes`): `lib/conteudo.ts` aplica o que foi salvo sobre os objetos que o site já lia (`horarios`, `rodizio`, `site`), no servidor (`carregarConteudo()` em layouts, páginas, rotas de reserva e `protegida()`) e no navegador (`<ConteudoSite>`). Os valores do código ficam como padrão.
 - **Disponibilidade mais clara no painel:** pratos e vinhos têm um interruptor com texto ("Disponível"/"Esgotado" ou "Indisponível") e a mesma troca no menu "⋯". O reajuste de preços em lote saiu do cardápio (a pedido).
 - **Página de avaliações refeita** (`app/(site)/avaliacoes/page.tsx`): o objetivo é levar a pessoa a avaliar no Google. Topo com o salão em vídeo e um cartão no estilo do Google (`components/avaliacoes/CartaoGoogle.tsx`) cujas estrelas e botão abrem direto a janela de escrever avaliação (`site.googleAvaliarUrl`, pelo Place ID). Depois: três passos, faixas com sugestões do que escrever (temas da casa, não depoimentos), depoimentos só da API e de 5 estrelas, e o fecho com a nota contando. Total de avaliações atualizado para 777 (Google Maps, 02/11/2026).
 - **Entradas da home** (`components/motion/CenasHome.tsx`, montado no fim de `app/(site)/page.tsx`): as seções marcam elementos com `data-anima` e um componente só coordena as entradas, com coreografia própria para desktop e celular. `letreiro` (a cursiva se escreve da esquerda para a direita; no desktop a serifada sobe letra a letra saindo de um desfoque, no celular entra inteira), `midia` (no desktop a foto abre de baixo como cortina com o zoom assentando; no celular abre do centro para as bordas), `cascata` (filhos em sequência; carrosséis do celular entram da direita), `data-anima-contar` (a nota das avaliações conta até o valor) e `data-anima-magnetico` (botões que seguem o cursor, só com mouse). Tudo roda uma vez, não esconde o que já está à vista e não anima com movimento reduzido. As cenas presas (hero, galeria da casa, camarão, mosaico, galeria) seguem com a animação própria.
@@ -53,18 +58,16 @@ Passo a passo:
 3. [ ] Criar a chave da API no Resend (Sending access, restrita ao domínio). O usuário coloca `RESEND_API_KEY` no `.env.local` e na Vercel (Production e Preview). Nunca pedir a chave no chat.
 4. [ ] Implementar no código:
    - instalar o SDK `resend` e criar um módulo `lib/email.ts` (`server-only`), com remetente `Rizz <nao-responda@mail.oceontech.com.br>`;
-   - **convite de administrador:** em Configurações, um administrador logado informa nome e e-mail. O sistema grava um convite com token de uso único e validade, e manda um link `/admin/convite/[token]` onde a pessoa define a senha;
-   - **recuperação de senha** no login, com o mesmo mecanismo de token;
+   - **convite:** o convite por link já existe (Configurações → Equipe, tabela `admin_convites`); falta só mandar o link por e-mail ao criar;
+   - **recuperação de senha** no login, reaproveitando o link de nova senha (`tipo = 'senha'` em `admin_convites`);
    - depois: **aviso de reserva nova** para a equipe e, se o cliente informar e-mail, a confirmação com o link pessoal.
-5. [ ] Ajustar `db:setup`/`schema.sql` com a tabela de convites/tokens (o usuário roda `! npm run db:setup`).
 
 ## Acesso ao painel
 
 - A tabela `admin_usuarios` só ganha registro pelo `npm run db:setup`, e só quando está vazia. Esse primeiro acesso já existe: o e-mail desse registro é `admin@rizzrestaurante.com.br` (o padrão do script era esse; hoje é `admin@rizzcucinaevino.com.br`, que só vale para um banco novo), e a senha apareceu uma única vez no terminal de quem rodou.
-- Em Configurações, o usuário logado troca o próprio nome, e-mail e senha (`lib/admin/sessao-actions.ts`). **Não existe tela para criar outro usuário nem para recuperar a senha.**
-- O usuário (Oceon) ainda não conseguiu um acesso com o próprio e-mail. Duas saídas:
-  - quem tiver a senha do primeiro acesso entra e troca o e-mail para o seu em Configurações;
-  - ou esperar o convite por e-mail (seção acima).
+- Em Configurações → Minha conta, cada pessoa troca nome, cargo, e-mail e senha e pode sair de todos os aparelhos (`lib/admin/sessao-actions.ts`).
+- Em Configurações → Equipe, quem administra convida pessoas por link e gera links de nova senha. **Não há "esqueci minha senha" no login**: quem esquecer pede um link a um administrador.
+- Quem já existia antes das permissões virou Administrador.
 
 ## Pendências
 

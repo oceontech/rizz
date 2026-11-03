@@ -3,7 +3,7 @@ import { rodizio } from "@/lib/rodizio";
 import { atualizarEnderecoLinha, site } from "@/lib/site";
 
 /**
- * Funcionamento e contato editáveis no painel (/admin/funcionamento).
+ * Funcionamento e contato editáveis no painel (Configurações → Horários e Contato).
  *
  * O site inteiro lê três objetos únicos: `horarios` (lib/hours), `rodizio`
  * (lib/rodizio) e `site` (lib/site), muitas vezes em funções síncronas que

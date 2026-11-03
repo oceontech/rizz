@@ -33,7 +33,7 @@ export type EstadoWhatsapp = { configurada: boolean; instancia: string; info: In
 
 /** Situação da conexão. Erro de rede vira texto, não falha: a tela mostra. */
 export async function estadoWhatsapp() {
-  return protegida<EstadoWhatsapp>(
+  return protegida<EstadoWhatsapp>("configuracoes",
     async () => {
       if (!evolutionConfigurada) return { configurada: false, instancia: INSTANCIA, info: null, erro: null };
       try {
@@ -44,7 +44,7 @@ export async function estadoWhatsapp() {
         return { configurada: true, instancia: INSTANCIA, info: null, erro: texto };
       }
     },
-    { revalidar: false },
+    { revalidar: false, nivel: "ver" },
   );
 }
 
@@ -55,7 +55,7 @@ const numeroOpcional = z
   .optional();
 
 export async function conectarWhatsapp(numero?: string) {
-  return protegida(
+  return protegida("configuracoes",
     async () => {
       const n = numeroOpcional.parse(numero);
       return comEvolution(() => gerarQrCode(n || undefined));
@@ -65,11 +65,11 @@ export async function conectarWhatsapp(numero?: string) {
 }
 
 export async function desconectarWhatsapp() {
-  return protegida(async () => comEvolution(desconectar), { revalidar: false });
+  return protegida("configuracoes", async () => comEvolution(desconectar), { revalidar: false });
 }
 
 export async function testarWhatsapp(telefone: string) {
-  return protegida(
+  return protegida("configuracoes",
     async () => {
       const t = normalizarTelefone(telefone);
       if (!/^\d{10,11}$/.test(t)) throw new ErroAmigavel("Informe um WhatsApp com DDD.");
@@ -101,7 +101,7 @@ const esquemaConfig = z.object({
 }) satisfies z.ZodType<WhatsappConfig, unknown>;
 
 export async function salvarConfigWhatsapp(entrada: WhatsappConfig) {
-  return protegida(async () => {
+  return protegida("configuracoes", async () => {
     const d = esquemaConfig.parse(entrada);
     if (d.avisoEquipe && d.telefonesEquipe.length === 0) {
       throw new ErroAmigavel("Informe pelo menos um número da equipe para o aviso de reserva nova.");

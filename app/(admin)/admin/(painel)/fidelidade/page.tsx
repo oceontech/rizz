@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 import { BotaoLink, Cabecalho } from "@/components/admin/ui";
 import { Card } from "@/components/sistema/ui/card";
-import { exigirSessao } from "@/lib/auth";
+import { exigirAcesso } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Fidelidade" };
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Fidelidade" };
  * para liberar, volte a renderizá-lo aqui e tire `emBreve` do item em nav.ts.
  */
 export default async function FidelidadeAdminPage() {
-  await exigirSessao();
+  await exigirAcesso("fidelidade");
   return (
     <>
       <Cabecalho titulo="Fidelidade" descricao="Cartão de selos dos clientes, visitas e prêmios." />

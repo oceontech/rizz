@@ -22,6 +22,8 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const logado = await valida(request.cookies.get(COOKIE_SESSAO)?.value);
   const naTelaDeLogin = pathname === "/admin/login";
+  // Link de convite ou de nova senha: abre sem login (o token do link é a prova).
+  if (pathname.startsWith("/admin/convite/")) return NextResponse.next();
 
   if (!logado && !naTelaDeLogin) {
     const destino = new URL("/admin/login", request.url);

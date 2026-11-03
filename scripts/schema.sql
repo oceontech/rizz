@@ -12,6 +12,34 @@ create table if not exists admin_usuarios (
   ultimo_login timestamptz
 );
 
+-- Equipe: papel e permissões (lib/permissoes.ts). Quem já existia vira dono.
+alter table admin_usuarios add column if not exists papel text not null default 'dono';
+alter table admin_usuarios add column if not exists permissoes jsonb;
+alter table admin_usuarios add column if not exists ativo boolean not null default true;
+-- Sobe para derrubar as sessões abertas ("sair de todos os aparelhos", desativar, nova senha).
+alter table admin_usuarios add column if not exists sessao_versao int not null default 1;
+alter table admin_usuarios add column if not exists cargo text;
+alter table admin_usuarios add column if not exists convidado_por int references admin_usuarios (id) on delete set null;
+
+-- Links de convite e de nova senha. Guarda só o hash do token.
+create table if not exists admin_convites (
+  id          serial primary key,
+  token_hash  text not null unique,
+  tipo        text not null default 'convite' check (tipo in ('convite', 'senha')),
+  usuario_id  int references admin_usuarios (id) on delete cascade,
+  nome        text,
+  email       text,
+  cargo       text,
+  papel       text,
+  permissoes  jsonb,
+  criado_por  int references admin_usuarios (id) on delete set null,
+  criado_em   timestamptz not null default now(),
+  expira_em   timestamptz not null,
+  usado_em    timestamptz,
+  revogado_em timestamptz
+);
+create index if not exists admin_convites_email on admin_convites (lower(email));
+
 -- Cardápio ----------------------------------------------------
 
 create table if not exists categorias (

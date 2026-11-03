@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import PainelWhatsapp from "@/components/admin/whatsapp/PainelWhatsapp";
 import { estadoWhatsapp } from "@/lib/admin/whatsapp-actions";
-import { exigirSessao } from "@/lib/auth";
+import { exigirAcesso } from "@/lib/auth";
 import { lerConfigWhatsapp, ultimaRodadaLembretes, ultimosEnvios } from "@/lib/whatsapp/avisos";
 
 export const metadata: Metadata = { title: "WhatsApp" };
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "WhatsApp" };
 const agoraMs = () => Date.now();
 
 export default async function WhatsappPage() {
-  await exigirSessao();
+  await exigirAcesso("configuracoes");
   const [config, envios, rodada, estado] = await Promise.all([
     lerConfigWhatsapp(),
     // Sem a tabela (db:setup ainda não rodou), a tela abre sem o histórico.
