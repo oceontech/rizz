@@ -28,7 +28,7 @@ export default async function ConvitePage({ params }: PageProps<"/admin/convite/
             <div className="max-w-md">
               <p className="text-[0.7rem] font-semibold tracking-[0.12em] text-white/60 uppercase">Painel do restaurante</p>
               <h1 className="mt-3 text-4xl leading-[1.1] font-semibold tracking-tight text-balance">
-                {link?.tipo === "senha" ? "Crie uma senha nova." : "Bem-vindo à equipe."}
+                {!link ? "Acesso ao painel." : link.tipo === "senha" ? "Crie uma senha nova." : "Bem-vindo à equipe."}
               </h1>
               <p className="mt-4 text-[15px] leading-relaxed text-white/70">
                 Reservas, cardápio e o site do restaurante num só lugar, no computador ou no celular.
