@@ -7,6 +7,7 @@ import { z } from "zod";
 import { iniciarSessao } from "@/lib/auth";
 import { sql } from "@/lib/db";
 
+import { avisarSenhaAlterada } from "./envio-acesso";
 import { lerLink } from "./equipe";
 
 export type EstadoConvite = { erro?: string };
@@ -42,10 +43,11 @@ export async function aceitarConvite(_: EstadoConvite, form: FormData): Promise<
 
   if (link.tipo === "senha") {
     const [u] = await sql`update admin_usuarios set senha_hash = ${hash}, nome = ${d.nome}, sessao_versao = sessao_versao + 1
-                          where id = ${link.usuarioId} and ativo returning id, sessao_versao`;
+                          where id = ${link.usuarioId} and ativo returning id, sessao_versao, email, telefone`;
     if (!u) return { erro: "Este acesso está desativado." };
     id = Number(u.id);
     versao = Number(u.sessao_versao);
+    await avisarSenhaAlterada({ nome: d.nome, email: String(u.email), telefone: u.telefone ? String(u.telefone) : null });
   } else {
     const [c] = await sql`select papel, permissoes, criado_por, telefone from admin_convites where id = ${link.id}`;
     try {
