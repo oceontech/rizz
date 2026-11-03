@@ -6,7 +6,7 @@ import "server-only";
  * O remetente precisa ser de um domínio verificado no Resend.
  */
 const CHAVE = process.env.RESEND_API_KEY?.trim();
-const REMETENTE = process.env.EMAIL_REMETENTE?.trim() || "Rizz Cucina & Vino <nao-responda@mail.oceontech.com.br>";
+const REMETENTE = process.env.EMAIL_REMETENTE?.trim() || "Rizz Cucina & Vino <nao-responda@rizzcucinaevino.com.br>";
 
 export const emailConfigurado = Boolean(CHAVE);
 

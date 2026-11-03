@@ -64,7 +64,7 @@ Os nomes estão em `.env.example`; os valores ficam no `.env.local` e na Vercel.
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob | ok |
 | `AUTH_SECRET` | assina o cookie do painel | ok |
 | `GOOGLE_PLACES_API_KEY` (+ `GOOGLE_PLACE_ID`, opcional) | textos das avaliações do Google | **chave não configurada**: o site usa a nota fixa de `data/reviews.ts`. O Place ID já está em `site.googlePlaceId`; a variável só o sobrescreve |
-| `RESEND_API_KEY`, `EMAIL_REMETENTE` | e-mails de convite e nova senha (Resend; `lib/email.ts`) | **falta a chave e o DNS** (ver `docs/ESTADO.md`); sem ela o envio vai só pelo WhatsApp |
+| `RESEND_API_KEY`, `EMAIL_REMETENTE` | e-mails de convite e nova senha (Resend; `lib/email.ts`) | ok (domínio `rizzcucinaevino.com.br` verificado; chave só de envio) |
 | `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCIA` | WhatsApp pela Evolution API (VPS, `https://evo.rizz.genext.group`) | ok |
 | `CRON_SECRET` | protege a rota dos lembretes (`/api/whatsapp/lembretes`); o mesmo valor está no cron da VPS | ok |
 | `SITE_URL` | base dos links nas mensagens (opcional) | opcional |
