@@ -39,7 +39,7 @@ export async function enviarAcesso(
   const dados: DadosAcesso = {
     ...d,
     urlSite,
-    urlLogo: `${urlSite}/email/logo-branca.png`,
+    urlCabecalho: `${urlSite}/email/cabecalho.png`,
     endereco: `${site.endereco.rua} · ${site.endereco.cidade}/${site.endereco.uf}`,
     nomeRestaurante: site.nome,
   };

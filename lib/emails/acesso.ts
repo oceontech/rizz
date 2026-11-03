@@ -19,8 +19,8 @@ export type DadosAcesso = {
   cargo?: string;
   /** Endereço do site (rodapé e link do painel). */
   urlSite: string;
-  /** Endereço da logo branca (PNG). */
-  urlLogo: string;
+  /** Imagem do cabeçalho (vinho com a logo), PNG. */
+  urlCabecalho: string;
   endereco: string;
   nomeRestaurante: string;
 };
@@ -30,8 +30,6 @@ const primeiroNome = (n: string) => n.trim().split(/\s+/)[0] || n;
 
 // Cores da marca (iguais às do site).
 const VINHO = "#5c0a1c";
-const VINHO_ESCURO = "#2b0710";
-const AMBAR = "#e8890c";
 const CREME = "#f6efe6";
 
 type Conteudo = {
@@ -116,48 +114,69 @@ function conteudo(etapa: EtapaAcesso, d: DadosAcesso): Conteudo {
   }
 }
 
-/** E-mail montado com tabelas e estilos inline (o que os clientes de e-mail aceitam). */
+/**
+ * E-mail montado com tabelas e estilos inline (o que os clientes de e-mail
+ * aceitam), pensado para sobreviver ao modo escuro:
+ * - o cabeçalho vinho é uma imagem (nenhum app inverte imagens);
+ * - todo texto é escuro sobre fundo claro: se o app inverter, vira claro
+ *   sobre escuro e o contraste continua bom;
+ * - o fundo do botão é um degradê (imagem, não é invertido) e o texto branco
+ *   leva o truque de mix-blend-mode que impede o Gmail do iPhone de escurecê-lo;
+ * - "color-scheme: light only" faz Apple Mail e Outlook não escurecerem nada.
+ */
 export function emailAcesso(etapa: EtapaAcesso, d: DadosAcesso) {
   const c = conteudo(etapa, d);
+  const fonte = "font-family:Arial,Helvetica,sans-serif";
   const html = `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${esc(c.assunto)}</title></head>
-<body style="margin:0;padding:0;background:${CREME};-webkit-font-smoothing:antialiased">
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only">
+<title>${esc(c.assunto)}</title>
+<style>
+:root{color-scheme:light only;supported-color-schemes:light only}
+u + .body .gmail-tela{background:#000;mix-blend-mode:screen}
+u + .body .gmail-dif{background:#000;mix-blend-mode:difference}
+</style></head>
+<body class="body" style="margin:0;padding:0;background:${CREME};-webkit-font-smoothing:antialiased">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(c.previa)}&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${CREME}">
-<tr><td align="center" style="padding:28px 12px 40px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${CREME}" style="background:${CREME}">
+<tr><td align="center" style="padding:24px 12px 40px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-    <tr><td style="background:${VINHO_ESCURO};background-image:linear-gradient(160deg,${VINHO} 0%,${VINHO_ESCURO} 100%);border-radius:24px 24px 0 0;padding:34px 36px 30px" align="left">
-      <img src="${esc(d.urlLogo)}" width="112" alt="${esc(d.nomeRestaurante)}" style="display:block;width:112px;height:auto;border:0">
-      <p style="margin:26px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:${AMBAR};font-weight:bold">${esc(c.sobretitulo)}</p>
-      <h1 style="margin:10px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.25;font-weight:normal;color:#ffffff">${esc(c.titulo)}</h1>
-    </td></tr>
-    <tr><td style="background:#ffffff;border-radius:0 0 24px 24px;padding:32px 36px 34px;font-family:Arial,Helvetica,sans-serif;color:#3a3a3a">
-      ${c.paragrafos.map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#4a4a4a">${esc(p)}</p>`).join("\n      ")}
+    <tr><td style="font-size:0;line-height:0"><img src="${esc(d.urlCabecalho)}" width="560" alt="${esc(d.nomeRestaurante)}" style="display:block;width:100%;max-width:560px;height:auto;border:0"></td></tr>
+    <tr><td bgcolor="#ffffff" style="background:#ffffff;border-radius:0 0 24px 24px;padding:30px 32px 34px;${fonte};color:#2b2b2b">
+      <p style="margin:0;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:${VINHO};font-weight:bold">${esc(c.sobretitulo)}</p>
+      <h1 style="margin:10px 0 18px;font-family:Georgia,'Times New Roman',serif;font-size:27px;line-height:1.25;font-weight:normal;color:#1c1c1c">${esc(c.titulo)}</h1>
+      ${c.paragrafos.map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#444444">${esc(p)}</p>`).join("\n      ")}
       ${
         c.destaque
-          ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0 4px;background:${CREME};border-radius:16px"><tr><td style="padding:18px 20px">
+          ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 4px"><tr><td bgcolor="${CREME}" style="background:${CREME};border-radius:16px;border-left:4px solid ${VINHO};padding:16px 20px">
         <p style="margin:0 0 8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${VINHO};font-weight:bold">${esc(c.destaque.rotulo)}</p>
-        ${c.destaque.linhas.map((l, i) => `<p style="margin:${i ? "6px" : "0"} 0 0;font-size:${i === 0 && etapa === "convite" ? "17px" : "14px"};line-height:1.5;color:${i === 0 && etapa === "convite" ? "#1f1f1f" : "#4a4a4a"};${i === 0 && etapa === "convite" ? "font-weight:bold;margin-bottom:10px" : ""}">${esc(l)}</p>`).join("\n        ")}
+        ${c.destaque.linhas
+          .map((l, i) => {
+            const forte = i === 0 && etapa === "convite";
+            return `<p style="margin:${i ? "6px" : "0"} 0 ${forte ? "10px" : "0"};font-size:${forte ? "17px" : "14px"};line-height:1.5;color:${forte ? "#1c1c1c" : "#444444"};${forte ? "font-weight:bold" : ""}">${esc(l)}</p>`;
+          })
+          .join("\n        ")}
       </td></tr></table>`
           : ""
       }
       ${
         c.botao
-          ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 6px"><tr><td style="background:${VINHO};border-radius:999px">
-        <a href="${esc(c.botao.link)}" style="display:inline-block;padding:15px 30px;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:999px">${esc(c.botao.texto)} &rarr;</a>
-      </td></tr></table>`
+          ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 6px"><tr>
+        <td bgcolor="${VINHO}" style="border-radius:999px;background-color:${VINHO};background-image:linear-gradient(${VINHO},${VINHO})">
+          <a href="${esc(c.botao.link)}" style="display:inline-block;padding:15px 30px;${fonte};font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:999px"><span class="gmail-tela"><span class="gmail-dif">${esc(c.botao.texto)} &rarr;</span></span></a>
+        </td></tr></table>`
           : ""
       }
-      <p style="margin:18px 0 0;font-size:13px;line-height:1.6;color:#7a7a7a">${esc(c.aviso)}</p>
+      <p style="margin:18px 0 0;font-size:13px;line-height:1.6;color:#6b6b6b">${esc(c.aviso)}</p>
       ${
         c.botao && etapa !== "senha-alterada"
-          ? `<p style="margin:16px 0 0;font-size:12px;line-height:1.6;color:#9a9a9a">Se o botão não abrir, copie este endereço no navegador:<br><a href="${esc(c.botao.link)}" style="color:${VINHO};word-break:break-all">${esc(c.botao.link)}</a></p>`
+          ? `<p style="margin:16px 0 0;font-size:12px;line-height:1.6;color:#7a7a7a">Se o botão não abrir, copie este endereço no navegador:<br><a href="${esc(c.botao.link)}" style="color:${VINHO};word-break:break-all">${esc(c.botao.link)}</a></p>`
           : ""
       }
     </td></tr>
-    <tr><td align="center" style="padding:22px 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#8a7f76">
+    <tr><td align="center" style="padding:22px 20px 0;${fonte};font-size:12px;line-height:1.6;color:#6f655d">
       <strong style="color:${VINHO}">${esc(d.nomeRestaurante)}</strong><br>${esc(d.endereco)}<br>
-      <a href="${esc(d.urlSite)}" style="color:#8a7f76">${esc(d.urlSite.replace(/^https?:\/\//, ""))}</a>
+      <a href="${esc(d.urlSite)}" style="color:#6f655d">${esc(d.urlSite.replace(/^https?:\/\//, ""))}</a>
     </td></tr>
   </table>
 </td></tr></table>
