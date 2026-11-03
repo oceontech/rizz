@@ -47,9 +47,10 @@ const fundoPorModo: Record<Modo, string> = {
  * o ScrollTrigger só informa "passou do hero" num estado — carimbado com a
  * rota em que foi medido, para não valer em outra página.
  *
- * Ao se recolher, ele marca `data-header="oculto"` na raiz do documento. A
- * variável `--altura-header` zera junto, e barras grudadas logo abaixo — as
- * abas do cardápio — sobem para o topo em vez de ficar um vão.
+ * Ao se recolher, ele marca `data-header="oculto"` na raiz do documento, e
+ * barras grudadas logo abaixo — as abas do cardápio — sobem para o topo em
+ * vez de ficar um vão. A marca só mexe em seletores do header e das abas,
+ * nunca numa variável herdada: isso recalculava a página inteira.
  */
 export default function Header({ aviso = null }: { aviso?: AvisoHeader }) {
   const raiz = useRef<HTMLElement>(null);
@@ -126,6 +127,9 @@ export default function Header({ aviso = null }: { aviso?: AvisoHeader }) {
         let oculto = false;
         let ultimo = window.scrollY;
         let acumulado = 0;
+        // Estado inicial gravado já na montagem: a divisa do cardápio depende
+        // de `data-header="visivel"` (seletor positivo, ver globals.css).
+        marcar(false);
 
         /**
          * Direção pela diferença real de posição, acumulada: só esconde depois
@@ -252,7 +256,7 @@ export default function Header({ aviso = null }: { aviso?: AvisoHeader }) {
       </div>
 
       {/* Absoluta: a altura do header tem que ser exatamente a de
-          `--altura-header`. Em fluxo, este 1px a mais cobria a borda de cima
+          `--altura-header-cheia`. Em fluxo, este 1px a mais cobria a borda de cima
           das abas do cardápio. */}
       {claro ? (
         // Divisa do cardápio: fio dourado que some nas pontas, com um

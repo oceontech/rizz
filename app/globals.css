@@ -56,8 +56,7 @@
     /* Faixa de aviso publicada pelo painel (dentro do header). */
     --altura-aviso: 0px;
     --altura-header-cheia: calc(4rem + var(--altura-aviso) + env(safe-area-inset-top, 0px));
-    --altura-header: var(--altura-header-cheia);
-    scroll-padding-top: calc(var(--altura-header) + 4rem);
+    scroll-padding-top: calc(var(--altura-header-cheia) + 4rem);
   }
 
   /* Mesmo ponto do `md:h-24` do Header (48rem = 768px). Com 860px, entre
@@ -65,13 +64,14 @@
   @media (min-width: 48rem) {
     :root {
       --altura-header-cheia: calc(6rem + var(--altura-aviso) + env(safe-area-inset-top, 0px));
-      --altura-header: var(--altura-header-cheia);
     }
   }
 
-  :root[data-header="oculto"] {
-    --altura-header: 0px;
-  }
+  /* A marca `data-header` (header recolhido) NUNCA estiliza a própria raiz:
+     nem variável herdada, nem propriedade dela. Qualquer regra que case com
+     o <html> recalcula a página inteira (~850 a 1.200 elementos); medido, era
+     um quadro de 150 a 400ms (CPU 4x mais lenta) na primeira rolagem do
+     celular. Só seletores de descendentes: `:root[data-header=…] .classe`. */
 
   :root.com-aviso {
     --altura-aviso: 2.25rem;
@@ -225,6 +225,17 @@
     top: calc(-1 * var(--altura-header-cheia) - 2px);
   }
 
+  /* Abas grudadas logo abaixo do header (cardápio): sobem junto quando ele
+     se recolhe. Pela marca na raiz, e não por variável, pelo mesmo motivo
+     acima. */
+  .abas-sob-header {
+    top: var(--altura-header-cheia);
+  }
+
+  :root[data-header="oculto"] .abas-sob-header {
+    top: 0;
+  }
+
   /* Vidro do cardápio. Header e abas usam exatamente o mesmo vidro e formam
      um painel só: com o header transparente e as abas quase opacas, o
      conteúdo visível só no header parecia um vão entre as duas barras.
@@ -296,12 +307,15 @@
       transform 0.6s var(--ease-rizz);
   }
 
-  :root[data-abas-presas="1"]:not([data-header="oculto"]) .divisa-ornada::before {
+  /* Seletor positivo de propósito: `:not([data-header=…])` seguido de um
+     descendente faz o navegador invalidar a página inteira a cada troca da
+     marca (era o tranco da primeira rolagem no celular). */
+  :root[data-abas-presas="1"][data-header="visivel"] .divisa-ornada::before {
     opacity: 1;
     transform: scaleX(1);
   }
 
-  :root[data-abas-presas="1"]:not([data-header="oculto"]) .divisa-ornada::after {
+  :root[data-abas-presas="1"][data-header="visivel"] .divisa-ornada::after {
     opacity: 1;
     transform: translate(-50%, -50%) rotate(45deg) scale(1);
     transition-delay: 0.12s;
