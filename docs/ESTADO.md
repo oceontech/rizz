@@ -53,9 +53,9 @@ Objetivo: o painel mandar e-mails. Primeiro uso: **convite de administrador**. H
 
 Passo a passo:
 
-1. [x] Começar o cadastro do domínio no Resend: `mail.oceontech.com.br`, região São Paulo (sa-east-1), Return-Path `send`, rastreamento de cliques e de aberturas **desligados**.
-2. [ ] Criar no DNS da **Hostinger** (hPanel → Domínios → `oceontech.com.br` → DNS) os registros TXT/MX que o Resend mostrar, e clicar em **Verify** no Resend. O domínio raiz não tinha MX nem SPF em 19/10/2026, então não há conflito.
-3. [ ] Criar a chave da API no Resend (Sending access, restrita ao domínio). O usuário coloca `RESEND_API_KEY` no `.env.local` e na Vercel (Production e Preview). Nunca pedir a chave no chat.
+1. [x] Domínio `rizzcucinaevino.com.br` verificado no Resend (o `mail.oceontech.com.br` iniciado antes não foi usado).
+2. [x] Chave da API (só envio) na Vercel (Production e Preview) e no `.env.local`, colocada pelo usuário em 03/11/2026.
+3. [x] Remetente: `nao-responda@rizzcucinaevino.com.br`.
 4. [x] Código: `lib/email.ts` (remetente `Rizz Cucina & Vino <nao-responda@rizzcucinaevino.com.br>`, trocável por `EMAIL_REMETENTE`), convite e recuperação de senha já mandam e-mail quando a chave existir.
 5. [ ] Depois: **aviso de reserva nova** para a equipe e, se o cliente informar e-mail, a confirmação com o link pessoal.
 

@@ -104,5 +104,5 @@ Cores do painel: ação em grafite (`primary`), vinho só em pontos de marca (`m
 - O Git usa o credential helper do `gestoken`, configurado só neste repositório (`git config --local`).
 - Nunca rodar `gh auth login`, `supabase login` ou `vercel login`, nem alterar configurações globais (git, gh, supabase, vercel).
 - Todo comando da Vercel usa `--token $VERCEL_TOKEN` e o escopo da conta deste projeto: `--scope team_jsF9ervoTl8eJv5RwbwjQAlC` (time `oceon`). No PowerShell, use `$env:VERCEL_TOKEN`.
-- Resend: conta da Oceon, domínio de envio `mail.oceontech.com.br` (DNS do `oceontech.com.br` na Hostinger). A chave vai só no `.env.local` e na Vercel, colocada pelo usuário.
+- Resend: conta da Oceon, domínio de envio `rizzcucinaevino.com.br` (remetente `nao-responda@rizzcucinaevino.com.br`). A chave (só envio) vai só no `.env.local` e na Vercel, colocada pelo usuário.
 - Nunca exibir, registrar ou commitar tokens.
