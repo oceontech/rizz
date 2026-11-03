@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { normalizarTelefone } from "@/lib/admin/formato";
 import { sql } from "@/lib/db";
-import { OCASIOES } from "@/lib/reservas/regras";
+import { OCASIOES, precisaAprovacao } from "@/lib/reservas/regras";
 import { horariosDisponiveis, livresNoHorario, novoCodigo } from "@/lib/reservas/servidor";
 import { avisarReserva } from "@/lib/whatsapp/avisos";
 
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
   const codigo = novoCodigo();
   // Grupos grandes entram pendentes: a equipe confirma e monta o espaço.
-  const status = cfg.confirmacaoAutomatica && d.pessoas <= cfg.maxPessoasOnline ? "confirmada" : "pendente";
+  const status = precisaAprovacao(cfg, d.pessoas) ? "pendente" : "confirmada";
   const [nova] = await sql`
     insert into reservas (nome, telefone, pessoas, data, hora, obs, ocasiao, status, origem, codigo)
     values (${d.nome}, ${d.telefone}, ${d.pessoas}, ${d.data}, ${d.hora}, ${d.obs || null},

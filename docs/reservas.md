@@ -33,6 +33,8 @@ Fica como JSON na tabela `configuracoes`, chave `reservas`. Padrões em `RESERVA
 2. `POST /api/reservas`: valida, confere a lotação, recusa uma segunda reserva do mesmo WhatsApp no mesmo dia, grava com um `codigo` aleatório (8 caracteres) e confere a lotação de novo (se lotou no meio, desfaz).
 3. Redireciona para `/reservas/[codigo]?nova=1`, o **link pessoal**: dados da reserva, "Salvar na agenda" (`/api/reservas/[codigo]/ics`), "Como chegar", alterar e cancelar.
 4. `PATCH /api/reservas/[codigo]` com `{ acao: "cancelar" }` ou `{ acao: "alterar", pessoas, data, hora }`. Só vale para `pendente`/`confirmada` antes do horário (`podeMexer`).
+   - **A alteração passa pela regra de aprovação** (`statusDaAlteracao`, em `lib/reservas/regras.ts`). Uma reserva confirmada volta a `pendente` quando a mudança precisa da equipe (grupo acima do limite ou confirmação automática desligada) e pesa: mais pessoas, outro dia ou outro horário. Reduzir pessoas no mesmo horário mantém a confirmação. Uma pendente que passa a caber na regra automática é confirmada. Sem isso, reservar para 8 e depois mudar para 10 pulava a aprovação de grupo grande.
+   - Quando volta a pendente, o cliente é avisado na revisão (antes de salvar) e recebe a mensagem "pedido recebido"; a equipe recebe um aviso no WhatsApp (se o aviso da equipe estiver ligado). Ao ser confirmada de novo, a confirmação sai outra vez.
 
 Proteção contra robôs: campo invisível `site` (precisa vir vazio).
 

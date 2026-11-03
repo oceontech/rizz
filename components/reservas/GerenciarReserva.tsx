@@ -128,7 +128,14 @@ export default function GerenciarReserva({
   if (modo === "alterar") {
     return (
       <ReservaOnline
-        alterando={{ codigo: r.codigo, pessoas: r.pessoas, data: r.data, hora: r.hora, nome: r.nome }}
+        alterando={{
+          codigo: r.codigo,
+          pessoas: r.pessoas,
+          data: r.data,
+          hora: r.hora,
+          nome: r.nome,
+          status: r.status === "pendente" ? "pendente" : "confirmada",
+        }}
         onCancelar={() => setModo("ver")}
         onAlterada={() => {
           setModo("ver");

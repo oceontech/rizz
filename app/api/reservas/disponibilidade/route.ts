@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     const fechados: string[] = [];
     for (let d = hoje; d <= ate; d = somarDias(d, 1)) if (diaSemReservas(cfg, bloqueios, d)) fechados.push(d);
     return Response.json(
-      { ativo: cfg.ativo, maxPessoas: cfg.maxPessoasOnline, hoje, ate, fechados },
+      { ativo: cfg.ativo, maxPessoas: cfg.maxPessoasOnline, confirmacaoAutomatica: cfg.confirmacaoAutomatica, hoje, ate, fechados },
       { headers: { "cache-control": "no-store" } },
     );
   }
