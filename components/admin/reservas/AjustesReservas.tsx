@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarOff, Clock, Globe, Trash2, Users } from "lucide-react";
+import { BadgeCheck, CalendarOff, Check, Clock, Globe, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -19,6 +19,7 @@ import { Button } from "@/components/sistema/ui/button";
 import { formatarData } from "@/lib/admin/formato";
 import { criarBloqueio, excluirBloqueio, salvarConfigReservas } from "@/lib/admin/reservas-actions";
 import { NOME_TURNO, type Bloqueio, type ReservasConfig, type Turno } from "@/lib/reservas/regras";
+import { cn } from "@/lib/utils";
 
 const ANTECEDENCIAS = [
   { id: "0", rotulo: "Sem antecedência" },
@@ -28,6 +29,79 @@ const ANTECEDENCIAS = [
   { id: "240", rotulo: "4 horas" },
   { id: "1440", rotulo: "1 dia" },
 ];
+
+type ModoConfirmacao = "automatica" | "grupos" | "manual";
+
+const MODOS: { id: ModoConfirmacao; titulo: string; texto: string }[] = [
+  {
+    id: "automatica",
+    titulo: "Automática para todos",
+    texto: "Toda reserva que cabe na lotação já nasce confirmada, qualquer que seja o tamanho do grupo.",
+  },
+  {
+    id: "grupos",
+    titulo: "Automática, menos grupos grandes",
+    texto: "Grupos pequenos são confirmados na hora. Grupos grandes chegam pendentes para a equipe confirmar e preparar o espaço.",
+  },
+  {
+    id: "manual",
+    titulo: "Manual",
+    texto: "Todas as reservas chegam pendentes. A equipe confirma uma a uma.",
+  },
+];
+
+function modoDe(c: ReservasConfig): ModoConfirmacao {
+  if (!c.confirmacaoAutomatica) return "manual";
+  return c.aprovarGrupos ? "grupos" : "automatica";
+}
+
+/** Lista de opções em cartão, com título e explicação (escolha única). */
+function OpcoesCartao<T extends string>({
+  rotulo,
+  valor,
+  aoMudar,
+  opcoes,
+}: {
+  rotulo: string;
+  valor: T;
+  aoMudar: (v: T) => void;
+  opcoes: { id: T; titulo: string; texto: string }[];
+}) {
+  return (
+    <div role="radiogroup" aria-label={rotulo} className="flex flex-col gap-2">
+      {opcoes.map((o) => {
+        const ativo = o.id === valor;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            role="radio"
+            aria-checked={ativo}
+            onClick={() => aoMudar(o.id)}
+            className={cn(
+              "flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              ativo ? "border-primary bg-primary-suave/60 shadow-[0_0_0_1px_var(--color-primary)]" : "border-border hover:bg-muted",
+            )}
+          >
+            <span
+              className={cn(
+                "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border transition-colors",
+                ativo ? "border-primary bg-primary text-primary-foreground" : "border-input bg-card",
+              )}
+              aria-hidden
+            >
+              {ativo && <Check className="size-3" strokeWidth={3} />}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">{o.titulo}</span>
+              <span className="mt-0.5 block text-[0.8rem] leading-snug text-muted-foreground">{o.texto}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 const INTERVALOS = [
   { id: "15", rotulo: "A cada 15 minutos" },
@@ -60,12 +134,36 @@ function Regras({ config }: { config: ReservasConfig }) {
           value={c.ativo}
           onChange={(v) => mudar("ativo", v)}
         />
-        <CampoSwitch
-          label="Confirmar automaticamente"
-          descricao="Dentro da lotação, a reserva já nasce confirmada. Desligado, todas chegam como pendentes."
-          value={c.confirmacaoAutomatica}
-          onChange={(v) => mudar("confirmacaoAutomatica", v)}
+      </Secao>
+
+      <Secao
+        icone={BadgeCheck}
+        titulo="Confirmação"
+        descricao="Quem decide se a reserva feita pelo site já está garantida. Pendentes aparecem no painel para a equipe confirmar."
+      >
+        <OpcoesCartao
+          rotulo="Como confirmar as reservas"
+          valor={modoDe(c)}
+          aoMudar={(m) =>
+            setC((x) =>
+              m === "manual"
+                ? { ...x, confirmacaoAutomatica: false }
+                : { ...x, confirmacaoAutomatica: true, aprovarGrupos: m === "grupos" },
+            )
+          }
+          opcoes={MODOS}
         />
+        {modoDe(c) === "grupos" && (
+          <CampoNumero
+            label="Grupo grande: acima de"
+            value={c.maxPessoasOnline}
+            onChange={(v) => mudar("maxPessoasOnline", v ?? 8)}
+            min={1}
+            max={60}
+            unidade="pessoas"
+            descricao={`Reservas de até ${c.maxPessoasOnline} pessoas são confirmadas na hora; de ${c.maxPessoasOnline + 1} em diante, ficam pendentes.`}
+          />
+        )}
       </Secao>
 
       <Secao
@@ -85,15 +183,7 @@ function Regras({ config }: { config: ReservasConfig }) {
             max={360}
             passo={15}
             descricao="Depois disso, os lugares voltam a ficar livres."
-          />
-          <CampoNumero
-            label="Grupo grande: acima de"
-            value={c.maxPessoasOnline}
-            onChange={(v) => mudar("maxPessoasOnline", v ?? 8)}
-            min={1}
-            max={60}
-            unidade="pessoas"
-            descricao="Grupos maiores reservam pelo site normalmente, mas chegam pendentes para a equipe confirmar e preparar o espaço."
+            className="@md:col-span-2"
           />
         </div>
       </Secao>

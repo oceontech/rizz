@@ -1,10 +1,11 @@
 "use client";
 
 import { format, parse } from "date-fns";
-import { CalendarDays, Link as IconeLink, Plus, X } from "lucide-react";
+import { CalendarDays, Link as IconeLink, Plus, Settings, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { BotaoSom } from "@/components/admin/AoVivo";
 import { avisar, Confirmar } from "@/components/admin/campos";
 import { Cabecalho, Selo, useUltimo } from "@/components/admin/ui";
 import { SeloWhatsapp } from "@/components/admin/whatsapp/conexao";
@@ -23,11 +24,23 @@ import { excluirReserva } from "@/lib/admin/reservas-actions";
 import { rotuloOcasiao, type Bloqueio, type ReservasConfig } from "@/lib/reservas/regras";
 
 import AjustesReservas from "./AjustesReservas";
-import { AcaoRapida, copiarTexto, EditorReserva, MenuReserva, STATUS } from "./compartilhado";
+import { AcaoRapida, copiarTexto, EditorReserva, MenuReserva, STATUS, WhatsAutomatico } from "./compartilhado";
 import VisaoDia from "./VisaoDia";
 
-type Aba = "dia" | "lista" | "ajustes";
-type Visao = "proximas" | "hoje" | "pendentes" | "anteriores";
+export type Aba = "dia" | "lista" | "ajustes";
+export type Visao = "proximas" | "hoje" | "pendentes" | "anteriores";
+
+/**
+ * Aba e filtro ficam no endereço (?aba=lista&visao=pendentes): recarregar a
+ * página volta para onde a pessoa estava, e o link pode ser compartilhado.
+ * `replaceState` não navega nem recarrega dados, só atualiza a barra.
+ */
+function guardarNoEndereco(chave: string, valor: string | null) {
+  const url = new URL(window.location.href);
+  if (valor) url.searchParams.set(chave, valor);
+  else url.searchParams.delete(chave);
+  window.history.replaceState(window.history.state, "", url);
+}
 
 /** Filtro de um dia só, em pílula clara sobre a página. */
 function FiltroDia({ dia, aoMudar }: { dia: string | null; aoMudar: (d: string | null) => void }) {
@@ -73,15 +86,17 @@ function FiltroDia({ dia, aoMudar }: { dia: string | null; aoMudar: (d: string |
 function Lista({
   reservas,
   hoje,
+  visaoInicial,
   onEditar,
   onExcluir,
 }: {
   reservas: Reserva[];
   hoje: string;
+  visaoInicial: Visao;
   onEditar: (r: Reserva) => void;
   onExcluir: (r: Reserva) => void;
 }) {
-  const [visao, setVisao] = useState<Visao>("proximas");
+  const [visao, setVisao] = useState<Visao>(visaoInicial);
   const [dia, setDia] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
 
@@ -131,6 +146,7 @@ function Lista({
             aoMudar={(v) => {
               setDia(null);
               setVisao(v);
+              guardarNoEndereco("visao", v === "proximas" ? null : v);
             }}
             opcoes={[
               { valor: "proximas", rotulo: "Próximas", contagem: contagem.proximas },
@@ -259,15 +275,25 @@ export default function GestorReservas({
   bloqueios,
   hoje,
   abrirNova,
+  abaInicial = "dia",
+  visaoInicial = "proximas",
+  whatsAutomatico = false,
 }: {
   reservas: Reserva[];
   config: ReservasConfig;
   bloqueios: Bloqueio[];
   hoje: string;
   abrirNova: boolean;
+  abaInicial?: Aba;
+  visaoInicial?: Visao;
+  whatsAutomatico?: boolean;
 }) {
   const router = useRouter();
-  const [aba, setAba] = useState<Aba>("dia");
+  const [aba, setAbaEstado] = useState<Aba>(abaInicial);
+  const setAba = (a: Aba) => {
+    setAbaEstado(a);
+    guardarNoEndereco("aba", a === "dia" ? null : a);
+  };
   const [editando, setEditando] = useState<Reserva | { nova: string } | null>(abrirNova ? { nova: hoje } : null);
   const [excluindo, setExcluindo] = useState<Reserva | null>(null);
   const excluida = useUltimo(excluindo);
@@ -278,7 +304,7 @@ export default function GestorReservas({
   }
 
   return (
-    <>
+    <WhatsAutomatico.Provider value={whatsAutomatico}>
       <Cabecalho
         titulo="Reservas"
         descricao={
@@ -289,6 +315,7 @@ export default function GestorReservas({
         acoes={
           <>
             <SeloWhatsapp />
+            <BotaoSom />
             <Button
               variant="secondary"
               className="rounded-full bg-card shadow-suave hover:bg-accent"
@@ -312,7 +339,7 @@ export default function GestorReservas({
         opcoes={[
           { valor: "dia", rotulo: "Dia" },
           { valor: "lista", rotulo: "Todas" },
-          { valor: "ajustes", rotulo: "Ajustes" },
+          { valor: "ajustes", rotulo: "Ajustes", icone: Settings },
         ]}
       />
 
@@ -333,7 +360,9 @@ export default function GestorReservas({
           onExcluir={setExcluindo}
         />
       )}
-      {aba === "lista" && <Lista reservas={reservas} hoje={hoje} onEditar={setEditando} onExcluir={setExcluindo} />}
+      {aba === "lista" && (
+        <Lista reservas={reservas} hoje={hoje} visaoInicial={visaoInicial} onEditar={setEditando} onExcluir={setExcluindo} />
+      )}
       {aba === "ajustes" && <AjustesReservas config={config} bloqueios={bloqueios} hoje={hoje} />}
 
       <EditorReserva editando={editando} hoje={hoje} onFechar={fecharEditor} />
@@ -352,6 +381,6 @@ export default function GestorReservas({
           if (excluindo) avisar(await excluirReserva(excluindo.id), "Reserva excluída");
         }}
       />
-    </>
+    </WhatsAutomatico.Provider>
   );
 }

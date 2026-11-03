@@ -34,6 +34,7 @@ import {
   OCASIOES,
   paraMinutos,
   rotuloOcasiao,
+  precisaAprovacao,
   somarDias,
   statusDaAlteracao,
   type Turno,
@@ -45,6 +46,7 @@ type Agenda = {
   ativo: boolean;
   maxPessoas: number;
   confirmacaoAutomatica?: boolean;
+  aprovarGrupos?: boolean;
   hoje: string;
   ate: string;
   fechados: string[];
@@ -387,6 +389,11 @@ export default function ReservaOnline({
 
   const max = agenda.maxPessoas;
   const grupoGrande = pessoas > max;
+  const regra = {
+    confirmacaoAutomatica: agenda.confirmacaoAutomatica ?? true,
+    aprovarGrupos: agenda.aprovarGrupos ?? true,
+    maxPessoasOnline: max,
+  };
 
   // Alterar uma reserva confirmada pode devolvê-la para a equipe (mesma regra
   // do servidor): o cliente fica sabendo antes de salvar.
@@ -395,7 +402,7 @@ export default function ReservaOnline({
     Boolean(alterando && data && hora) &&
     alterando!.status === "confirmada" &&
     statusDaAlteracao(
-      { confirmacaoAutomatica: agenda.confirmacaoAutomatica ?? true, maxPessoasOnline: max },
+      regra,
       "confirmada",
       alterando!,
       { pessoas, data: data!, hora: hora! },
@@ -566,9 +573,11 @@ export default function ReservaOnline({
                       </BotaoContador>
                     </div>
                     <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-                      {online
-                        ? "Grupos grandes ficam pendentes até a equipe confirmar e preparar o espaço. A confirmação chega pelo WhatsApp."
-                        : "A equipe confirma o espaço com você pelo WhatsApp."}
+                      {!online
+                        ? "A equipe confirma o espaço com você pelo WhatsApp."
+                        : precisaAprovacao(regra, pessoas)
+                          ? "Grupos grandes ficam pendentes até a equipe confirmar e preparar o espaço. A confirmação chega pelo WhatsApp."
+                          : "Escolha o dia e o horário: se couber no salão, a reserva já sai confirmada."}
                     </p>
                     <p className="mt-2 text-[14px] text-muted-foreground">
                       Mais de {GRUPO_MAXIMO} pessoas?{" "}
@@ -878,7 +887,7 @@ export default function ReservaOnline({
                 {voltaParaEquipe && (
                   <p className="mt-5 flex items-start gap-2.5 rounded-2xl bg-ambar/12 px-4 py-3 text-[14px] leading-relaxed text-foreground">
                     <Clock className="mt-0.5 size-4 shrink-0 text-primary-texto" />
-                    {pessoas > max
+                    {pessoas > max && regra.confirmacaoAutomatica
                       ? `Para grupos de mais de ${max} pessoas, a equipe confirma e prepara o espaço. Ao salvar, sua reserva volta a ficar pendente até a confirmação, que chega pelo WhatsApp.`
                       : "Ao salvar, sua reserva volta a ficar pendente até a equipe confirmar a mudança. A confirmação chega pelo WhatsApp."}
                   </p>

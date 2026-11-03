@@ -339,11 +339,35 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Botão "Confirmar" das reservas pendentes: verde de confirmação (não o
+   vinho de todo botão principal) e um halo que pulsa devagar enquanto há
+   pedido esperando. Verde 700 para o texto branco passar no contraste. */
+@keyframes halo-confirmar {
+  0% {
+    box-shadow: 0 0 0 0 rgb(22 163 74 / 0.45);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 8px rgb(22 163 74 / 0);
+  }
+}
+
+@utility botao-confirmar {
+  animation: halo-confirmar 2.4s ease-out infinite;
+  &:disabled {
+    animation: none;
+  }
+}
+
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .botao-confirmar {
+    animation: none !important;
+  }
+
   *,
   *::before,
   *::after {
