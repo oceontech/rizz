@@ -23,10 +23,14 @@ export type Nivel = "nenhum" | "ver" | "editar";
 export type Permissoes = Record<Area, Nivel>;
 export type Papel = "dono" | "gerente" | "colaborador" | "personalizado";
 
-export const NIVEIS: { id: Nivel; rotulo: string }[] = [
-  { id: "nenhum", rotulo: "Sem acesso" },
-  { id: "ver", rotulo: "Só ver" },
-  { id: "editar", rotulo: "Editar" },
+/**
+ * Rótulos descrevem o que a pessoa consegue fazer, não uma ação: "Editar"
+ * num botão verde parecia um botão de edição.
+ */
+export const NIVEIS: { id: Nivel; rotulo: string; descricao: string }[] = [
+  { id: "nenhum", rotulo: "Não acessa", descricao: "A área nem aparece no menu." },
+  { id: "ver", rotulo: "Só consulta", descricao: "Abre e vê tudo, mas não muda nada." },
+  { id: "editar", rotulo: "Consulta e altera", descricao: "Pode mudar e salvar." },
 ];
 
 const todas = (nivel: Nivel) => Object.fromEntries(AREAS.map((a) => [a.id, nivel])) as Permissoes;
@@ -79,11 +83,11 @@ export function pode(p: Permissoes, area: Area, nivel: "ver" | "editar" = "ver")
   return nivel === "ver" ? p[area] !== "nenhum" : p[area] === "editar";
 }
 
-/** Resumo curto da matriz ("Edita 3 áreas · vê 2"), para a lista da equipe. */
+/** Resumo curto da matriz ("Altera 3 áreas · consulta 2"), para a lista da equipe. */
 export function resumoPermissoes(p: Permissoes) {
   const edita = AREAS.filter((a) => p[a.id] === "editar").length;
   const ve = AREAS.filter((a) => p[a.id] === "ver").length;
   if (edita === AREAS.length) return "Acesso total";
-  const partes = [edita && `edita ${edita} ${edita === 1 ? "área" : "áreas"}`, ve && `vê ${ve}`].filter(Boolean);
-  return partes.length ? String(partes.join(" · ")).replace(/^./, (c) => c.toUpperCase()) : "Sem acesso a nenhuma área";
+  const partes = [edita && `altera ${edita} ${edita === 1 ? "área" : "áreas"}`, ve && `consulta ${ve}`].filter(Boolean);
+  return partes.length ? String(partes.join(" · ")).replace(/^./, (c) => c.toUpperCase()) : "Não acessa nenhuma área";
 }
