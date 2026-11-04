@@ -50,6 +50,23 @@ export async function entrar(_: EstadoLogin, form: FormData): Promise<EstadoLogi
   redirect(destino.startsWith("/admin") ? destino : "/admin");
 }
 
+/**
+ * Marca que a pessoa está usando o painel agora. Chamada pelo navegador em
+ * interações (no máximo uma vez por minuto); o próprio banco descarta
+ * gravações mais próximas que 30 s. Nunca falha para a tela: sem a coluna
+ * (antes do `db:setup`) ou sem rede, só não registra.
+ */
+export async function registrarAtividade() {
+  const sessao = await exigirSessao();
+  try {
+    await sql`update admin_usuarios set ultima_atividade = now()
+              where id = ${sessao.id}
+                and (ultima_atividade is null or ultima_atividade < now() - interval '30 seconds')`;
+  } catch {
+    // coluna ainda não criada
+  }
+}
+
 export async function sair() {
   await encerrarSessao();
   redirect("/admin/login");
