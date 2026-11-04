@@ -241,7 +241,7 @@ export default function GestorExecutivo({ dados, selos }: { dados: ExecutivoDado
         }
       />
 
-      <div className="grid items-start gap-4 lg:grid-cols-[1fr_380px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         <ListaEscalonada className="order-2 flex flex-col gap-4 lg:order-1">
           {SECOES.map((s) => {
             const itens = dados[s.id];

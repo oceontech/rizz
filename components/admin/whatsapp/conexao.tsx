@@ -85,8 +85,9 @@ export function ConectarWhatsapp({ aoConectar, autoGerar = false }: { aoConectar
     if (!aberto) return;
     let vivo = true;
     const conferir = setInterval(async () => {
-      const r = await estadoWhatsapp();
-      if (!vivo) return;
+      // Sem rede, tenta de novo na próxima volta.
+      const r = await estadoWhatsapp().catch(() => null);
+      if (!vivo || !r) return;
       if (r.ok && r.dados?.info?.estado === "open") {
         toast.success("WhatsApp conectado!");
         aoConectar();
@@ -251,23 +252,28 @@ export function SeloWhatsapp() {
 
   const consultar = useCallback(
     () =>
-      estadoWhatsapp().then((r) => {
-        const e = r.ok ? (r.dados ?? null) : null;
-        setEstado(e);
-        setSituacao(situacaoDe(e));
-      }),
+      estadoWhatsapp()
+        .then((r) => {
+          const e = r.ok ? (r.dados ?? null) : null;
+          setEstado(e);
+          setSituacao(situacaoDe(e));
+        })
+        // Sem rede, o selo sai do "carregando" em vez de ficar preso nele.
+        .catch(() => setSituacao(situacaoDe(null))),
     [],
   );
 
   // A Evolution pode demorar: a página abre na hora e o selo se atualiza depois.
   useEffect(() => {
     let vivo = true;
-    estadoWhatsapp().then((r) => {
-      if (!vivo) return;
-      const e = r.ok ? (r.dados ?? null) : null;
-      setEstado(e);
-      setSituacao(situacaoDe(e));
-    });
+    estadoWhatsapp()
+      .then((r) => {
+        if (!vivo) return;
+        const e = r.ok ? (r.dados ?? null) : null;
+        setEstado(e);
+        setSituacao(situacaoDe(e));
+      })
+      .catch(() => vivo && setSituacao(situacaoDe(null)));
     return () => {
       vivo = false;
     };

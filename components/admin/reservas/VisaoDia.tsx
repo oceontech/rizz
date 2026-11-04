@@ -369,7 +369,7 @@ export default function VisaoDia({
       ) : (
         <ListaEscalonada key={dia} className="mt-2 flex flex-col gap-5">
           {grupos.map(([hora, lista]) => (
-            <ItemEscalonado key={hora} className="grid gap-3 md:grid-cols-[5.5rem_1fr]">
+            <ItemEscalonado key={hora} className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[5.5rem_minmax(0,1fr)]">
               <div className="flex items-baseline gap-2 md:flex-col md:gap-0.5 md:pt-4">
                 <p className="numeros text-xl font-semibold tracking-tight">{hora}</p>
                 <p className="numeros text-[13px] text-muted-foreground">

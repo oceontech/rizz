@@ -138,7 +138,7 @@ function IndiceSecoes({ secoes }: { secoes: SecaoVinhoAdmin[] }) {
   }, [secoes]);
 
   return (
-    <nav aria-label="Seções da carta" className="sticky top-6 hidden max-h-[calc(100dvh-3rem)] w-56 shrink-0 overflow-y-auto pb-6 lg:block">
+    <nav aria-label="Seções da carta" className="sticky top-6 hidden max-h-[calc(100dvh-3rem)] w-56 shrink-0 overflow-y-auto pb-6 xl:block">
       <p className="mb-2 px-3 text-[0.68rem] font-semibold tracking-[0.08em] text-muted-foreground uppercase">Seções</p>
       <ul className="flex flex-col gap-0.5">
         {secoes.map((s) => {

@@ -116,6 +116,16 @@ export function AoVivo() {
       if (document.visibilityState === "visible") void consultar();
     };
 
+    // Rede de segurança: uma ação do painel que falhou por falta de conexão e
+    // não foi tratada na tela vira um aviso, em vez de sumir em silêncio.
+    const semRede = (e: PromiseRejectionEvent) => {
+      const msg = e.reason instanceof Error ? e.reason.message : String(e.reason ?? "");
+      if (/fetch|network|rede|conex/i.test(msg)) {
+        toast.error("Sem conexão com o servidor. Confira a internet e tente de novo.", { id: "sem-rede" });
+      }
+    };
+    window.addEventListener("unhandledrejection", semRede);
+
     void consultar();
     document.addEventListener("visibilitychange", aoVoltar);
     window.addEventListener("pointerdown", prepararAudio, { passive: true });
@@ -124,6 +134,7 @@ export function AoVivo() {
       vivo = false;
       window.clearTimeout(timer);
       document.removeEventListener("visibilitychange", aoVoltar);
+      window.removeEventListener("unhandledrejection", semRede);
       window.removeEventListener("pointerdown", prepararAudio);
       window.removeEventListener("keydown", prepararAudio);
     };

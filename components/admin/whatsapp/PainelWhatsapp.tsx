@@ -215,10 +215,15 @@ function Conexao({ inicial }: { inicial: EstadoWhatsapp }) {
 
   async function atualizar() {
     setAtualizando(true);
-    const r = await estadoWhatsapp();
-    setAtualizando(false);
-    if (r.ok && r.dados) setEstado(r.dados);
-    router.refresh();
+    try {
+      const r = await estadoWhatsapp();
+      if (r.ok && r.dados) setEstado(r.dados);
+      router.refresh();
+    } catch {
+      toast.error("Sem conexão. Confira a internet e tente de novo.");
+    } finally {
+      setAtualizando(false);
+    }
   }
 
   if (!estado.configurada) return <SemConfiguracao />;

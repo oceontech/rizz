@@ -158,7 +158,7 @@ export default function Dashboard({ nome, resumo, permissoes }: { nome: string; 
         </ItemEscalonado>
       </ListaEscalonada>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card>
           <TituloBloco
             icone={CalendarDays}
