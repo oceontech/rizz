@@ -476,7 +476,8 @@ export default function GestorEquipe({
 
   function linhaMembro(m: Membro) {
     const papel = papelInfo(m.papel);
-    const uso = presenca(m, agora);
+    // Quem está vendo a lista está usando o painel agora, por definição.
+    const uso = m.id === eu.id ? { agora: true, texto: "Ativo agora", curto: "ativo agora" } : presenca(m, agora);
     return (
       <li key={m.id} className="flex items-center gap-3 py-3.5 first:pt-1 last:pb-1">
         <Avatar nome={m.nome} apagado={!m.ativo} />
