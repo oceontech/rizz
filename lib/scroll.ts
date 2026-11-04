@@ -1,7 +1,6 @@
 "use client";
 
 import type Lenis from "lenis";
-import { gsap } from "@/lib/gsap";
 
 /**
  * Registro do dono da rolagem.
@@ -35,7 +34,8 @@ function headerOffset() {
 
 /**
  * Rola até um elemento (ou seletor). Delega ao Lenis quando ele está ativo,
- * senão usa o ScrollToPlugin. Respeita prefers-reduced-motion pulando direto.
+ * senão usa a rolagem suave do próprio navegador. Respeita
+ * prefers-reduced-motion pulando direto.
  */
 export function scrollToTarget(target: string | HTMLElement, extra = 0) {
   const el =
@@ -59,14 +59,11 @@ export function scrollToTarget(target: string | HTMLElement, extra = 0) {
     return;
   }
 
-  if (instant) {
-    window.scrollTo(0, y);
-    return;
-  }
-
-  gsap.to(window, {
-    duration: 0.9,
-    ease: "power2.inOut",
-    scrollTo: { y, autoKill: true },
-  });
+  // Sem Lenis (celular e tablet): rolagem suave NATIVA, nunca um tween do
+  // GSAP. No iPhone a página segue deslizando por inércia depois do dedo
+  // sair; tocando numa aba nesse meio-tempo, o `autoKill` do ScrollToPlugin
+  // via a página andando sozinha, achava que era o usuário e cancelava no
+  // primeiro quadro (as abas do cardápio e dos vinhos "não faziam nada").
+  // Rolando pelo navegador, o Safari para a inércia e vai até o destino.
+  window.scrollTo({ top: Math.max(0, y), behavior: instant ? "auto" : "smooth" });
 }

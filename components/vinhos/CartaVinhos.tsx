@@ -139,7 +139,7 @@ export default function CartaVinhos({ secoes }: { secoes: SecaoCarta[] }) {
 
   return (
     <div>
-      <div className="sticky top-[var(--altura-header)] z-30 -mx-[1.375rem] border-b border-creme/10 bg-noite/85 backdrop-blur-md transition-[top] duration-[550ms] ease-[var(--ease-rizz)] min-[860px]:-mx-12">
+      <div className="abas-sob-header sticky z-30 -mx-[1.375rem] border-b border-creme/10 bg-noite/85 backdrop-blur-md transition-[top] duration-[550ms] ease-[var(--ease-rizz)] min-[860px]:-mx-12">
         <div ref={trilho} className="no-scrollbar flex gap-1.5 overflow-x-auto px-[1.375rem] py-3 min-[860px]:px-12">
           {filtradas.map((s) => (
             <a
