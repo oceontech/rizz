@@ -129,7 +129,11 @@ export type EventoReserva = "nova" | "confirmada" | "alterada" | "cancelada";
  * a configuração. Chamado dentro de `after()`, depois da resposta: nada
  * daqui atrasa a tela de quem reservou.
  */
-export async function avisarReserva(reservaId: number, evento: EventoReserva) {
+export async function avisarReserva(
+  reservaId: number,
+  evento: EventoReserva,
+  { statusAntes }: { statusAntes?: string } = {},
+) {
   if (!bancoConfigurado || !evolutionConfigurada) return;
   try {
     const cfg = await lerConfigWhatsapp();
@@ -144,11 +148,20 @@ export async function avisarReserva(reservaId: number, evento: EventoReserva) {
       await sql`delete from whatsapp_envios where reserva_id = ${r.id} and tipo = 'lembrete'`;
     }
 
-    const tipo = tipoParaCliente(cfg, r, evento);
+    const tipo = tipoParaCliente(cfg, r, evento, statusAntes);
     if (tipo && r.telefone) {
+      // Confirmação repetida não sai — a não ser que, depois dela, a reserva
+      // tenha voltado a pendente (alteração que precisa da equipe de novo).
       const jaConfirmada =
         tipo === "confirmacao" &&
-        (await sql`select 1 from whatsapp_envios where reserva_id = ${r.id} and tipo = 'confirmacao' and status = 'enviado'`).length > 0;
+        (
+          await sql`
+            select 1 from whatsapp_envios c
+            where c.reserva_id = ${r.id} and c.tipo = 'confirmacao' and c.status = 'enviado'
+              and c.criado_em > coalesce(
+                (select max(e.criado_em) from whatsapp_envios e where e.reserva_id = ${r.id} and e.tipo = 'recebida'),
+                '-infinity')`
+        ).length > 0;
       if (!jaConfirmada) await enviarRegistrando(r.id, tipo, r.telefone, montarMensagem(cfg.modelos[tipo], v));
     }
 
@@ -156,12 +169,33 @@ export async function avisarReserva(reservaId: number, evento: EventoReserva) {
       const texto = montarMensagem(cfg.modelos.equipe, v);
       for (const tel of cfg.telefonesEquipe) await enviarRegistrando(r.id, "equipe", tel, texto);
     }
+
+    // Cliente mexeu numa reserva confirmada e ela voltou para a equipe.
+    if (evento === "alterada" && statusAntes === "confirmada" && r.status === "pendente" && cfg.avisoEquipe) {
+      const texto = montarMensagem(AVISO_EQUIPE_ALTERACAO, v);
+      for (const tel of cfg.telefonesEquipe) await enviarRegistrando(r.id, "equipe", tel, texto);
+    }
   } catch (erro) {
     console.error("[whatsapp] aviso da reserva", reservaId, erro);
   }
 }
 
-function tipoParaCliente(cfg: WhatsappConfig, r: ReservaAviso, evento: EventoReserva): TipoMensagem | null {
+const AVISO_EQUIPE_ALTERACAO = [
+  "🔔 Reserva alterada pelo cliente: precisa confirmar",
+  "",
+  "{nomeCompleto} · {pessoas}",
+  "{data} às {hora}",
+  "WhatsApp: {telefone}",
+  "",
+  "Painel: {site}/admin/reservas",
+].join("\n");
+
+function tipoParaCliente(
+  cfg: WhatsappConfig,
+  r: ReservaAviso,
+  evento: EventoReserva,
+  statusAntes?: string,
+): TipoMensagem | null {
   if (evento === "nova") {
     if (!cfg.confirmacao || (r.origem === "painel" && !cfg.confirmacaoPainel)) return null;
     if (r.status === "pendente") return "recebida";
@@ -169,7 +203,12 @@ function tipoParaCliente(cfg: WhatsappConfig, r: ReservaAviso, evento: EventoRes
     return null;
   }
   if (evento === "confirmada") return cfg.confirmacao && r.status === "confirmada" ? "confirmacao" : null;
-  if (evento === "alterada") return cfg.alteracao && (r.status === "pendente" || r.status === "confirmada") ? "alteracao" : null;
+  if (evento === "alterada") {
+    // A alteração mudou o status: a mensagem certa é a do novo estado.
+    if (statusAntes === "confirmada" && r.status === "pendente") return cfg.confirmacao ? "recebida" : null;
+    if (statusAntes === "pendente" && r.status === "confirmada") return cfg.confirmacao ? "confirmacao" : null;
+    return cfg.alteracao && (r.status === "pendente" || r.status === "confirmada") ? "alteracao" : null;
+  }
   return cfg.cancelamento && r.status === "cancelada" ? "cancelamento" : null;
 }
 

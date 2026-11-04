@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { z } from "zod";
 
 import { sql } from "@/lib/db";
+import { statusDaAlteracao } from "@/lib/reservas/regras";
 import { horariosDisponiveis, livresNoHorario, podeMexer, reservaPorCodigo } from "@/lib/reservas/servidor";
 import { avisarReserva } from "@/lib/whatsapp/avisos";
 
@@ -42,16 +43,21 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/reservas/[codi
   const horario = horarios.find((h) => h.hora === d.hora);
   if (!horario || horario.livres < d.pessoas) return erro("Esse horário não tem mais lugar. Escolha outro.", 409);
 
-  const antes = { pessoas: reserva.pessoas, data: reserva.data, hora: reserva.hora };
-  await sql`update reservas set pessoas = ${d.pessoas}, data = ${d.data}, hora = ${d.hora}, atualizado_em = now()
+  const antes = { pessoas: reserva.pessoas, data: reserva.data, hora: reserva.hora, status: reserva.status };
+  // A alteração passa pela mesma regra de aprovação de uma reserva nova (ver
+  // `statusDaAlteracao`): mudar de 8 para 10 pessoas não pode pular a equipe.
+  const status = statusDaAlteracao(cfg, reserva.status as "pendente" | "confirmada", antes, d);
+  await sql`update reservas set pessoas = ${d.pessoas}, data = ${d.data}, hora = ${d.hora}, status = ${status},
+              atualizado_em = now()
             where id = ${reserva.id}`;
 
   const depois = await livresNoHorario(cfg, d.data, d.hora, reserva.id);
   if (depois.livres < d.pessoas) {
-    await sql`update reservas set pessoas = ${antes.pessoas}, data = ${antes.data}, hora = ${antes.hora}
+    await sql`update reservas set pessoas = ${antes.pessoas}, data = ${antes.data}, hora = ${antes.hora},
+                status = ${antes.status}
               where id = ${reserva.id}`;
     return erro("Esse horário acabou de lotar. Escolha outro, por favor.", 409);
   }
-  after(() => avisarReserva(reserva.id, "alterada"));
-  return Response.json({ ok: true });
+  after(() => avisarReserva(reserva.id, "alterada", { statusAntes: antes.status }));
+  return Response.json({ ok: true, status });
 }

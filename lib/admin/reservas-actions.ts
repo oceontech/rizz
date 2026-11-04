@@ -153,6 +153,7 @@ const esquemaConfig = z.object({
   intervalo: z.number().int().refine((n) => [15, 20, 30, 60].includes(n), "Intervalo inválido."),
   permanencia: z.number().int().min(30).max(360),
   ultimoAntesDoFim: z.number().int().min(0).max(240),
+  aprovarGrupos: z.boolean(),
   maxPessoasOnline: z.number().int().min(1).max(60),
   antecedenciaMinima: z.number().int().min(0).max(24 * 60),
   diasAFrente: z.number().int().min(1).max(180),
@@ -185,4 +186,47 @@ export async function excluirBloqueio(id: number) {
   return protegida("reservas", async () => {
     await sql`delete from reserva_bloqueios where id = ${id}`;
   });
+}
+
+// ─── Ao vivo ───────────────────────────────────────────────────
+
+export type NovaReserva = { id: number; nome: string; pessoas: number; data: string | null; hora: string | null; status: string };
+
+/**
+ * O painel pergunta de tempos em tempos se algo mudou nas reservas (não há
+ * conexão aberta na Vercel). `versao` muda a cada reserva criada, alterada ou
+ * excluída; `novas` traz as reservas do site com id acima de `desde`, para o
+ * aviso com som. Só leitura: não revalida nada.
+ */
+export async function novidadesReservas(desde: number) {
+  return protegida(
+    "reservas",
+    async () => {
+      const [v] = await sql`
+        select coalesce(max(id), 0)::int as ultimo, count(*)::int as total,
+               coalesce(max(atualizado_em), max(criado_em))::text as mudou,
+               count(*) filter (where status = 'pendente')::int as pendentes
+        from reservas`;
+      const novas =
+        desde > 0
+          ? await sql`select id, nome, pessoas, data::text as data, hora, status from reservas
+                      where id > ${desde} and origem = 'site' order by id limit 5`
+          : [];
+      return {
+        versao: `${v.total}-${v.ultimo}-${v.mudou ?? ""}-${v.pendentes}`,
+        ultimo: Number(v.ultimo),
+        novas: novas.map(
+          (l): NovaReserva => ({
+            id: Number(l.id),
+            nome: String(l.nome),
+            pessoas: Number(l.pessoas),
+            data: l.data ? String(l.data) : null,
+            hora: l.hora ? String(l.hora) : null,
+            status: String(l.status),
+          }),
+        ),
+      };
+    },
+    { revalidar: false, nivel: "ver" },
+  );
 }

@@ -1,10 +1,11 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useId, useRef, type KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
 
-type Opcao<T extends string> = { valor: T; rotulo: string; contagem?: number };
+type Opcao<T extends string> = { valor: T; rotulo: string; contagem?: number; icone?: LucideIcon };
 
 type Props<T extends string> = {
   opcoes: Opcao<T>[];
@@ -73,6 +74,7 @@ export function ControleSegmentado<T extends string>({
               />
             )}
             <span className="relative flex min-w-0 items-center justify-center gap-1.5">
+              {opcao.icone && <opcao.icone className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />}
               <span className="truncate">{opcao.rotulo}</span>
               {opcao.contagem !== undefined && (
                 <span className={cn("numeros", ativo ? "opacity-80" : "opacity-60")}>{opcao.contagem}</span>

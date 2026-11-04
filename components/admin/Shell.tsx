@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import garfo from "@/assets/marca/garfo-branco.png";
+import { AoVivo } from "@/components/admin/AoVivo";
 import Logo from "@/components/brand/Logo";
 import { MOLA, TransicaoPagina } from "@/components/sistema/movimento";
 import { BotaoTema } from "@/components/sistema/tema/botao-tema";
@@ -479,6 +480,7 @@ export default function Shell({ usuario, pendentes, recolhidaInicial, children }
       </div>
 
       <BarraCelular usuario={usuario} pendentes={pendentes} />
+      <AoVivo />
     </div>
   );
 }

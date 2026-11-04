@@ -13,7 +13,7 @@ import {
   Trash2,
   UserX,
 } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { createContext, useContext, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
@@ -146,20 +146,27 @@ export function MenuReserva({
 }
 
 /** Ação principal do momento: confirmar o pedido ou registrar a chegada. */
+/** O WhatsApp automático (Evolution) está ligado? Dado pela página de reservas. */
+export const WhatsAutomatico = createContext(false);
+
 export function AcaoRapida({ r, hoje }: { r: Reserva; hoje: string }) {
   const { pendente, mudar } = useStatus(r);
+  const whatsAutomatico = useContext(WhatsAutomatico);
 
   if (r.status === "pendente") {
     return (
       <BotaoSalvar
         size="sm"
         pendente={pendente}
+        className="botao-confirmar bg-[#15803d]! font-semibold text-white! hover:bg-[#166534]!"
         onClick={() => {
           mudar("confirmada");
-          void abrirWhatsComMensagem({ ...r, status: "confirmada" });
+          // Com o WhatsApp automático ligado, a confirmação já sai pela
+          // instância; abrir o WhatsApp manual mandaria a mensagem duas vezes.
+          if (!whatsAutomatico) void abrirWhatsComMensagem({ ...r, status: "confirmada" });
         }}
       >
-        <Check /> Confirmar
+        <Check strokeWidth={2.5} /> Confirmar
       </BotaoSalvar>
     );
   }

@@ -23,7 +23,9 @@ export type ReservasConfig = {
   permanencia: number;
   /** Último horário oferecido = fim do turno menos isto, em minutos. */
   ultimoAntesDoFim: number;
-  /** Acima disto, a reserva do site chega pendente para a equipe confirmar. */
+  /** Com a confirmação automática, grupos grandes ainda passam pela equipe? */
+  aprovarGrupos: boolean;
+  /** "Grupo grande": acima disto (com `aprovarGrupos`), chega pendente. */
   maxPessoasOnline: number;
   /** Antecedência mínima para reservar pelo site, em minutos. */
   antecedenciaMinima: number;
@@ -39,6 +41,7 @@ export const RESERVAS_PADRAO: ReservasConfig = {
   intervalo: 30,
   permanencia: 105,
   ultimoAntesDoFim: 60,
+  aprovarGrupos: true,
   maxPessoasOnline: 8,
   antecedenciaMinima: 60,
   diasAFrente: 60,
@@ -66,6 +69,43 @@ export type Horario = {
 };
 
 export const NOME_TURNO: Record<Turno, string> = { almoco: "Almoço", jantar: "Jantar" };
+
+export type RegraConfirmacao = Pick<ReservasConfig, "confirmacaoAutomatica" | "aprovarGrupos" | "maxPessoasOnline">;
+
+/**
+ * A reserva precisa passar pela equipe? Três modos no painel (Ajustes →
+ * Confirmação): automática para todos; automática menos grupos grandes
+ * (acima de `maxPessoasOnline`); ou manual, com todas pendentes.
+ */
+export function precisaAprovacao(cfg: RegraConfirmacao, pessoas: number) {
+  if (!cfg.confirmacaoAutomatica) return true;
+  return cfg.aprovarGrupos !== false && pessoas > cfg.maxPessoasOnline;
+}
+
+type Quando = { pessoas: number; data: string; hora: string };
+
+/**
+ * Status depois que o CLIENTE altera a reserva pelo link pessoal.
+ *
+ * A alteração passa pela mesma regra de uma reserva nova; sem isso, reservar
+ * para 8 (confirmada na hora) e depois mudar para 10 virava um atalho para
+ * pular a aprovação de grupo grande. Uma reserva confirmada só volta a
+ * pendente quando a mudança pesa para a equipe: mais pessoas, ou outro dia ou
+ * horário (o espaço foi preparado para aquele momento). Reduzir pessoas no
+ * mesmo horário mantém a confirmação. Uma pendente que passa a caber na regra
+ * automática é confirmada, como seria se fosse feita agora.
+ */
+export function statusDaAlteracao(
+  cfg: RegraConfirmacao,
+  atual: "pendente" | "confirmada",
+  antes: Quando,
+  depois: Quando,
+): "pendente" | "confirmada" {
+  if (!precisaAprovacao(cfg, depois.pessoas)) return "confirmada";
+  if (atual === "pendente") return "pendente";
+  const pesou = depois.pessoas > antes.pessoas || depois.data !== antes.data || depois.hora !== antes.hora;
+  return pesou ? "pendente" : "confirmada";
+}
 
 /** Status que ocupam lugar no salão. */
 export const STATUS_ATIVOS = ["pendente", "confirmada", "concluida"] as const;
