@@ -103,7 +103,7 @@ function Lista({
   const contagem = {
     hoje: reservas.filter((r) => r.data === hoje && r.status !== "cancelada").length,
     proximas: reservas.filter((r) => (r.data ?? "9999") >= hoje && ["pendente", "confirmada"].includes(r.status)).length,
-    pendentes: reservas.filter((r) => r.status === "pendente").length,
+    pendentes: reservas.filter((r) => r.status === "pendente" && (r.data ?? "9999") >= hoje).length,
   };
 
   const lista = useMemo(() => {
@@ -113,7 +113,8 @@ function Lista({
     else if (visao === "hoje") l = l.filter((r) => r.data === hoje);
     else if (visao === "proximas")
       l = l.filter((r) => (r.data ?? "9999") >= hoje && ["pendente", "confirmada"].includes(r.status));
-    else if (visao === "pendentes") l = l.filter((r) => r.status === "pendente");
+    // Pendentes de datas que já passaram ficam em "Anteriores", como no contador da barra.
+    else if (visao === "pendentes") l = l.filter((r) => r.status === "pendente" && (r.data ?? "9999") >= hoje);
     else l = l.filter((r) => r.data !== null && r.data < hoje).reverse();
     if (termo)
       l = l.filter((r) => `${r.nome} ${r.telefone ?? ""} ${r.obs ?? ""} ${r.mesa ?? ""}`.toLowerCase().includes(termo));

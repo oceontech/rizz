@@ -107,7 +107,9 @@ export async function resumoPainel() {
       sql`select
             count(*) filter (where data = ${hoje} and status in ('pendente','confirmada'))::int as hoje,
             coalesce(sum(pessoas) filter (where data = ${hoje} and status in ('pendente','confirmada')), 0)::int as pessoas_hoje,
-            count(*) filter (where status = 'pendente')::int as pendentes,
+            -- Pendente que ainda pede ação: de hoje em diante (a mesma regra do
+            -- contador da barra lateral e da aba "Pendentes").
+            count(*) filter (where status = 'pendente' and (data is null or data >= ${hoje}))::int as pendentes,
             count(*) filter (where data >= ${hoje} and data < ${hoje}::date + 7 and status in ('pendente','confirmada'))::int as semana
           from reservas`,
       sql`select count(*)::int as total,

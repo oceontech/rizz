@@ -76,6 +76,32 @@ function telefoneLegivel(digitos: string | null) {
   return mascaraTelefone(d);
 }
 
+/**
+ * Foto do perfil conectado. O link vem do WhatsApp e expira em alguns dias;
+ * quebrado, cai no ícone em vez de mostrar uma imagem partida.
+ */
+function FotoPerfil({ src }: { src: string | null }) {
+  const [falhou, setFalhou] = useState<string | null>(null);
+  if (src && falhou !== src) {
+    return (
+      <Image
+        src={src}
+        alt=""
+        width={56}
+        height={56}
+        unoptimized
+        onError={() => setFalhou(src)}
+        className="size-14 rounded-full object-cover"
+      />
+    );
+  }
+  return (
+    <span className="grid size-14 place-items-center rounded-full bg-primary-suave text-primary-texto">
+      <Smartphone className="size-6" />
+    </span>
+  );
+}
+
 /** `agora` vem do servidor: o mesmo valor no HTML e na hidratação. */
 function haQuanto(iso: string, agora: number) {
   const min = Math.round((agora - new Date(iso).getTime()) / 60_000);
@@ -133,13 +159,7 @@ function Conectado({ estado, aoMudar }: { estado: EstadoWhatsapp; aoMudar: () =>
       }
     >
       <div className="flex items-center gap-4 rounded-2xl bg-muted/60 p-4">
-        {info.foto ? (
-          <Image src={info.foto} alt="" width={56} height={56} unoptimized className="size-14 rounded-full object-cover" />
-        ) : (
-          <span className="grid size-14 place-items-center rounded-full bg-primary-suave text-primary-texto">
-            <Smartphone className="size-6" />
-          </span>
-        )}
+        <FotoPerfil src={info.foto} />
         <div className="min-w-0">
           <p className="truncate font-semibold">{info.nomePerfil ?? "WhatsApp do restaurante"}</p>
           <p className="numeros text-sm text-muted-foreground">{telefoneLegivel(info.numero) || "Número não informado"}</p>

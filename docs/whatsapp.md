@@ -76,6 +76,8 @@ Algo precisa chamar `/api/whatsapp/lembretes` a cada 10–15 minutos, com o cabe
 - **QR Code não aparece ou o celular recusa**: costuma ser a versão do WhatsApp Web que a Evolution anuncia. Atualize a imagem da Evolution na VPS (runbook `atualizar-imagem.md` do vps-infra) (ou ajuste `CONFIG_SESSION_PHONE_VERSION`) e tente de novo.
 - **"Esse número não tem WhatsApp"**: o cliente digitou um número sem WhatsApp. Aparece no histórico do painel.
 - O número conectado **não deve** estar na lista de avisos da equipe: mensagem para si mesmo não toca.
+- **Nome de outro número no painel** (ex.: conectou um número novo e aparece o nome do anterior): a Evolution 2.3.7 não limpa o `profileName` ao parear outro número (grava `undefined`, que o Prisma ignora). Por isso o painel **apaga e recria a instância** ao desconectar e antes de gerar o QR de uma instância que já teve número (`gerarQrCode`/`desconectar` em `lib/whatsapp/evolution.ts`). Se o nome errado já estiver lá, basta Desconectar e conectar de novo. Sem nome informado, o painel mostra o número.
+- A foto do perfil é um link do WhatsApp que expira em alguns dias; quebrado, o painel mostra o ícone.
 
 ## Próximo passo possível: atendimento com IA
 

@@ -309,7 +309,7 @@ export function SeloWhatsapp() {
       <NextLink
         href="/admin/whatsapp"
         className={classe}
-        title={conectado && estado?.info?.nomePerfil ? `Conectado como ${estado.info.nomePerfil}` : "Ajustes do WhatsApp"}
+        title={conectado && estado?.info?.numero ? `Conectado: ${estado.info.nomePerfil ?? `+${estado.info.numero}`}` : "Ajustes do WhatsApp"}
       >
         {conteudo}
       </NextLink>
