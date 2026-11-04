@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { pode, type Area, type Permissoes } from "@/lib/permissoes";
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 
 /** Área do painel: dá a cor do item na sidebar e dos ícones da página (admin.css). */
 export type Secao =
@@ -54,7 +55,7 @@ type ItemNav = {
   area?: Area;
 };
 
-export const NAV: ItemNav[] = [
+export const NAV: ItemNav[] = ([
   { href: "/admin", rotulo: "Visão geral", curto: "Início", Icone: LayoutGrid, secao: "inicio", grupo: "restaurante" },
   { href: "/admin/reservas", rotulo: "Reservas", curto: "Reservas", Icone: CalendarDays, secao: "reservas", grupo: "restaurante", area: "reservas" },
   { href: "/admin/cardapio", rotulo: "Cardápio", curto: "Cardápio", Icone: BookOpen, secao: "cardapio", grupo: "restaurante", aba: "Cardápio", area: "cardapio" },
@@ -71,7 +72,7 @@ export const NAV: ItemNav[] = [
   { href: "/admin/selos", rotulo: "Selos", curto: "Selos", Icone: Award, secao: "selos", grupo: "rodape", pai: "/admin/configuracoes", area: "configuracoes" },
   { href: "/admin/whatsapp", rotulo: "WhatsApp", curto: "WhatsApp", Icone: MessageCircle, secao: "whatsapp", grupo: "rodape", pai: "/admin/configuracoes", area: "configuracoes" },
   { href: "/admin/configuracoes/conta", rotulo: "Minha conta", curto: "Conta", Icone: UserRound, secao: "conta", grupo: "rodape", pai: "/admin/configuracoes" },
-];
+] satisfies ItemNav[]).filter((n) => FIDELIDADE_ATIVA || n.area !== "fidelidade");
 
 /** A pessoa logada vê este item? */
 export const visivel = (n: ItemNav, p: Permissoes) => !n.area || pode(p, n.area, "ver");

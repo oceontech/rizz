@@ -13,14 +13,15 @@ import type { AvisoConfig } from "@/lib/dados";
 import { diaDaSemanaISO, hojeNoRestaurante, horarios } from "@/lib/hours";
 import { pode, type Area, type Permissoes } from "@/lib/permissoes";
 import { site } from "@/lib/site";
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 
 const DESTINOS = [
   { id: "", rotulo: "Sem link" },
   { id: "/reservas", rotulo: "Reservas" },
   { id: "/cardapio", rotulo: "Cardápio" },
   { id: "/cardapio#executivo", rotulo: "Menu executivo" },
-  { id: "/vinhos", rotulo: "Carta de vinhos" },
-  { id: "/fidelidade", rotulo: "Fidelidade" },
+  { id: "/carta-de-vinhos", rotulo: "Carta de vinhos" },
+  ...(FIDELIDADE_ATIVA ? [{ id: "/fidelidade", rotulo: "Fidelidade" }] : []),
 ];
 
 /** Mensagens prontas: um toque preenche o texto. */
@@ -170,7 +171,7 @@ export default function Configuracoes({
   return (
     <>
       <Cabecalho titulo="Configurações" descricao="Tudo o que ajusta o funcionamento do painel e do site, separado por abas." />
-      <div className="grid items-start gap-4 xl:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <AvisoSite aviso={aviso} />
         <nav aria-label="Outras configurações" className="flex flex-col gap-2">
           {atalhos

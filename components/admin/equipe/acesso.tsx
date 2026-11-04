@@ -3,7 +3,7 @@
 import { Check } from "lucide-react";
 
 import { Seletor } from "@/components/sistema/pickers/seletor";
-import { AREAS, NIVEIS, PAPEIS, permissoesDe, type Nivel, type Papel, type Permissoes } from "@/lib/permissoes";
+import { AREAS_VISIVEIS, NIVEIS, PAPEIS, permissoesDe, type Nivel, type Papel, type Permissoes } from "@/lib/permissoes";
 import { cn } from "@/lib/utils";
 
 const DEGRAUS: Record<Nivel, number> = { nenhum: 0, ver: 1, editar: 2 };
@@ -53,7 +53,7 @@ export function LegendaNiveis({ className }: { className?: string }) {
 export function MatrizLeitura({ permissoes }: { permissoes: Permissoes }) {
   return (
     <ul className="flex flex-col divide-y rounded-2xl border">
-      {AREAS.map((a) => (
+      {AREAS_VISIVEIS.map((a) => (
         <li key={a.id} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
           <span className={cn("text-sm", permissoes[a.id] === "nenhum" && "text-muted-foreground")}>{a.rotulo}</span>
           <RotuloNivel nivel={permissoes[a.id]} />
@@ -139,7 +139,7 @@ export function EditorAcesso({
         </div>
         <LegendaNiveis />
         <ul className="flex flex-col divide-y rounded-2xl border">
-          {AREAS.map((a) => (
+          {AREAS_VISIVEIS.map((a) => (
             <li key={a.id} className="flex flex-col gap-2 px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <span className="min-w-0">
                 <span className="block text-sm font-medium">{a.rotulo}</span>

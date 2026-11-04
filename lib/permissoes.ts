@@ -7,6 +7,8 @@
  * "personalizado" guarda a matriz escolhida à mão.
  */
 
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
+
 export const AREAS = [
   { id: "reservas", rotulo: "Reservas", descricao: "Agenda, confirmar ou recusar, mesas, bloqueios e lotação." },
   { id: "cardapio", rotulo: "Cardápio e executivo", descricao: "Pratos, preços, fotos, esgotados e menu executivo." },
@@ -19,6 +21,9 @@ export const AREAS = [
 ] as const;
 
 export type Area = (typeof AREAS)[number]["id"];
+
+/** Áreas mostradas nas telas (a fidelidade só aparece quando existir; ver lib/recursos.ts). */
+export const AREAS_VISIVEIS = AREAS.filter((a) => FIDELIDADE_ATIVA || a.id !== "fidelidade");
 export type Nivel = "nenhum" | "ver" | "editar";
 export type Permissoes = Record<Area, Nivel>;
 export type Papel = "dono" | "gerente" | "colaborador" | "personalizado";

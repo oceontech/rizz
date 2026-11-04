@@ -1,9 +1,11 @@
 import { Heart, Lock } from "lucide-react";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { BotaoLink, Cabecalho } from "@/components/admin/ui";
 import { Card } from "@/components/sistema/ui/card";
 import { exigirAcesso } from "@/lib/auth";
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 
 export const metadata: Metadata = { title: "Fidelidade" };
 
@@ -13,6 +15,7 @@ export const metadata: Metadata = { title: "Fidelidade" };
  * para liberar, volte a renderizá-lo aqui e tire `emBreve` do item em nav.ts.
  */
 export default async function FidelidadeAdminPage() {
+  if (!FIDELIDADE_ATIVA) notFound();
   await exigirAcesso("fidelidade");
   return (
     <>

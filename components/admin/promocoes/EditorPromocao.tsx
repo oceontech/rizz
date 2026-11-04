@@ -20,12 +20,13 @@ import { salvarPromocao, type PromocaoEntrada } from "@/lib/admin/promocoes-acti
 import type { Promocao } from "@/lib/dados";
 import { whatsappLink } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 
 const DESTINOS = [
   { id: "/reservas", rotulo: "Página de reservas" },
   { id: "/cardapio", rotulo: "Cardápio" },
   { id: "/cardapio#executivo", rotulo: "Menu executivo" },
-  { id: "/fidelidade", rotulo: "Programa de fidelidade" },
+  ...(FIDELIDADE_ATIVA ? [{ id: "/fidelidade", rotulo: "Programa de fidelidade" }] : []),
   { id: "whatsapp", rotulo: "WhatsApp do restaurante" },
   { id: "outro", rotulo: "Outro link…" },
 ];
@@ -115,7 +116,7 @@ function Formulario({ aberto, promocao, onFechar }: { aberto: boolean; promocao:
         </>
       }
     >
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex flex-col gap-8">
           <Grupo titulo="Conteúdo">
             <CampoTexto

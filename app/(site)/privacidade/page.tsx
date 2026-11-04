@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -29,13 +30,17 @@ export default function PrivacidadePage() {
           na conversa.
         </p>
 
-        <h2 className="pt-6 font-display text-2xl text-creme">Cartão fidelidade</h2>
-        <p>
-          Ao participar do cartão fidelidade, guardamos seu nome, seu celular
-          e, se você informar, a data do seu aniversário, para registrar as
-          visitas e o prêmio. Mensagens pelo WhatsApp só são enviadas se você
-          autorizar no cadastro.
-        </p>
+        {FIDELIDADE_ATIVA && (
+          <>
+            <h2 className="pt-6 font-display text-2xl text-creme">Cartão fidelidade</h2>
+            <p>
+              Ao participar do cartão fidelidade, guardamos seu nome, seu celular
+              e, se você informar, a data do seu aniversário, para registrar as
+              visitas e o prêmio. Mensagens pelo WhatsApp só são enviadas se você
+              autorizar no cadastro.
+            </p>
+          </>
+        )}
 
         <h2 className="pt-6 font-display text-2xl text-creme">Serviços de terceiros</h2>
         <p>

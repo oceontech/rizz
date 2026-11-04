@@ -11,7 +11,7 @@ import { InputTexto } from "@/components/sistema/inputs/input-texto";
 import { InputEmail } from "@/components/sistema/inputs/input-web";
 import { Button } from "@/components/sistema/ui/button";
 import { atualizarPerfil, sairDeTodos, trocarSenha, type EstadoSenha } from "@/lib/admin/sessao-actions";
-import { AREAS, papelInfo, type Papel, type Permissoes } from "@/lib/permissoes";
+import { AREAS_VISIVEIS, papelInfo, type Papel, type Permissoes } from "@/lib/permissoes";
 
 import { MatrizLeitura } from "../equipe/acesso";
 
@@ -99,7 +99,7 @@ function Senha() {
 
 export default function MinhaConta({ usuario }: { usuario: Usuario }) {
   const papel = papelInfo(usuario.papel);
-  const edita = AREAS.filter((a) => usuario.permissoes[a.id] === "editar").length;
+  const edita = AREAS_VISIVEIS.filter((a) => usuario.permissoes[a.id] === "editar").length;
 
   return (
     <>
@@ -117,7 +117,7 @@ export default function MinhaConta({ usuario }: { usuario: Usuario }) {
             acoes={<Selo tom="secao">{papel.rotulo}</Selo>}
           >
             <MatrizLeitura permissoes={usuario.permissoes} />
-            {edita < AREAS.length && (
+            {edita < AREAS_VISIVEIS.length && (
               <p className="text-[13px] text-muted-foreground">Precisa de mais acesso? Peça a quem administra a equipe.</p>
             )}
           </Secao>
