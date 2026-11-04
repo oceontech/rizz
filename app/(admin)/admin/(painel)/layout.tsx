@@ -14,7 +14,8 @@ export default async function PainelLayout({ children }: { children: React.React
   const [loja, [{ n }], conteudo] = await Promise.all([
     cookies(),
     // Quem não vê reservas não precisa do contador.
-    sessao.permissoes.reservas === "nenhum" ? [{ n: 0 }] : sql`select count(*)::int as n from reservas where status = 'pendente'`,
+    sessao.permissoes.reservas === "nenhum" ? [{ n: 0 }] : sql`select count(*)::int as n from reservas
+         where status = 'pendente' and (data is null or data >= (now() at time zone 'America/Sao_Paulo')::date)`,
     carregarConteudo(),
   ]);
 

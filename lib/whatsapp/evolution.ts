@@ -154,7 +154,19 @@ function paraQr(r: QrBruto | null | undefined): QrCode {
  * outro enquanto a pessoa não escaneia.
  */
 export async function gerarQrCode(numero?: string): Promise<QrCode> {
-  const info = await infoInstancia();
+  let info = await infoInstancia();
+  if (info.existe && info.estado === "open") throw new ErroEvolution("O WhatsApp já está conectado.");
+
+  // Instância que já teve um número começa do zero a cada novo pareamento.
+  // A Evolution 2.3.7 não limpa o nome do perfil antigo: ao conectar, grava
+  // `profileName: undefined` quando o WhatsApp ainda não informou o nome, e o
+  // Prisma ignora campo `undefined`. Conectando outro número, o painel seguia
+  // mostrando o nome do primeiro ("Maísa" com o número novo).
+  if (info.existe && info.estado === "close" && info.numero) {
+    await apagarInstancia();
+    info = { ...info, existe: false };
+  }
+
   if (!info.existe) {
     const criada = await chamar<QrBruto>("POST", "/instance/create", {
       instanceName: INSTANCIA,
@@ -170,14 +182,36 @@ export async function gerarQrCode(numero?: string): Promise<QrCode> {
     const qr = paraQr(criada);
     if (qr.imagem || qr.codigoPareamento) return qr;
   }
-  if (info.estado === "open") throw new ErroEvolution("O WhatsApp já está conectado.");
   const consulta = numero ? `?number=${numero}` : "";
   return paraQr(await chamar<QrBruto>("GET", `/instance/connect/${INSTANCIA}${consulta}`));
 }
 
-/** Desconecta o aparelho. A instância continua existindo para conectar de novo. */
+/**
+ * Apaga a instância e tudo o que a Evolution guardou dela (número, nome,
+ * foto, sessão). A exclusão termina em segundo plano: espera sumir da lista
+ * antes de devolver, para a próxima criação não esbarrar no mesmo nome.
+ */
+async function apagarInstancia() {
+  await chamar("DELETE", `/instance/delete/${INSTANCIA}`).catch((erro) => {
+    if (erro instanceof ErroEvolution && erro.status === 404) return;
+    throw erro;
+  });
+  for (let tentativa = 0; tentativa < 10; tentativa++) {
+    if (!(await infoInstancia()).existe) return;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+}
+
+/**
+ * Desconecta o aparelho e apaga a instância: o próximo pareamento (com o
+ * mesmo número ou outro) nasce sem dados do anterior. Ver `gerarQrCode`.
+ */
 export async function desconectar() {
-  await chamar("DELETE", `/instance/logout/${INSTANCIA}`);
+  await chamar("DELETE", `/instance/logout/${INSTANCIA}`).catch((erro) => {
+    // Já desconectado pelo celular: segue para apagar a instância.
+    if (!(erro instanceof ErroEvolution) || erro.status === 401) throw erro;
+  });
+  await apagarInstancia();
 }
 
 /**
