@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { avisar, BotaoSalvar, CampoSelect, CampoTelefone, CampoTexto, Confirmar } from "@/components/admin/campos";
 import { Cabecalho, Janela, MenuAcoes, PainelLateral, Secao, Selo, useUltimo, type Tom } from "@/components/admin/ui";
@@ -37,7 +37,7 @@ import {
   removerMembro,
   renovarConvite,
 } from "@/lib/admin/equipe-actions";
-import { AREAS, PAPEIS, papelInfo, permissoesDe, resumoPermissoes, type Papel, type Permissoes } from "@/lib/permissoes";
+import { AREAS_VISIVEIS, PAPEIS, papelInfo, permissoesDe, resumoPermissoes, type Papel, type Permissoes } from "@/lib/permissoes";
 import { cn } from "@/lib/utils";
 
 import { EditorAcesso, LegendaNiveis, RotuloNivel } from "./acesso";
@@ -59,17 +59,41 @@ function Avatar({ nome, apagado }: { nome: string; apagado?: boolean }) {
 }
 
 /** "há 5 min", "ontem", "há 3 dias", "12/10". */
-function relativo(iso: string | null, agora: number) {
-  if (!iso) return null;
-  const min = Math.round((agora - new Date(iso).getTime()) / 6e4);
-  if (min < 2) return "agora";
-  if (min < 60) return `há ${min} min`;
-  const h = Math.round(min / 60);
-  if (h < 24) return `há ${h} h`;
-  const d = Math.round(h / 24);
-  if (d === 1) return "ontem";
-  if (d < 30) return `há ${d} dias`;
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", timeZone: "America/Sao_Paulo" });
+const TZ = "America/Sao_Paulo";
+const diaSP = (ms: number) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(ms);
+const horaSP = (ms: number) => new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+
+/** Até 3 min depois do último gesto, a pessoa conta como usando o painel agora. */
+const ATIVO_AGORA_MIN = 3;
+
+/**
+ * Último uso do painel, para a lista da Equipe. Vale o mais recente entre a
+ * última atividade (clique, tecla, rolagem) e o último login.
+ */
+function presenca(m: Membro, agora: number): { agora: boolean; texto: string; curto: string } | null {
+  const marcas = [m.ultimaAtividade, m.ultimoLogin].filter(Boolean).map((v) => new Date(v!).getTime());
+  if (!marcas.length) return null;
+  const quando = Math.max(...marcas);
+  const min = Math.floor((agora - quando) / 6e4);
+  if (min < ATIVO_AGORA_MIN) return { agora: true, texto: "Ativo agora", curto: "ativo agora" };
+  if (min < 60) return { agora: false, texto: `Ativo há ${min} min`, curto: `ativo há ${min} min` };
+  const dias = Math.round((new Date(diaSP(agora)).getTime() - new Date(diaSP(quando)).getTime()) / 864e5);
+  const hora = horaSP(quando);
+  const dia =
+    dias === 0
+      ? `hoje às ${hora}`
+      : dias === 1
+        ? `ontem às ${hora}`
+        : dias < 7
+          ? `${new Date(quando).toLocaleDateString("pt-BR", { weekday: "short", timeZone: TZ }).replace(".", "")} às ${hora}`
+          : `em ${new Date(quando).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: dias > 300 ? "2-digit" : undefined, timeZone: TZ })}`;
+  return { agora: false, texto: `Ativo ${dia}`, curto: `ativo ${dia}` };
+}
+
+function dicaLogin(m: Membro) {
+  return m.ultimoLogin
+    ? `Último login: ${new Date(m.ultimoLogin).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: TZ })}`
+    : "Ainda não entrou";
 }
 
 const diasAte = (iso: string, agora: number) => Math.max(0, Math.ceil((new Date(iso).getTime() - agora) / 864e5));
@@ -355,13 +379,13 @@ function ReferenciaPapeis() {
               <th className="py-2 pr-3 font-medium">Área</th>
               {prontos.map((p) => (
                 <th key={p.id} className="px-3 py-2 font-medium">
-                  {p.rotulo}
+                  <Selo tom={TOM_PAPEL[p.id]}>{p.rotulo}</Selo>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y">
-            {AREAS.map((a) => (
+            {AREAS_VISIVEIS.map((a) => (
               <tr key={a.id}>
                 <td className="py-2.5 pr-3">{a.rotulo}</td>
                 {prontos.map((p) => (
@@ -401,6 +425,14 @@ export default function GestorEquipe({
   canais: Canais;
 }) {
   const router = useRouter();
+
+  // "Ativo agora" envelhece: com a tela aberta, a lista se atualiza a cada minuto.
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") router.refresh();
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, [router]);
   const [convidando, setConvidando] = useState(false);
   const [editando, setEditando] = useState<Membro | null>(null);
   const [envio, setEnvio] = useState<EnvioPronto | null>(null);
@@ -444,7 +476,7 @@ export default function GestorEquipe({
 
   function linhaMembro(m: Membro) {
     const papel = papelInfo(m.papel);
-    const visto = relativo(m.ultimoLogin, agora);
+    const uso = presenca(m, agora);
     return (
       <li key={m.id} className="flex items-center gap-3 py-3.5 first:pt-1 last:pb-1">
         <Avatar nome={m.nome} apagado={!m.ativo} />
@@ -456,15 +488,27 @@ export default function GestorEquipe({
           </p>
           <p className="truncate text-[13px] text-muted-foreground">{m.email}</p>
           <p className="mt-1 text-xs text-muted-foreground @2xl:hidden">
-            {papel.rotulo} · {m.ativo ? (visto ? `entrou ${visto}` : "ainda não entrou") : "desativado"}
+            {papel.rotulo} · {m.ativo ? (uso ? uso.curto : "ainda não entrou") : "desativado"}
           </p>
         </div>
         <div className="hidden w-44 shrink-0 flex-col items-start gap-1 @2xl:flex">
           <Selo tom={m.ativo ? TOM_PAPEL[m.papel] : "neutro"}>{m.ativo ? papel.rotulo : "Desativado"}</Selo>
           {m.papel === "personalizado" && <span className="text-xs text-muted-foreground">{resumoPermissoes(m.permissoes)}</span>}
         </div>
-        <span className="hidden w-28 shrink-0 text-[13px] text-muted-foreground @2xl:block">
-          {visto ? `Entrou ${visto}` : "Ainda não entrou"}
+        <span
+          className={cn(
+            "hidden w-40 shrink-0 items-center gap-1.5 text-[13px] @2xl:flex",
+            uso?.agora && m.ativo ? "font-medium text-positivo-texto" : "text-muted-foreground",
+          )}
+          title={dicaLogin(m)}
+        >
+          {uso?.agora && m.ativo && (
+            <span className="relative flex size-2" aria-hidden>
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-positivo opacity-60 motion-reduce:animate-none" />
+              <span className="relative inline-flex size-2 rounded-full bg-positivo" />
+            </span>
+          )}
+          {uso ? uso.texto : "Ainda não entrou"}
         </span>
         <div className="w-8 shrink-0">
           {podeMexer(m) && (

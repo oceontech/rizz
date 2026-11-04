@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import CartaoFidelidade from "@/components/fidelidade/CartaoFidelidade";
 import Filete from "@/components/motion/Filete";
@@ -6,15 +7,21 @@ import Reveal from "@/components/motion/Reveal";
 import RevealScrub from "@/components/motion/RevealScrub";
 import { BotaoLink } from "@/components/ui/Botao";
 import { fidelidadeDoSite } from "@/lib/dados";
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Fidelidade",
-  description: `Cartão fidelidade digital do ${site.nome}: junte selos a cada visita e ganhe um presente da casa.`,
-  alternates: { canonical: "/fidelidade" },
-};
+// Desligada, a página é um 404 comum: sem título nem descrição da fidelidade.
+export const metadata: Metadata = FIDELIDADE_ATIVA
+  ? {
+      title: "Fidelidade",
+      description: `Cartão fidelidade digital do ${site.nome}: junte selos a cada visita e ganhe um presente da casa.`,
+      alternates: { canonical: "/fidelidade" },
+    }
+  : { robots: { index: false } };
 
 export default async function FidelidadePage() {
+  // O programa ainda não existe (lib/recursos.ts).
+  if (!FIDELIDADE_ATIVA) notFound();
   const config = await fidelidadeDoSite();
 
   return (

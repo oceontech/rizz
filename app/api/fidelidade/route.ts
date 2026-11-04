@@ -3,6 +3,7 @@ import { z } from "zod";
 import { normalizarTelefone } from "@/lib/admin/formato";
 import { FIDELIDADE_PADRAO, lerConfig } from "@/lib/dados";
 import { sql } from "@/lib/db";
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 
 const telefone = z
   .string()
@@ -30,6 +31,7 @@ const esquema = z.discriminatedUnion("acao", [
  * Devolve só o primeiro nome — o telefone não pode virar consulta de dados.
  */
 export async function POST(req: Request) {
+  if (!FIDELIDADE_ATIVA) return Response.json({ ok: false, erro: "Não encontrado." }, { status: 404 });
   const config = await lerConfig("fidelidade", FIDELIDADE_PADRAO);
   if (!config.ativo) return Response.json({ ok: false, erro: "Programa indisponível no momento." }, { status: 403 });
 

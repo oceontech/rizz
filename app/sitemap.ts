@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { site } from "@/lib/site";
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const agora = new Date();
@@ -12,7 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       { caminho: "/avaliacoes", prioridade: 0.7, frequencia: "weekly" },
       { caminho: "/reservas", prioridade: 0.8, frequencia: "monthly" },
       { caminho: "/carta-de-vinhos", prioridade: 0.5, frequencia: "monthly" },
-      { caminho: "/fidelidade", prioridade: 0.5, frequencia: "monthly" },
+      ...(FIDELIDADE_ATIVA ? [{ caminho: "/fidelidade", prioridade: 0.5, frequencia: "monthly" as const }] : []),
     ];
 
   return rotas.map((r) => ({

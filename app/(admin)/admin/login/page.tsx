@@ -31,10 +31,10 @@ export default async function LoginPage({ searchParams }: PageProps<"/admin/logi
             <div className="max-w-md">
               <p className="text-[0.7rem] font-semibold tracking-[0.12em] text-white/60 uppercase">Painel do restaurante</p>
               <h1 className="mt-3 text-4xl leading-[1.1] font-semibold tracking-tight text-balance">
-                Cardápio, reservas e clientes num só lugar.
+                Cardápio, reservas e site num só lugar.
               </h1>
               <p className="mt-4 text-[15px] leading-relaxed text-white/70">
-                Altere preços, marque pratos esgotados, publique promoções e acompanhe a fidelidade. Tudo
+                Altere preços, marque pratos esgotados, publique promoções e acompanhe as reservas. Tudo
                 reflete no site na hora.
               </p>
             </div>

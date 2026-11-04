@@ -7,6 +7,7 @@ import { useRef } from "react";
 import { CONDICOES, gsap, useGSAP } from "@/lib/gsap";
 import Logo from "@/components/brand/Logo";
 import { enderecoLinha, site } from "@/lib/site";
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 
 const redes = [
   {
@@ -131,7 +132,7 @@ export default function Footer() {
                 ["/avaliacoes", "Avaliações"],
                 ["/reservas", "Reservas"],
                 ["/carta-de-vinhos", "Vinhos"],
-                ["/fidelidade", "Cartão fidelidade"],
+                ...(FIDELIDADE_ATIVA ? [["/fidelidade", "Cartão fidelidade"]] : []),
                 ["/#visite", "Horários e endereço"],
               ].map(([href, rotulo]) => (
                 <li key={href}>

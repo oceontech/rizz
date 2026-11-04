@@ -17,6 +17,8 @@ export type Membro = {
   permissoes: Permissoes;
   ativo: boolean;
   ultimoLogin: string | null;
+  /** Último uso do painel; null antes do `db:setup` ou se nunca usou depois dele. */
+  ultimaAtividade: string | null;
   criadoEm: string;
   convidadoPor: string | null;
 };
@@ -38,7 +40,9 @@ const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
 
 export async function lerEquipe(): Promise<{ membros: Membro[]; convites: ConvitePendente[] }> {
   const [membros, convites] = await Promise.all([
-    sql`select u.id, u.nome, u.email, u.telefone, u.cargo, u.papel, u.permissoes, u.ativo, u.ultimo_login, u.criado_em, c.nome as convidado_por
+    // `to_jsonb(u)` lê `ultima_atividade` sem quebrar antes do `db:setup` criar a coluna.
+    sql`select u.id, u.nome, u.email, u.telefone, u.cargo, u.papel, u.permissoes, u.ativo, u.ultimo_login, u.criado_em,
+               to_jsonb(u) ->> 'ultima_atividade' as ultima_atividade, c.nome as convidado_por
         from admin_usuarios u left join admin_usuarios c on c.id = u.convidado_por
         order by u.ativo desc, case u.papel when 'dono' then 0 when 'gerente' then 1 when 'colaborador' then 2 else 3 end, u.nome`,
     sql`select v.id, v.nome, v.email, v.telefone, v.cargo, v.papel, v.permissoes, v.criado_em, v.expira_em, u.nome as criado_por
@@ -57,6 +61,7 @@ export async function lerEquipe(): Promise<{ membros: Membro[]; convites: Convit
       permissoes: permissoesDe(String(l.papel), l.permissoes),
       ativo: Boolean(l.ativo),
       ultimoLogin: iso(l.ultimo_login),
+      ultimaAtividade: iso(l.ultima_atividade),
       criadoEm: iso(l.criado_em)!,
       convidadoPor: l.convidado_por ? String(l.convidado_por) : null,
     })),

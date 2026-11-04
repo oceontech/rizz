@@ -7,6 +7,7 @@ import { paraDataISO } from "@/lib/dados";
 import { sql } from "@/lib/db";
 import { OCASIOES, RESERVAS_PADRAO, type ReservasConfig } from "@/lib/reservas/regras";
 import { lerConfigReservas, livresNoHorario, novoCodigo } from "@/lib/reservas/servidor";
+import { FIDELIDADE_ATIVA } from "@/lib/recursos";
 import { avisarReserva } from "@/lib/whatsapp/avisos";
 
 import { ErroAmigavel, protegida } from "./comum";
@@ -119,13 +120,14 @@ export async function lotacaoNoHorario(data: string, hora: string, ignorarId?: n
   );
 }
 
-/** Quem liga já pode estar na fidelidade: o nome vem preenchido. */
+/** Quem liga já pode ter reservado antes: o nome vem preenchido. */
 export async function clientePorTelefone(telefone: string) {
   return protegida("reservas",
     async () => {
       const t = normalizarTelefone(telefone);
       if (t.length < 10) return null;
-      const [c] = await sql`select nome, total_visitas from clientes where telefone = ${t}`;
+      // A base de clientes é a da fidelidade, que ainda não existe (lib/recursos.ts).
+      const [c] = FIDELIDADE_ATIVA ? await sql`select nome, total_visitas from clientes where telefone = ${t}` : [];
       const [ultima] = await sql`
         select nome, count(*) over ()::int as total,
                count(*) filter (where status = 'nao_compareceu') over ()::int as faltas

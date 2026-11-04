@@ -9,6 +9,7 @@ import { useState } from "react";
 
 import garfo from "@/assets/marca/garfo-branco.png";
 import { AoVivo } from "@/components/admin/AoVivo";
+import { Presenca } from "@/components/admin/Presenca";
 import Logo from "@/components/brand/Logo";
 import { MOLA, TransicaoPagina } from "@/components/sistema/movimento";
 import { BotaoTema } from "@/components/sistema/tema/botao-tema";
@@ -481,6 +482,7 @@ export default function Shell({ usuario, pendentes, recolhidaInicial, children }
 
       <BarraCelular usuario={usuario} pendentes={pendentes} />
       <AoVivo />
+      <Presenca />
     </div>
   );
 }

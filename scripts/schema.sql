@@ -41,6 +41,9 @@ create table if not exists admin_convites (
 create index if not exists admin_convites_email on admin_convites (lower(email));
 -- WhatsApp da pessoa: o convite e o link de nova senha vão por ele também.
 alter table admin_usuarios add column if not exists telefone text;
+-- Último uso do painel (clique, tecla, rolagem), mais fiel que o último login:
+-- a sessão dura semanas e o login não diz quem está usando agora.
+alter table admin_usuarios add column if not exists ultima_atividade timestamptz;
 alter table admin_convites add column if not exists telefone text;
 
 -- Cardápio ----------------------------------------------------

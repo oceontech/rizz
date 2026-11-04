@@ -112,7 +112,7 @@ export default function GestorHome({ categorias, config }: { categorias: Categor
 
       <div className="flex flex-col gap-4">
         <Secao icone={Star} titulo="O mais pedido" descricao="A dobra de destaque logo depois do manifesto, com foto grande e chamada.">
-          <div className="grid gap-6 @3xl:grid-cols-[1fr_minmax(0,22rem)]">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-6 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">Prato</span>
@@ -213,7 +213,7 @@ export default function GestorHome({ categorias, config }: { categorias: Categor
               Nenhum prato na seleção. Adicione pelo menos 3.
             </p>
           ) : (
-            <ol className="grid gap-2 @2xl:grid-cols-2">
+            <ol className="grid grid-cols-[minmax(0,1fr)] gap-2 @2xl:grid-cols-2">
               {c.destaques.map((id, i) => {
                 const p = porId.get(id)!;
                 return (
