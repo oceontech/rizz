@@ -21,10 +21,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { Reserva } from "@/lib/admin/consultas";
 import { formatarData, mascaraTelefone } from "@/lib/admin/formato";
 import { excluirReserva } from "@/lib/admin/reservas-actions";
-import { rotuloOcasiao, type Bloqueio, type ReservasConfig } from "@/lib/reservas/regras";
+import { type Bloqueio, type ReservasConfig } from "@/lib/reservas/regras";
 
 import AjustesReservas from "./AjustesReservas";
-import { AcaoRapida, copiarTexto, EditorReserva, MenuReserva, STATUS, WhatsAutomatico } from "./compartilhado";
+import {
+  AcaoRapida,
+  copiarTexto,
+  EditorReserva,
+  MenuReserva,
+  ObsResumo,
+  STATUS,
+  TagsReserva,
+  WhatsAutomatico,
+  type ReservaAberta,
+} from "./compartilhado";
 import VisaoDia from "./VisaoDia";
 
 export type Aba = "dia" | "lista" | "ajustes";
@@ -87,12 +97,14 @@ function Lista({
   reservas,
   hoje,
   visaoInicial,
+  onAbrir,
   onEditar,
   onExcluir,
 }: {
   reservas: Reserva[];
   hoje: string;
   visaoInicial: Visao;
+  onAbrir: (r: Reserva) => void;
   onEditar: (r: Reserva) => void;
   onExcluir: (r: Reserva) => void;
 }) {
@@ -133,9 +145,6 @@ function Lista({
     />
   );
 
-  const detalhe = (r: Reserva) =>
-    [rotuloOcasiao(r.ocasiao), r.mesa && `Mesa ${r.mesa}`, r.obs].filter(Boolean).join(" · ");
-
   return (
     <>
       <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -174,7 +183,7 @@ function Lista({
         {lista.length} {lista.length === 1 ? "reserva" : "reservas"} · {pessoas} pessoas
       </p>
 
-      {/* Desktop: tabela */}
+      {/* Desktop: tabela. A linha inteira abre a ficha; os botões de ação, não. */}
       <Card className="hidden py-0 md:flex">
         {lista.length === 0 ? (
           vazio
@@ -186,37 +195,37 @@ function Lista({
                 <TableHead>Quando</TableHead>
                 <TableHead>Pessoas</TableHead>
                 <TableHead>Situação</TableHead>
-                <TableHead>Origem</TableHead>
                 <TableHead className="pr-5 text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {lista.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="py-3 pl-5">
-                    <button type="button" onClick={() => onEditar(r)} className="text-left">
-                      <span className="block font-medium hover:underline">{r.nome}</span>
-                      <span className="numeros block max-w-72 truncate text-xs text-muted-foreground">
+                <TableRow key={r.id} onClick={() => onAbrir(r)} className="cursor-pointer">
+                  <TableCell className="max-w-0 py-3 pl-5">
+                    <button type="button" onClick={() => onAbrir(r)} className="block max-w-full text-left outline-none focus-visible:underline">
+                      <span className="block truncate font-medium">{r.nome}</span>
+                      <span className="numeros block text-xs text-muted-foreground">
                         {r.telefone ? mascaraTelefone(r.telefone) : "sem telefone"}
-                        {detalhe(r) ? ` · ${detalhe(r)}` : ""}
+                        {r.origem === "site" ? " · pelo site" : ""}
                       </span>
                     </button>
+                    <TagsReserva r={r} className="mt-1.5" />
+                    <ObsResumo obs={r.obs} className="mt-1" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-44">
                     <span className="numeros block first-letter:uppercase">
                       {formatarData(r.data, { weekday: "short", day: "2-digit", month: "short" })}
                     </span>
                     <span className="numeros block text-xs text-muted-foreground">{r.hora ?? "sem horário"}</span>
                   </TableCell>
-                  <TableCell className="numeros">{r.pessoas}</TableCell>
-                  <TableCell>
+                  <TableCell className="numeros w-24">{r.pessoas}</TableCell>
+                  <TableCell className="w-36">
                     <Selo tom={STATUS[r.status].tom} ponto>
                       {STATUS[r.status].rotulo}
                     </Selo>
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{r.origem === "site" ? "Site" : "Painel"}</TableCell>
-                  <TableCell className="pr-5">
-                    <div className="flex items-center justify-end gap-1">
+                  <TableCell className="w-56 pr-5">
+                    <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                       <AcaoRapida r={r} hoje={hoje} />
                       <MenuReserva r={r} onEditar={() => onEditar(r)} onExcluir={() => onExcluir(r)} />
                     </div>
@@ -228,15 +237,15 @@ function Lista({
         )}
       </Card>
 
-      {/* Celular: cartões */}
+      {/* Celular: cartões. Tocar em qualquer lugar abre a ficha. */}
       <div className="flex flex-col gap-3 md:hidden">
         {lista.length === 0 ? (
           <Card>{vazio}</Card>
         ) : (
           lista.map((r) => (
-            <Card key={r.id} size="sm" className="gap-3">
+            <Card key={r.id} size="sm" className="cursor-pointer gap-2.5 transition-shadow active:shadow-elevado" onClick={() => onAbrir(r)}>
               <div className="flex items-start justify-between gap-3 px-(--card-spacing)">
-                <button type="button" onClick={() => onEditar(r)} className="min-w-0 text-left">
+                <button type="button" onClick={() => onAbrir(r)} className="min-w-0 text-left outline-none">
                   <p className="truncate text-[15px] font-semibold">{r.nome}</p>
                   <p className="numeros text-[13px] text-muted-foreground">
                     {r.telefone ? mascaraTelefone(r.telefone) : "sem telefone"}
@@ -255,10 +264,9 @@ function Lista({
                   {r.pessoas} {r.pessoas === 1 ? "pessoa" : "pessoas"}
                 </span>
               </div>
-              {detalhe(r) && (
-                <p className="mx-(--card-spacing) rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">{detalhe(r)}</p>
-              )}
-              <div className="flex items-center justify-end gap-1 px-(--card-spacing)">
+              <TagsReserva r={r} className="px-(--card-spacing)" />
+              <ObsResumo obs={r.obs} className="px-(--card-spacing)" />
+              <div className="flex items-center justify-end gap-1 px-(--card-spacing)" onClick={(e) => e.stopPropagation()}>
                 <AcaoRapida r={r} hoje={hoje} />
                 <MenuReserva r={r} onEditar={() => onEditar(r)} onExcluir={() => onExcluir(r)} />
               </div>
@@ -295,12 +303,14 @@ export default function GestorReservas({
     setAbaEstado(a);
     guardarNoEndereco("aba", a === "dia" ? null : a);
   };
-  const [editando, setEditando] = useState<Reserva | { nova: string } | null>(abrirNova ? { nova: hoje } : null);
+  const [aberta, setAberta] = useState<ReservaAberta | null>(abrirNova ? { nova: hoje } : null);
+  const abrir = (r: Reserva) => setAberta({ id: r.id });
+  const editar = (r: Reserva) => setAberta({ id: r.id, editar: true });
   const [excluindo, setExcluindo] = useState<Reserva | null>(null);
   const excluida = useUltimo(excluindo);
 
   function fecharEditor() {
-    setEditando(null);
+    setAberta(null);
     if (abrirNova) router.replace("/admin/reservas");
   }
 
@@ -324,7 +334,7 @@ export default function GestorReservas({
             >
               <IconeLink /> Copiar link
             </Button>
-            <Button variant="marca" className="rounded-full" onClick={() => setEditando({ nova: hoje })}>
+            <Button variant="marca" className="rounded-full" onClick={() => setAberta({ nova: hoje })}>
               <Plus /> Nova reserva
             </Button>
           </>
@@ -356,17 +366,34 @@ export default function GestorReservas({
           config={config}
           bloqueios={bloqueios}
           hoje={hoje}
-          onNova={(dia) => setEditando({ nova: dia })}
-          onEditar={setEditando}
+          onNova={(dia) => setAberta({ nova: dia })}
+          onAbrir={abrir}
+          onEditar={editar}
           onExcluir={setExcluindo}
         />
       )}
       {aba === "lista" && (
-        <Lista reservas={reservas} hoje={hoje} visaoInicial={visaoInicial} onEditar={setEditando} onExcluir={setExcluindo} />
+        <Lista
+          reservas={reservas}
+          hoje={hoje}
+          visaoInicial={visaoInicial}
+          onAbrir={abrir}
+          onEditar={editar}
+          onExcluir={setExcluindo}
+        />
       )}
       {aba === "ajustes" && <AjustesReservas config={config} bloqueios={bloqueios} hoje={hoje} />}
 
-      <EditorReserva editando={editando} hoje={hoje} onFechar={fecharEditor} />
+      <EditorReserva
+        aberta={aberta}
+        reservas={reservas}
+        hoje={hoje}
+        onFechar={fecharEditor}
+        onExcluir={(r) => {
+          setAberta(null);
+          setExcluindo(r);
+        }}
+      />
 
       <Confirmar
         aberto={excluindo !== null}

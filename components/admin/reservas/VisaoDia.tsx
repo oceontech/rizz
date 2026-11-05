@@ -20,7 +20,6 @@ import {
   lotacaoDoTurno,
   NOME_TURNO,
   picoDoTurno,
-  rotuloOcasiao,
   somarDias,
   STATUS_ATIVOS,
   turnoDaHora,
@@ -31,7 +30,7 @@ import {
 } from "@/lib/reservas/regras";
 import { cn } from "@/lib/utils";
 
-import { AcaoRapida, MenuReserva, STATUS } from "./compartilhado";
+import { AcaoRapida, MenuReserva, ObsResumo, STATUS, TagsReserva } from "./compartilhado";
 
 const ativa = (r: Reserva) => (STATUS_ATIVOS as readonly string[]).includes(r.status);
 const NOMES_DIA = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
@@ -66,21 +65,23 @@ function CampoMesa({ r }: { r: Reserva }) {
 function CartaoReserva({
   r,
   hoje,
+  onAbrir,
   onEditar,
   onExcluir,
 }: {
   r: Reserva;
   hoje: string;
+  onAbrir: () => void;
   onEditar: () => void;
   onExcluir: () => void;
 }) {
-  const ocasiao = rotuloOcasiao(r.ocasiao);
   const apagada = r.status === "cancelada" || r.status === "nao_compareceu";
   return (
-    <Card className={cn("gap-3 transition-shadow hover:shadow-elevado", apagada && "opacity-60")} size="sm">
+    // O card inteiro abre a ficha; mesa e botões de ação, não.
+    <Card className={cn("cursor-pointer gap-3 transition-shadow hover:shadow-elevado", apagada && "opacity-60")} size="sm" onClick={onAbrir}>
       <div className="flex items-start justify-between gap-3 px-(--card-spacing)">
-        <button type="button" onClick={onEditar} className="min-w-0 text-left outline-none">
-          <p className="truncate text-[15px] font-semibold hover:underline">{r.nome}</p>
+        <button type="button" onClick={onAbrir} className="min-w-0 text-left outline-none focus-visible:underline">
+          <p className="truncate text-[15px] font-semibold">{r.nome}</p>
           <p className="numeros text-[13px] text-muted-foreground">
             {r.telefone ? mascaraTelefone(r.telefone) : "sem telefone"}
             {r.origem === "site" ? " · pelo site" : ""}
@@ -96,13 +97,9 @@ function CartaoReserva({
           </Selo>
         </div>
       </div>
-      {(ocasiao || r.obs) && (
-        <div className="flex flex-wrap items-center gap-2 px-(--card-spacing) text-[13px]">
-          {ocasiao && <Selo tom="atencao">{ocasiao}</Selo>}
-          {r.obs && <span className="text-muted-foreground">{r.obs}</span>}
-        </div>
-      )}
-      <div className="flex items-center justify-between gap-2 px-(--card-spacing)">
+      <TagsReserva r={r} className="px-(--card-spacing)" />
+      <ObsResumo obs={r.obs} className="px-(--card-spacing)" />
+      <div className="flex items-center justify-between gap-2 px-(--card-spacing)" onClick={(e) => e.stopPropagation()}>
         <CampoMesa r={r} />
         <div className="flex items-center gap-1">
           <AcaoRapida r={r} hoje={hoje} />
@@ -240,6 +237,7 @@ export default function VisaoDia({
   bloqueios,
   hoje,
   onNova,
+  onAbrir,
   onEditar,
   onExcluir,
 }: {
@@ -248,6 +246,7 @@ export default function VisaoDia({
   bloqueios: Bloqueio[];
   hoje: string;
   onNova: (dia: string) => void;
+  onAbrir: (r: Reserva) => void;
   onEditar: (r: Reserva) => void;
   onExcluir: (r: Reserva) => void;
 }) {
@@ -382,6 +381,7 @@ export default function VisaoDia({
                     key={`${r.id}-${r.mesa ?? ""}`}
                     r={r}
                     hoje={hoje}
+                    onAbrir={() => onAbrir(r)}
                     onEditar={() => onEditar(r)}
                     onExcluir={() => onExcluir(r)}
                   />
@@ -400,7 +400,14 @@ export default function VisaoDia({
           </summary>
           <div className="mt-3 grid gap-3 lg:grid-cols-2">
             {encerradas.map((r) => (
-              <CartaoReserva key={r.id} r={r} hoje={hoje} onEditar={() => onEditar(r)} onExcluir={() => onExcluir(r)} />
+              <CartaoReserva
+                key={r.id}
+                r={r}
+                hoje={hoje}
+                onAbrir={() => onAbrir(r)}
+                onEditar={() => onEditar(r)}
+                onExcluir={() => onExcluir(r)}
+              />
             ))}
           </div>
         </details>
