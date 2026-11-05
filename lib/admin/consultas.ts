@@ -19,6 +19,12 @@ export type Reserva = {
   status: StatusReserva;
   origem: "site" | "painel";
   criadoEm: string;
+  /**
+   * Histórico do mesmo telefone ANTES desta reserva (só em `listarReservas`):
+   * quantas reservas não canceladas e quantas faltas. 0 reservas = primeira vez.
+   */
+  anteriores?: number;
+  faltasAntes?: number;
 };
 
 export type Cliente = {
@@ -55,6 +61,7 @@ export function mapReserva(l: Linha): Reserva {
     status: l.status as StatusReserva,
     origem: l.origem as Reserva["origem"],
     criadoEm: iso(l.criado_em)!,
+    ...(l.anteriores !== undefined ? { anteriores: Number(l.anteriores), faltasAntes: Number(l.faltas_antes ?? 0) } : {}),
   };
 }
 
@@ -82,10 +89,21 @@ export function hojeSP() {
 }
 
 export async function listarReservas(): Promise<Reserva[]> {
+  // O histórico conta o mesmo telefone (só dígitos) em reservas anteriores a
+  // esta: data menor, ou o mesmo dia com id menor. Canceladas não contam.
   const linhas = await sql`
-    select * from reservas
-    where data is null or data >= (now() at time zone 'America/Sao_Paulo')::date - 60
-    order by data nulls last, hora nulls last, criado_em desc
+    select r.*, coalesce(h.anteriores, 0) as anteriores, coalesce(h.faltas, 0) as faltas_antes
+    from reservas r
+    left join lateral (
+      select count(*) filter (where o.status <> 'cancelada')::int as anteriores,
+             count(*) filter (where o.status = 'nao_compareceu')::int as faltas
+      from reservas o
+      where r.telefone is not null and o.id <> r.id
+        and regexp_replace(coalesce(o.telefone, ''), '\\D', '', 'g') = regexp_replace(r.telefone, '\\D', '', 'g')
+        and (o.data < r.data or (o.data = r.data and o.id < r.id))
+    ) h on true
+    where r.data is null or r.data >= (now() at time zone 'America/Sao_Paulo')::date - 60
+    order by r.data nulls last, r.hora nulls last, r.criado_em desc
     limit 1000`;
   return linhas.map(mapReserva);
 }

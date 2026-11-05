@@ -120,8 +120,12 @@ export async function lotacaoNoHorario(data: string, hora: string, ignorarId?: n
   );
 }
 
-/** Quem liga já pode ter reservado antes: o nome vem preenchido. */
-export async function clientePorTelefone(telefone: string) {
+/**
+ * Quem liga já pode ter reservado antes: o nome vem preenchido. `ignorarId`
+ * é a reserva aberta no painel, que não conta como reserva "anterior" (a
+ * primeira reserva de alguém aparecia como "já reservou antes").
+ */
+export async function clientePorTelefone(telefone: string, ignorarId?: number) {
   return protegida("reservas",
     async () => {
       const t = normalizarTelefone(telefone);
@@ -132,6 +136,7 @@ export async function clientePorTelefone(telefone: string) {
         select nome, count(*) over ()::int as total,
                count(*) filter (where status = 'nao_compareceu') over ()::int as faltas
         from reservas where regexp_replace(coalesce(telefone, ''), '\\D', '', 'g') = ${t}
+          and id <> ${ignorarId ?? 0} and status <> 'cancelada'
         order by data desc nulls last limit 1`;
       if (!c && !ultima) return null;
       return {

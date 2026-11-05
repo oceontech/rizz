@@ -213,7 +213,6 @@ function Formulario({ aberto, promocao, onFechar }: { aberto: boolean; promocao:
               inicio={f.inicio}
               fim={f.fim}
               onChange={(a, b) => setF((x) => ({ ...x, inicio: a, fim: b }))}
-              descricao="Opcional. Fora do período o pop-up não aparece, mesmo ativo."
             />
 
             <div className="grid gap-4 sm:grid-cols-3">
