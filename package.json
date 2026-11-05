@@ -48,5 +48,8 @@
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@radix-ui/react-dialog": "1.2.0"
   }
 }

@@ -7,7 +7,7 @@
  * simples (string, number, "AAAA-MM-DD", "HH:MM").
  */
 
-import { addDays, endOfMonth, format, parse, startOfMonth } from "date-fns";
+import { addDays, differenceInCalendarDays, endOfMonth, format, parse, startOfMonth } from "date-fns";
 import { CalendarRange, ImagePlus, Loader2, Minus, Plus, Trash2, Upload } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
@@ -23,10 +23,7 @@ import { InputTelefone } from "@/components/sistema/inputs/input-telefone";
 import { AreaTexto, InputTexto } from "@/components/sistema/inputs/input-texto";
 import { InputEmail, InputUrl } from "@/components/sistema/inputs/input-web";
 import { ControleSegmentado } from "@/components/sistema/pickers/controle-segmentado";
-import { GatilhoCampo } from "@/components/sistema/pickers/gatilho-campo";
-import { PainelAdaptavel } from "@/components/sistema/pickers/painel-adaptavel";
 import { Seletor } from "@/components/sistema/pickers/seletor";
-import { ConteudoIntervalo } from "@/components/sistema/pickers/seletor-intervalo";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -40,6 +37,7 @@ import {
 import { Button } from "@/components/sistema/ui/button";
 import { Switch } from "@/components/sistema/ui/switch";
 import { enviarImagem } from "@/lib/admin/cardapio-actions";
+import { hojeSaoPaulo } from "@/lib/periodos";
 import { cn } from "@/lib/utils";
 
 type Comum = {
@@ -334,7 +332,26 @@ export function CampoHora({
 const ISO = "yyyy-MM-dd";
 const lerData = (iso: string) => parse(iso, ISO, new Date());
 
-/** Período de exibição (promoções): atalhos para frente e calendário duplo. */
+const SEMANA_CURTA = ["dom.", "seg.", "ter.", "qua.", "qui.", "sex.", "sáb."];
+const PERIODO_DIA = (iso: string) => {
+  const d = lerData(iso);
+  return `${SEMANA_CURTA[d.getDay()]} ${format(d, "dd/MM")}`;
+};
+
+/** Próximo fim de semana (sexta a domingo); se já for fim de semana, o atual. */
+function fimDeSemana(hoje: Date) {
+  const dia = hoje.getDay(); // 0 = domingo
+  const ateSexta = dia === 0 ? -2 : dia === 6 ? -1 : 5 - dia;
+  const sexta = addDays(hoje, ateSexta);
+  return { de: dia === 0 || dia === 6 ? hoje : sexta, ate: addDays(sexta, 2) };
+}
+
+/**
+ * Período de exibição (promoções). Sem janela escondida nem botão "Aplicar":
+ * escolhe "Sempre" ou "Em um período" e, no período, as duas datas ficam à
+ * vista e valem na hora, com atalhos que preenchem as duas de uma vez. As duas
+ * são opcionais: sem início, aparece desde já; sem fim, não tem data para acabar.
+ */
 export function CampoPeriodo({
   label,
   inicio,
@@ -347,58 +364,99 @@ export function CampoPeriodo({
   fim: string | null;
   onChange: (inicio: string | null, fim: string | null) => void;
 }) {
-  const [aberto, setAberto] = useState(false);
-  const id = useId();
-  const hoje = new Date();
-  const valor = inicio && fim ? { de: lerData(inicio), ate: lerData(fim) } : undefined;
-  const texto = valor
-    ? `${format(valor.de, "dd/MM/yyyy")} → ${format(valor.ate, "dd/MM/yyyy")}`
-    : null;
+  const [comPeriodo, setComPeriodo] = useState(Boolean(inicio || fim));
+  // Volta as datas que estavam ao trocar "Sempre" ↔ "Em um período".
+  const guardado = useRef<{ inicio: string | null; fim: string | null }>({ inicio, fim });
+  const hoje = hojeSaoPaulo();
+  const iso = (d: Date) => format(d, ISO);
+  const proximoMes = addDays(endOfMonth(hoje), 1);
+  const fds = fimDeSemana(hoje);
+  const atalhos = [
+    { rotulo: "Só hoje", de: iso(hoje), ate: iso(hoje) },
+    { rotulo: "Próximos 7 dias", de: iso(hoje), ate: iso(addDays(hoje, 6)) },
+    { rotulo: "Este fim de semana", de: iso(fds.de), ate: iso(fds.ate) },
+    { rotulo: "Até o fim do mês", de: iso(hoje), ate: iso(endOfMonth(hoje)) },
+    { rotulo: "Mês que vem", de: iso(startOfMonth(proximoMes)), ate: iso(endOfMonth(proximoMes)) },
+  ];
+
+  function trocarModo(modo: "sempre" | "periodo") {
+    if (modo === "sempre") {
+      guardado.current = { inicio, fim };
+      setComPeriodo(false);
+      onChange(null, null);
+    } else {
+      setComPeriodo(true);
+      onChange(guardado.current.inicio, guardado.current.fim);
+    }
+  }
+
+  const invertido = Boolean(inicio && fim && fim < inicio);
+  const dias = inicio && fim && !invertido ? differenceInCalendarDays(lerData(fim), lerData(inicio)) + 1 : null;
+  const passou = Boolean(fim && fim < iso(hoje));
+  const resumo = invertido
+    ? "O fim precisa ser depois do início."
+    : inicio && fim
+      ? `Aparece de ${PERIODO_DIA(inicio)} a ${PERIODO_DIA(fim)} · ${dias} ${dias === 1 ? "dia" : "dias"}`
+      : inicio
+        ? `Aparece a partir de ${PERIODO_DIA(inicio)}, sem data para acabar`
+        : fim
+          ? `Aparece desde já até ${PERIODO_DIA(fim)}`
+          : "Escolha um atalho ou as datas.";
 
   return (
-    <Campo
-      id={id}
-      rotulo={label}
-      ajuda={descricao}
-      className={className}
-      extra={
-        valor ? (
-          <button
-            type="button"
-            onClick={() => onChange(null, null)}
-            className="text-[0.8rem] font-medium text-primary-texto hover:underline"
+    <div className={cn("flex min-w-0 flex-col gap-2.5", className)}>
+      <span className="text-sm font-medium">{label}</span>
+      <ControleSegmentado
+        rotulo={label}
+        valor={comPeriodo ? "periodo" : "sempre"}
+        aoMudar={trocarModo}
+        opcoes={[
+          { valor: "sempre", rotulo: "Sempre" },
+          { valor: "periodo", rotulo: "Em um período" },
+        ]}
+        className="flex w-full [&>button]:flex-1"
+      />
+      {comPeriodo ? (
+        <div className="flex flex-col gap-3 rounded-2xl bg-muted/50 p-3">
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Atalhos de período">
+            {atalhos.map((a) => {
+              const ativo = inicio === a.de && fim === a.ate;
+              return (
+                <button
+                  key={a.rotulo}
+                  type="button"
+                  aria-pressed={ativo}
+                  onClick={() => onChange(a.de, a.ate)}
+                  className={cn(
+                    "h-8 rounded-full border px-3 text-[13px] font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                    ativo ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-accent",
+                  )}
+                >
+                  {a.rotulo}
+                </button>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
+            <CampoData label="Começa em" value={inicio} onChange={(v) => onChange(v, fim)} descricao="Vazio: desde já." />
+            <CampoData label="Termina em" value={fim} onChange={(v) => onChange(inicio, v)} minimo={inicio ?? undefined} descricao="Vazio: sem data para acabar." />
+          </div>
+          <p
+            aria-live="polite"
+            className={cn(
+              "flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-medium",
+              invertido ? "bg-negativo/10 text-negativo-texto" : passou ? "bg-atencao/14 text-atencao-texto" : "bg-card text-foreground",
+            )}
           >
-            Sem período
-          </button>
-        ) : null
-      }
-    >
-      <PainelAdaptavel
-        aberto={aberto}
-        aoMudar={setAberto}
-        titulo={label}
-        gatilho={<GatilhoCampo id={id} icone={CalendarRange} valor={texto} placeholder="Sempre (sem período)" />}
-      >
-        <ConteudoIntervalo
-          valor={valor}
-          atalhos={[
-            { atalho: "hoje", rotulo: "Só hoje", intervalo: { de: hoje, ate: hoje } },
-            { atalho: "7d", rotulo: "Próximos 7 dias", intervalo: { de: hoje, ate: addDays(hoje, 6) } },
-            { atalho: "15d", rotulo: "Próximos 15 dias", intervalo: { de: hoje, ate: addDays(hoje, 14) } },
-            { atalho: "mes", rotulo: "Até o fim do mês", intervalo: { de: hoje, ate: endOfMonth(hoje) } },
-            {
-              atalho: "proximo",
-              rotulo: "Mês que vem",
-              intervalo: { de: startOfMonth(addDays(endOfMonth(hoje), 1)), ate: endOfMonth(addDays(endOfMonth(hoje), 1)) },
-            },
-          ]}
-          aoEscolher={(r) => {
-            onChange(format(r.de, ISO), format(r.ate, ISO));
-            setAberto(false);
-          }}
-        />
-      </PainelAdaptavel>
-    </Campo>
+            <CalendarRange className="size-4 shrink-0" />
+            {passou && !invertido ? `${resumo}. Esse período já passou: o pop-up não aparece.` : resumo}
+          </p>
+        </div>
+      ) : (
+        <p className="text-[0.8rem] text-muted-foreground">Aparece todos os dias enquanto estiver ativa.</p>
+      )}
+      {descricao && <p className="text-[0.8rem] leading-snug text-muted-foreground">{descricao}</p>}
+    </div>
   );
 }
 
