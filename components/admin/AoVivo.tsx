@@ -67,13 +67,14 @@ function descrever(r: NovaReserva) {
 
 /**
  * Mantém o painel em dia sem recarregar: pergunta ao servidor se as reservas
- * mudaram e, se sim, atualiza a tela (`router.refresh`, que traz também o
+ * mudaram (ou se o dia virou) e, se sim, atualiza a tela (`router.refresh`, que traz também o
  * contador de pendentes da barra lateral). Reserva nova do site toca um aviso
  * e mostra quem reservou.
  */
 export function AoVivo() {
   const router = useRouter();
   const versao = useRef<string | null>(null);
+  const dia = useRef<string | null>(null);
   const ultimo = useRef(0);
 
   useEffect(() => {
@@ -89,10 +90,15 @@ export function AoVivo() {
       try {
         const r = await novidadesReservas(ultimo.current);
         if (!vivo || !r.ok || !r.dados) return;
-        const { versao: nova, ultimo: id, novas } = r.dados;
+        const { versao: nova, hoje, ultimo: id, novas } = r.dados;
 
-        if (versao.current !== null && nova !== versao.current) router.refresh();
+        const mudou = versao.current !== null && nova !== versao.current;
+        // Virada do dia: a página aberta de um dia para o outro continuava no
+        // "hoje" antigo (reservas, painel e promoções calculam o dia no servidor).
+        const virouDia = dia.current !== null && hoje !== dia.current;
+        if (mudou || virouDia) router.refresh();
         versao.current = nova;
+        dia.current = hoje;
         ultimo.current = Math.max(ultimo.current, id);
 
         if (novas.length) {

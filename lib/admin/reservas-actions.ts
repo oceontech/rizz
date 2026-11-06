@@ -3,6 +3,7 @@
 import { after } from "next/server";
 import { z } from "zod";
 
+import { hojeSP } from "@/lib/admin/consultas";
 import { paraDataISO } from "@/lib/dados";
 import { sql } from "@/lib/db";
 import { OCASIOES, RESERVAS_PADRAO, type ReservasConfig } from "@/lib/reservas/regras";
@@ -221,6 +222,9 @@ export async function novidadesReservas(desde: number) {
           : [];
       return {
         versao: `${v.total}-${v.ultimo}-${v.mudou ?? ""}-${v.pendentes}`,
+        // O dia do restaurante pelo relógio do servidor: quando vira, a tela
+        // aberta precisa trocar o "hoje" mesmo sem nenhuma reserva nova.
+        hoje: hojeSP(),
         ultimo: Number(v.ultimo),
         novas: novas.map(
           (l): NovaReserva => ({
