@@ -308,15 +308,46 @@ export default function ReservaOnline({
   const [etapa, setEtapa] = useState<Etapa>("pessoas");
   const [sentido, setSentido] = useState<1 | -1>(1);
 
+  /**
+   * Muda quando a pessoa volta para a aba e a cada poucos minutos com ela à
+   * vista. Serve para os horários de hoje que já passaram saírem da lista e
+   * para trocar o "hoje" se a página ficou aberta de um dia para o outro.
+   */
+  const [relogio, setRelogio] = useState(0);
   useEffect(() => {
+    const tocar = () => {
+      if (document.visibilityState === "visible") setRelogio((n) => n + 1);
+    };
+    const id = window.setInterval(tocar, 5 * 60_000);
+    document.addEventListener("visibilitychange", tocar);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", tocar);
+    };
+  }, []);
+
+  // A agenda guarda o dia em que foi buscada; só busca de novo se o dia virou.
+  const diaDaAgenda = agenda?.hoje ?? null;
+  const virouDia = diaDaAgenda !== null && relogio > 0 && hojeSP() !== diaDaAgenda;
+  useEffect(() => {
+    if (diaDaAgenda !== null && !virouDia) return;
     fetch("/api/reservas/disponibilidade")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((a: Agenda) => setAgenda(a.ativo ? a : agendaLocal()))
+      .then((a: Agenda) => {
+        setFalhou(false);
+        setAgenda(a.ativo ? a : agendaLocal());
+      })
       .catch(() => {
         setFalhou(true);
         setAgenda(agendaLocal());
       });
-  }, []);
+  }, [diaDaAgenda, virouDia]);
+
+  // Dia escolhido que ficou no passado (página aberta desde ontem): volta a escolher.
+  if (agenda && data && data < agenda.hoje && !alterando) {
+    setData(null);
+    setHora(null);
+  }
 
   const online = Boolean(agenda?.ativo) && !falhou;
 
@@ -327,7 +358,7 @@ export default function ReservaOnline({
     return () => {
       vivo = false;
     };
-  }, [data, online, alterando?.codigo]);
+  }, [data, online, alterando?.codigo, relogio]);
 
   const horariosDoDia = !online
     ? data

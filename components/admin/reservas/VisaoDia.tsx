@@ -253,6 +253,14 @@ export default function VisaoDia({
   const [dia, setDia] = useState(hoje);
   const [calendario, setCalendario] = useState(false);
 
+  // Quando o dia vira com a tela aberta, quem estava olhando "Hoje" passa
+  // para o novo hoje; quem tinha escolhido outro dia continua nele.
+  const [hojeVisto, setHojeVisto] = useState(hoje);
+  if (hoje !== hojeVisto) {
+    setHojeVisto(hoje);
+    if (dia === hojeVisto) setDia(hoje);
+  }
+
   const doDia = useMemo(
     () => reservas.filter((r) => r.data === dia).sort((a, b) => (a.hora ?? "99").localeCompare(b.hora ?? "99")),
     [reservas, dia],
