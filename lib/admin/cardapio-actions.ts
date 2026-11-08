@@ -20,6 +20,8 @@ const esquemaItem = z.object({
   disponivel: z.boolean(),
   visivel: z.boolean(),
   fotoUrl: z.string().url().nullable(),
+  /** Tira a foto do acervo do site (pratos que vieram do cardápio original). */
+  removerFotoAcervo: z.boolean().optional(),
 });
 
 export type ItemEntrada = z.infer<typeof esquemaItem>;
@@ -34,6 +36,7 @@ export async function salvarItem(entrada: ItemEntrada) {
             categoria_id = ${d.categoriaId}, nome = ${d.nome}, descricao = ${d.descricao || null},
             preco = ${d.preco}, badges = ${d.badges}, vpj = false, grupo = ${d.grupo || null},
             disponivel = ${d.disponivel}, visivel = ${d.visivel}, foto_url = ${d.fotoUrl},
+            img = case when ${d.removerFotoAcervo === true} then null else img end,
             atualizado_em = now()
           where id = ${d.id}`;
         return d.id;
