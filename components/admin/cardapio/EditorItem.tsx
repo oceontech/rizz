@@ -121,6 +121,9 @@ function Formulario({ aberto, item, categoriaInicial, categorias, selos, onFecha
   const [disponivel, setDisponivel] = useState(item?.disponivel ?? true);
   const [visivel, setVisivel] = useState(item?.visivel ?? true);
   const [fotoUrl, setFotoUrl] = useState(item?.fotoUrl ?? null);
+  // Foto do acervo do site (pratos que vieram do cardápio original). Antes ela
+  // aparecia na prévia mas não no campo de foto, e não havia como tirá-la.
+  const [fotoAcervo, setFotoAcervo] = useState(item?.img && item.img in images ? images[item.img].src : null);
   const [salvando, setSalvando] = useState(false);
 
   const grupos = Array.from(
@@ -128,8 +131,14 @@ function Formulario({ aberto, item, categoriaInicial, categorias, selos, onFecha
   ) as string[];
   const mapa = new Map(selos.map((s) => [s.id, s]));
   const selosMarcados = badges.map((b) => mapa.get(b)).filter((s): s is SeloDef => Boolean(s?.ativo));
-  // Foto da prévia: a enviada agora, ou a do acervo do site (pratos que vieram da peça).
-  const fotoPrevia = fotoUrl ?? (item?.img && item.img in images ? images[item.img].src : null);
+  // Foto da prévia: a enviada pelo painel, ou a do acervo do site.
+  const fotoPrevia = fotoUrl ?? fotoAcervo;
+
+  /** Enviar uma foto nova a põe no lugar; remover tira as duas (enviada e do acervo). */
+  function mudarFoto(url: string | null) {
+    setFotoUrl(url);
+    if (url === null) setFotoAcervo(null);
+  }
 
   async function salvar() {
     if (nome.trim().length < 2) return avisar({ ok: false, erro: "Informe o nome do prato." }, "");
@@ -148,6 +157,7 @@ function Formulario({ aberto, item, categoriaInicial, categorias, selos, onFecha
       disponivel,
       visivel,
       fotoUrl,
+      removerFotoAcervo: Boolean(item?.img) && fotoAcervo === null,
     });
     setSalvando(false);
     if (avisar(r, item ? "Prato atualizado" : "Prato adicionado ao cardápio")) onFechar();
@@ -199,8 +209,8 @@ function Formulario({ aberto, item, categoriaInicial, categorias, selos, onFecha
             </div>
             <UploadImagem
               label="Foto"
-              value={fotoUrl}
-              onChange={setFotoUrl}
+              value={fotoPrevia}
+              onChange={mudarFoto}
               pasta="pratos"
               proporcao="aspect-square"
               descricao="JPG, PNG ou WebP até 4,5 MB."
