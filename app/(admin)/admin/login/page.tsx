@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import LoginForm from "@/components/admin/LoginForm";
 import Logo from "@/components/brand/Logo";
-import foto from "@/assets/img/salao-claraboia-vinho.webp";
+import foto from "@/assets/img/salao-noite-vinho.webp";
 
 export const metadata: Metadata = { title: "Entrar" };
 
@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/admin/logi
             priority
             placeholder="blur"
             sizes="55vw"
-            className="object-cover opacity-55"
+            className="object-cover opacity-80"
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/35 to-black/10" />
           <div className="relative flex h-full flex-col justify-between p-12 text-white">
