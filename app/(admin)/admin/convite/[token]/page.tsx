@@ -21,7 +21,7 @@ export default async function ConvitePage({ params }: PageProps<"/admin/convite/
     <main className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
       <section className="hidden p-3 lg:block">
         <div className="relative h-full overflow-hidden rounded-[28px] bg-sidebar">
-          <Image src={foto} alt="" fill priority placeholder="blur" sizes="55vw" className="object-cover opacity-80" />
+          <Image src={foto} alt="" fill priority placeholder="blur" unoptimized className="object-cover opacity-80" />
           <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/35 to-black/10" />
           <div className="relative flex h-full flex-col justify-between p-12 text-white">
             <Logo variante="branca" className="h-auto w-36" sizes="144px" />

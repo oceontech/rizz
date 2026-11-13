@@ -22,7 +22,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/admin/logi
             fill
             priority
             placeholder="blur"
-            sizes="55vw"
+            // Foto já otimizada (92 KB): servida como está, sem a recompressão do Next.
+            unoptimized
             className="object-cover opacity-80"
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/35 to-black/10" />
