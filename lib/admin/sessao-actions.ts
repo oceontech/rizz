@@ -8,7 +8,7 @@ import { z } from "zod";
 import { encerrarSessao, exigirSessao, iniciarSessao } from "@/lib/auth";
 import { sql } from "@/lib/db";
 
-import { avisarSenhaAlterada, enviarAcesso } from "./envio-acesso";
+import { avisarSenhaAlterada, enviarAcesso, type Envio } from "./envio-acesso";
 import { novoToken, origemAtual } from "./equipe";
 import { normalizarTelefone } from "./formato";
 
@@ -19,10 +19,11 @@ const esquema = z.object({
   senha: z.string().min(1, "Informe a senha."),
 });
 
-/** Hash descartável para gastar o mesmo tempo quando o e-mail não existe. */
-let hashFalso: string | null = null;
-const HASH_FALSO = () => (hashFalso ??= bcrypt.hashSync("rizz-sem-usuario", 12));
-
+/**
+ * Mensagens distintas para "e-mail sem acesso" e "senha errada": o painel é
+ * de uma equipe pequena e saber qual dos dois errou vale mais que esconder
+ * quem tem acesso (decisão do dono do projeto, 13/11/2026).
+ */
 export async function entrar(_: EstadoLogin, form: FormData): Promise<EstadoLogin> {
   const dados = esquema.safeParse({ email: form.get("email"), senha: form.get("senha") });
   const email = String(form.get("email") ?? "");
@@ -31,13 +32,11 @@ export async function entrar(_: EstadoLogin, form: FormData): Promise<EstadoLogi
   const [usuario] = await sql`
     select id, senha_hash, ativo, sessao_versao from admin_usuarios where email = ${dados.data.email}`;
 
-  const confere = await bcrypt.compare(
-    dados.data.senha,
-    usuario ? String(usuario.senha_hash) : HASH_FALSO(),
-  );
-
-  if (!usuario || !confere) {
-    return { erro: "E-mail ou senha incorretos.", email };
+  if (!usuario) {
+    return { erro: "Não há acesso ao painel com esse e-mail. Confira o endereço ou peça um convite a quem administra o painel.", email };
+  }
+  if (!(await bcrypt.compare(dados.data.senha, String(usuario.senha_hash)))) {
+    return { erro: "Senha incorreta. Se não lembrar, use \"Esqueci minha senha\".", email };
   }
   if (!usuario.ativo) {
     return { erro: "Este acesso está desativado. Fale com quem administra o painel.", email };
@@ -136,34 +135,43 @@ export async function sairDeTodos() {
   redirect("/admin/login");
 }
 
-export type EstadoEsqueci = { enviado?: boolean; erro?: string };
+export type EstadoEsqueci = { enviado?: boolean; recente?: boolean; envios?: Envio[]; erro?: string };
 
 /**
- * "Esqueci minha senha": manda o link de nova senha por e-mail e WhatsApp.
- * A resposta é a mesma exista ou não o e-mail (não revela quem tem acesso),
- * e cada pessoa recebe no máximo um link a cada 5 minutos.
+ * "Esqueci minha senha": manda o link de nova senha por e-mail e WhatsApp e
+ * diz na tela por onde saiu. Cada pessoa recebe no máximo um link a cada
+ * 5 minutos.
  */
 export async function pedirNovaSenha(_: EstadoEsqueci, form: FormData): Promise<EstadoEsqueci> {
   const email = z.string().trim().toLowerCase().email().safeParse(form.get("email"));
   if (!email.success) return { erro: "Informe um e-mail válido." };
 
-  const [u] = await sql`select id, nome, email, telefone from admin_usuarios where email = ${email.data} and ativo`;
-  if (u) {
-    const [recente] = await sql`select 1 from admin_convites where tipo = 'senha' and usuario_id = ${u.id}
-                                and criado_em > now() - interval '5 minutes'`;
-    if (!recente) {
-      await sql`update admin_convites set revogado_em = now() where tipo = 'senha' and usuario_id = ${u.id} and usado_em is null and revogado_em is null`;
-      const { token, hash } = novoToken();
-      await sql`insert into admin_convites (token_hash, tipo, usuario_id, expira_em)
-                values (${hash}, 'senha', ${u.id}, ${new Date(Date.now() + 864e5).toISOString()})`;
-      await enviarAcesso("recuperacao", {
-        nome: String(u.nome),
-        email: String(u.email),
-        telefone: u.telefone ? String(u.telefone) : null,
-        link: `${await origemAtual()}/admin/convite/${token}`,
-        validade: "24 horas",
-      });
-    }
+  const [u] = await sql`select id, nome, email, telefone, ativo from admin_usuarios where email = ${email.data}`;
+  if (!u) {
+    return { erro: "Não há acesso ao painel com esse e-mail. Confira o endereço ou peça a quem administra o painel." };
   }
-  return { enviado: true };
+  if (!u.ativo) return { erro: "Este acesso está desativado. Fale com quem administra o painel." };
+
+  const [recente] = await sql`select 1 from admin_convites where tipo = 'senha' and usuario_id = ${u.id}
+                              and revogado_em is null and criado_em > now() - interval '5 minutes'`;
+  if (recente) return { enviado: true, recente: true };
+
+  await sql`update admin_convites set revogado_em = now() where tipo = 'senha' and usuario_id = ${u.id} and usado_em is null and revogado_em is null`;
+  const { token, hash } = novoToken();
+  await sql`insert into admin_convites (token_hash, tipo, usuario_id, expira_em)
+            values (${hash}, 'senha', ${u.id}, ${new Date(Date.now() + 864e5).toISOString()})`;
+  const envios = await enviarAcesso("recuperacao", {
+    nome: String(u.nome),
+    email: String(u.email),
+    telefone: u.telefone ? String(u.telefone) : null,
+    link: `${await origemAtual()}/admin/convite/${token}`,
+    validade: "24 horas",
+  });
+  if (!envios.some((e) => e.ok)) {
+    // Nada saiu: o link fica sem uso, então não pode travar um novo pedido por 5 minutos.
+    await sql`update admin_convites set revogado_em = now() where token_hash = ${hash}`;
+    const motivo = envios.map((e) => e.motivo).filter(Boolean).join("; ");
+    return { erro: `Não conseguimos enviar o link${motivo ? ` (${motivo})` : ""}. Peça a quem administra o painel para gerar um em Configurações → Equipe.` };
+  }
+  return { enviado: true, envios };
 }

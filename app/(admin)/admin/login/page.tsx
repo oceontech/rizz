@@ -44,14 +44,14 @@ export default async function LoginPage({ searchParams }: PageProps<"/admin/logi
 
       {/* Formulário */}
       <section className="flex items-center justify-center px-5 py-10 sm:px-8">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-sm xl:max-w-md 2xl:max-w-[28rem]">
           <div className="mb-8 flex flex-col items-center text-center lg:items-start lg:text-left">
             <Logo variante="vinho" className="mb-8 h-auto w-28 lg:hidden dark:hidden" sizes="112px" />
             <Logo variante="branca" className="mb-8 hidden h-auto w-28 dark:block lg:dark:hidden" sizes="112px" />
-            <h2 className="text-2xl leading-8 font-semibold tracking-tight">Bem-vindo de volta</h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">Entre com o e-mail e a senha do painel.</p>
+            <h2 className="text-2xl leading-8 font-semibold tracking-tight xl:text-3xl xl:leading-10">Bem-vindo de volta</h2>
+            <p className="mt-1.5 text-sm text-muted-foreground xl:text-[15px]">Entre com o e-mail e a senha do painel.</p>
           </div>
-          <div className="rounded-3xl bg-card p-6 shadow-suave sm:p-7">
+          <div className="rounded-3xl bg-card p-6 shadow-suave sm:p-7 xl:p-9">
             <LoginForm de={typeof de === "string" ? de : undefined} />
           </div>
           <p className="mt-6 text-center lg:text-left">
