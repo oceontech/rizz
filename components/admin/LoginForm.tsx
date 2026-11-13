@@ -25,13 +25,33 @@ function Esqueci({ emailInicial, aoVoltar }: { emailInicial: string; aoVoltar: (
   const [email, setEmail] = useState(emailInicial);
 
   if (estado.enviado) {
+    const saiu = estado.envios?.filter((e) => e.ok) ?? [];
+    const falhou = estado.envios?.filter((e) => !e.ok) ?? [];
     return (
       <div className="flex flex-col gap-5">
-        <p className="flex items-start gap-2.5 rounded-xl bg-positivo/10 px-3.5 py-3 text-sm text-positivo-texto">
+        <div className="flex items-start gap-2.5 rounded-xl bg-positivo/10 px-3.5 py-3 text-sm text-positivo-texto">
           <CircleCheck className="mt-0.5 size-4 shrink-0" />
-          Se esse e-mail tiver acesso ao painel, enviamos um link para criar uma senha nova (por e-mail e, se houver número cadastrado, pelo WhatsApp). Ele vale 24 horas.
-        </p>
-        <p className="text-sm text-muted-foreground">Não chegou em alguns minutos? Peça a um administrador para enviar pelo painel, em Configurações → Equipe.</p>
+          {estado.recente ? (
+            <p>Já enviamos um link há poucos minutos. Confira o e-mail (inclusive a caixa de spam) e o WhatsApp antes de pedir outro.</p>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <p>Enviamos um link para criar uma senha nova. Ele vale 24 horas.</p>
+              <ul className="flex flex-col gap-0.5">
+                {saiu.map((e) => (
+                  <li key={e.canal}>
+                    {e.canal === "email" ? "E-mail" : "WhatsApp"}: <strong className="font-medium">{e.destino}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+        {falhou.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            {falhou.map((e) => `${e.canal === "email" ? "E-mail" : "WhatsApp"} não enviado: ${e.motivo ?? "falha no envio"}.`).join(" ")}
+          </p>
+        )}
+        <p className="text-sm text-muted-foreground">Não chegou? Olhe a caixa de spam ou peça a um administrador para gerar o link em Configurações → Equipe.</p>
         <Button variant="secondary" className="rounded-full" onClick={aoVoltar}>
           <ArrowLeft /> Voltar para o login
         </Button>
